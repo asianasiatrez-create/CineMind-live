@@ -12,7 +12,7 @@ CORS(app)
 TMDB_API_KEY = "3dc27f9ae386c422fdc5994e6fda6823"
 DB_NAME = "cinemind.db"
 
-# Cleans your API Key instantly in case of accidental quotes/spaces from Render dashboard
+# Cleans your API Key instantly in case of accidental quotes/spaces
 raw_gemini = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_API_KEY = raw_gemini.strip().strip('"').strip("'")
 
@@ -30,7 +30,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Ultimate Defense Engine Live", "version": "101.0"})
+    return jsonify({"status": "CineMind Ultimate Defense Engine Live", "version": "105.0"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -154,7 +154,7 @@ def chat():
             prompt = f"""You are Nova, an expert AI movie recommender. 
             User request: "{user_message}"
             
-            Return ONLY a valid JSON object in this exact format:
+            Return ONLY a valid JSON object in this exact format. Do NOT wrap it in markdown backticks. Return raw JSON only:
             {{
               "reply": "Warm 1-sentence response as Nova addressing {username}.",
               "recommendations": [
@@ -163,10 +163,10 @@ def chat():
                 {{"title": "Exact Movie Title 3", "match": 96, "rationale": "Explainable AI reason why it matches."}},
                 {{"title": "Exact Movie Title 4", "match": 95, "rationale": "Explainable AI reason why it matches."}}
               ]
-            }}
-            Do not include any markdown backticks. Return raw JSON only."""
+            }}"""
 
-            gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+            # USING THE UNIVERSALLY SUPPORTED GEMINI-PRO
+            gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={GEMINI_API_KEY}"
             headers = {"Content-Type": "application/json"}
             payload = {
                 "contents": [{"parts": [{"text": prompt}]}]
@@ -174,7 +174,6 @@ def chat():
             
             res = requests.post(gemini_url, headers=headers, json=payload, timeout=15)
             
-            # Print exact Google API Error to Nova's Chat Bubble
             if res.status_code != 200:
                 ai_reply = f"Google API Error {res.status_code}: {res.text[:150]}"
             else:
@@ -187,7 +186,6 @@ def chat():
                 recommendations = res_data.get("recommendations", [])
                 
         except Exception as e:
-            # Print exact Python parsing Error to Nova's Chat Bubble
             ai_reply = f"System Error parsing Gemini: {str(e)}"
 
     movies = []
