@@ -30,7 +30,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Gemini 3.5 Engine Live", "version": "700.0"})
+    return jsonify({"status": "CineMind Gemini 3 Engine Live", "version": "800.0"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -164,8 +164,8 @@ def chat():
               ]
             }}"""
 
-            # Explicitly targeting the active Gemini 3.5 Flash architecture
-            gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key={GEMINI_API_KEY}"
+            # Targeted API endpoint for Gemini 3.8 Flash
+            gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key={GEMINI_API_KEY}"
             headers = {"Content-Type": "application/json"}
             payload = {
                 "contents": [{"parts": [{"text": prompt}]}]
@@ -195,7 +195,7 @@ def chat():
         if not title:
             continue
         try:
-            search_url = f"[https://api.themoviedb.org/3/search/movie?api_key=](https://api.themoviedb.org/3/search/movie?api_key=){TMDB_API_KEY}&query={requests.utils.quote(title)}"
+            search_url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&query={requests.utils.quote(title)}"
             s_res = requests.get(search_url).json()
             results = s_res.get("results", [])
             if results:
@@ -204,7 +204,7 @@ def chat():
                 movies.append({
                     "id": movie_id,
                     "title": m.get("title"),
-                    "poster": f"[https://image.tmdb.org/t/p/w500](https://image.tmdb.org/t/p/w500){m.get('poster_path')}" if m.get('poster_path') else "",
+                    "poster": f"https://image.tmdb.org/t/p/w500{m.get('poster_path')}" if m.get('poster_path') else "",
                     "vote_average": m.get("vote_average", 0.0),
                     "release_date": m.get("release_date", "2026"),
                     "overview": m.get("overview") or "No overview available.",
@@ -217,12 +217,12 @@ def chat():
 
     if not movies:
         try:
-            fallback = requests.get(f"[https://api.themoviedb.org/3/movie/popular?api_key=](https://api.themoviedb.org/3/movie/popular?api_key=){TMDB_API_KEY}&page=1").json()
+            fallback = requests.get(f"https://api.themoviedb.org/3/movie/popular?api_key={TMDB_API_KEY}&page=1").json()
             for m in fallback.get("results", [])[:4]:
                 movies.append({
                     "id": m.get("id"),
                     "title": m.get("title"),
-                    "poster": f"[https://image.tmdb.org/t/p/w500](https://image.tmdb.org/t/p/w500){m.get('poster_path')}" if m.get('poster_path') else "",
+                    "poster": f"https://image.tmdb.org/t/p/w500{m.get('poster_path')}" if m.get('poster_path') else "",
                     "vote_average": m.get("vote_average", 0.0),
                     "release_date": m.get("release_date", "2026"),
                     "overview": m.get("overview") or "No overview available.",
