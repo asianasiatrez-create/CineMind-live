@@ -30,7 +30,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Ultimate Defense Engine Live", "version": "105.0"})
+    return jsonify({"status": "CineMind Ultimate Defense Engine Live", "version": "200.0"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -165,8 +165,8 @@ def chat():
               ]
             }}"""
 
-            # USING THE UNIVERSALLY SUPPORTED GEMINI-PRO
-            gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={GEMINI_API_KEY}"
+            # THE FIX: Using the active and correct gemini-1.5-flash model
+            gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
             headers = {"Content-Type": "application/json"}
             payload = {
                 "contents": [{"parts": [{"text": prompt}]}]
@@ -249,3 +249,4 @@ def trends():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
+    
