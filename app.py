@@ -55,7 +55,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind JSON AI Engine Live", "version": "14.0"})
+    return jsonify({"status": "CineMind Debug Engine Live", "version": "15.0"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -159,14 +159,14 @@ def chat():
     ai_reply = f"Here are the best matches for your mood, {username}!"
     movie_titles = []
 
-    # 1. Use Gemini with guaranteed JSON structured output
+    # 1. Attempt Gemini AI
     if client:
         try:
             prompt = f"""You are Nova, an expert AI movie recommender. 
             User request: "{user_message}"
             Provide a JSON response with:
             - "reply": A warm, friendly 1-sentence response as Nova addressing {username}.
-            - "titles": An array of exactly 4 real, existing movie titles that accurately match the user's request (ensure they match any requested country or genre like Thai, Korean, Japanese, comedy, romance, etc.)."""
+            - "titles": An array of exactly 4 real, existing movie titles that accurately match the user's request."""
 
             response = client.models.generate_content(
                 model="gemini-1.5-flash",
@@ -177,11 +177,25 @@ def chat():
             ai_reply = res_data.get("reply", ai_reply)
             movie_titles = res_data.get("titles", [])
         except Exception as e:
-            pass
+            ai_reply = f"I processed your request, {username}!"
 
-    # 2. Fetch each title from TMDB
+    # 2. GUARANTEED FALLBACK: If Gemini failed or key is missing, parse words so it NEVER falls back to Spider-Man
+    if not movie_titles:
+        stop_words = {"i", "want", "a", "movie", "wherein", "the", "main", "character", "will", "die", "about", "set", "in", "with", "and", "to", "an", "is", "that"}
+        keywords = [w for w in lower_msg.split() if w not in stop_words and len(w) > 2]
+        query_str = " ".join(keywords) if keywords else user_message
+        
+        # Search TMDB using their actual words
+        search_url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&query={requests.utils.quote(query_str)}"
+        s_res = requests.get(search_url).json()
+        results = s_res.get("results", [])
+        movie_titles = [m.get("title") for m in results[:4]]
+
+    # 3. Fetch movies from TMDB
     movies = []
-    for title in movie_titles[:4]:
+    titles_to_fetch = movie_titles if isinstance(movie_titles, list) else [user_message]
+    
+    for title in titles_to_fetch[:4]:
         try:
             search_url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&query={requests.utils.quote(title)}"
             s_res = requests.get(search_url).json()
@@ -205,39 +219,10 @@ def chat():
                     "overview": m.get("overview") or "No overview available.",
                     "match": 99,
                     "platforms": platforms,
-                    "rationale": f"Curated by Gemini AI JSON engine for '{user_message}'."
+                    "rationale": f"Curated for '{user_message}'."
                 })
         except Exception:
             continue
-
-    # 3. Deterministic Fallback if AI titles didn't resolve (using TMDB Discover based on keywords)
-    if not movies:
-        genre_map = {"action": 28, "comedy": 35, "horror": 27, "romance": 10749, "drama": 18, "thriller": 53, "animation": 16}
-        detected_genre = next((str(gid) for word, gid in genre_map.items() if word in lower_msg), "")
-        lang_code = "th" if "thai" in lower_msg else ("ko" if "korean" in lower_msg or "korea" in lower_msg else ("ja" if "japan" in lower_msg else ""))
-        
-        disc_url = f"https://api.themoviedb.org/3/discover/movie?api_key={TMDB_API_KEY}&sort_by=popularity.desc"
-        if detected_genre:
-            disc_url += f"&with_genres={detected_genre}"
-        if lang_code:
-            disc_url += f"&with_original_language={lang_code}"
-            
-        try:
-            d_res = requests.get(disc_url).json()
-            for m in d_res.get("results", [])[:4]:
-                movies.append({
-                    "id": m.get("id"),
-                    "title": m.get("title"),
-                    "poster": f"https://image.tmdb.org/t/p/w500{m.get('poster_path')}" if m.get('poster_path') else "",
-                    "vote_average": m.get("vote_average", 0.0),
-                    "release_date": m.get("release_date", "2026"),
-                    "overview": m.get("overview") or "No overview available.",
-                    "match": 98,
-                    "platforms": ["TMDB VOD Catalog"],
-                    "rationale": "Curated via Discover filter."
-                })
-        except Exception:
-            pass
 
     return jsonify({"reply": ai_reply, "movies": movies})
 
