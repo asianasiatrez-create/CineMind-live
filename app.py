@@ -16,6 +16,9 @@ DB_NAME = "cinemind.db"
 raw_gemini = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_API_KEY = raw_gemini.strip().strip('"').strip("'")
 
+# We will auto-detect the correct model instead of guessing
+ACTIVE_GEMINI_MODEL = None
+
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
@@ -30,7 +33,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Ultimate Defense Engine Live", "version": "300.0"})
+    return jsonify({"status": "CineMind Ultimate Defense Engine Live", "version": "400.0"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -135,6 +138,7 @@ def get_insights():
 
 @app.route("/chat", methods=["POST"])
 def chat():
+    global ACTIVE_GEMINI_MODEL
     data = request.get_json() or {}
     user_message = data.get("message", "").strip()
     profile = data.get("profile", {"name": "Guest"})
@@ -148,8 +152,35 @@ def chat():
     recommendations = []
 
     if not GEMINI_API_KEY:
-        ai_reply = "System Alert: GEMINI_API_KEY is completely missing in Render Environment Variables."
+        ai_reply = "System Alert: GEMINI_API_KEY is missing in Render Environment Variables."
     else:
+        # THE FIX: Dynamically fetch the working model from Google to avoid 404 errors
+        if not ACTIVE_GEMINI_MODEL:
+            try:
+                m_url = f"https://generativelanguage.googleapis.com/v1beta/models?key={GEMINI_API_KEY}"
+                m_res = requests.get(m_url, timeout=10)
+                if m_res.status_code == 200:
+                    models = m_res.json().get("models", [])
+                    # Find a model that supports generating content
+                    for m in models:
+                        if "generateContent" in m.get("supportedGenerationMethods", []):
+                            name = m["name"].replace("models/", "")
+                            if "flash" in name.lower():
+                                ACTIVE_GEMINI_MODEL = name
+                                break
+                    # If no flash model found, pick the first valid one
+                    if not ACTIVE_GEMINI_MODEL:
+                        for m in models:
+                            if "generateContent" in m.get("supportedGenerationMethods", []):
+                                ACTIVE_GEMINI_MODEL = m["name"].replace("models/", "")
+                                break
+            except Exception as e:
+                print("Failed to fetch models:", e)
+        
+        # Absolute fallback if fetch fails
+        if not ACTIVE_GEMINI_MODEL:
+            ACTIVE_GEMINI_MODEL = "gemini-1.5-flash"
+
         try:
             prompt = f"""You are Nova, an expert AI movie recommender. 
             User request: "{user_message}"
@@ -165,8 +196,7 @@ def chat():
               ]
             }}"""
 
-            # THE FIX: Google retired Gemini 1.5. We are now correctly targeting gemini-2.5-flash
-            gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+            gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/{ACTIVE_GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
             headers = {"Content-Type": "application/json"}
             payload = {
                 "contents": [{"parts": [{"text": prompt}]}]
@@ -175,7 +205,7 @@ def chat():
             res = requests.post(gemini_url, headers=headers, json=payload, timeout=15)
             
             if res.status_code != 200:
-                ai_reply = f"Google API Error {res.status_code}: {res.text[:150]}"
+                ai_reply = f"Google API Error {res.status_code} using model {ACTIVE_GEMINI_MODEL}: {res.text[:150]}"
             else:
                 res_json = res.json()
                 raw_text = res_json["candidates"][0]["content"]["parts"][0]["text"]
