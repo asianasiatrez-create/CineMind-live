@@ -5,6 +5,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import requests
 import hashlib
+from google import genai
 
 app = Flask(__name__)
 CORS(app)
@@ -14,6 +15,9 @@ DB_NAME = "cinemind.db"
 
 raw_gemini = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_API_KEY = raw_gemini.strip().strip('"').strip("'")
+
+# Initialize official Google GenAI client
+client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
 def init_db():
     conn = sqlite3.connect(DB_NAME)
@@ -29,7 +33,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Defense-Ready Engine Live", "version": "1500.0"})
+    return jsonify({"status": "CineMind SDK Engine Live", "version": "2000.0"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -145,7 +149,7 @@ def chat():
     ai_reply = f"Here are the precise cinematic matches for your request, {username}!"
     recommendations = []
 
-    if not GEMINI_API_KEY:
+    if not client:
         ai_reply = "System Alert: GEMINI_API_KEY is missing in Render Environment Variables."
     else:
         try:
@@ -163,31 +167,23 @@ def chat():
               ]
             }}"""
 
-            # Locked precisely to gemini-3.8-flash as Google instructed
-            gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key={GEMINI_API_KEY}"
-            headers = {"Content-Type": "application/json"}
-            payload = {"contents": [{"parts": [{"text": prompt}]}]}
+            # Use the official Google GenAI SDK with gemini-3.8-flash
+            response = client.models.generate_content(
+                model='gemini-3.8-flash',
+                contents=prompt,
+            )
             
-            res = requests.post(gemini_url, headers=headers, json=payload, timeout=20)
+            raw_text = response.text
+            clean_text = raw_text.replace("```json", "").replace("```", "").strip()
+            res_data = json.loads(clean_text)
             
-            if res.status_code == 200:
-                res_json = res.json()
-                raw_text = res_json["candidates"][0]["content"]["parts"][0]["text"]
-                clean_text = raw_text.replace("```json", "").replace("```", "").strip()
-                res_data = json.loads(clean_text)
-                
-                ai_reply = res_data.get("reply", ai_reply)
-                recommendations = res_data.get("recommendations", [])
-            else:
-                # DEFENSE-READY FALLBACK: If Google gives a 503 or error, Nova dynamically responds based on user input instead of failing
-                ai_reply = f"Based on your request for '{user_message}', I've mapped out these optimal neural matches for you, {username}!"
+            ai_reply = res_data.get("reply", ai_reply)
+            recommendations = res_data.get("recommendations", [])
                 
         except Exception as e:
-            ai_reply = f"Based on your request for '{user_message}', here are your curated cinematic matches, {username}!"
+            ai_reply = f"Based on your request for '{user_message}', here are your curated matches, {username}!"
 
     movies = []
-    
-    # If Gemini returned recommendations, use them. Otherwise, pull dynamic smart matches from TMDB based on keywords.
     if recommendations:
         for rec in recommendations[:4]:
             title = rec.get("title", "")
@@ -215,7 +211,7 @@ def chat():
             except Exception:
                 continue
 
-    # Absolute safety net: If anything is empty, query TMDB dynamically so movie cards always appear matching the user query
+    # Smart Search Fallback: If AI didn't return cards, query TMDB directly using the user's search text (e.g., "Sad Romance")
     if not movies:
         try:
             search_url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&query={requests.utils.quote(user_message)}"
@@ -234,25 +230,6 @@ def chat():
                         "platforms": ["TMDB VOD Catalog"],
                         "rationale": f"Contextual semantic alignment for '{user_message}'."
                     })
-        except Exception:
-            pass
-
-    # Final fallback if TMDB search returns nothing
-    if not movies:
-        try:
-            fallback = requests.get(f"https://api.themoviedb.org/3/movie/popular?api_key={TMDB_API_KEY}&page=1").json()
-            for m in fallback.get("results", [])[:4]:
-                movies.append({
-                    "id": m.get("id"),
-                    "title": m.get("title"),
-                    "poster": f"https://image.tmdb.org/t/p/w500{m.get('poster_path')}" if m.get('poster_path') else "",
-                    "vote_average": m.get("vote_average", 0.0),
-                    "release_date": m.get("release_date", "2026"),
-                    "overview": m.get("overview") or "No overview available.",
-                    "match": 95,
-                    "platforms": ["TMDB VOD Catalog"],
-                    "rationale": "Curated via multi-condition contextual matching."
-                })
         except Exception:
             pass
 
