@@ -46,7 +46,6 @@
         .logo-unboxed { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 3px solid var(--secondary-glow); box-shadow: 0 0 50px rgba(56,189,248,0.7); transition: 0.4s; cursor: pointer; display: block; }
         .logo-unboxed:hover { transform: scale(1.12) rotate(6deg); box-shadow: 0 0 75px rgba(192,132,252,0.95); border-color: var(--primary-glow); }
 
-        /* Prominent Top Account Trigger */
         .account-top-btn { background: linear-gradient(135deg, rgba(192, 132, 252, 0.2), rgba(56, 189, 248, 0.2)); border: 1px solid var(--secondary-glow); padding: 14px 18px; border-radius: 18px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: 0.3s; width: 100%; box-shadow: 0 0 20px rgba(56,189,248,0.2); }
         .account-top-btn:hover { background: linear-gradient(135deg, rgba(192, 132, 252, 0.35), rgba(56, 189, 248, 0.35)); border-color: var(--primary-glow); transform: translateY(-2px); }
         .account-info { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
@@ -66,7 +65,10 @@
         .hero-search-box { position: relative; width: 100%; max-width: 750px; display: flex; gap: 12px; }
         .hero-search-box input { flex: 1; background: rgba(3, 2, 10, 0.95); border: 1.5px solid var(--glass-border); border-radius: 40px; padding: 20px 28px 20px 65px; outline: none; color: white; font-size: 1.08rem; }
         .hero-search-box input:focus { border-color: var(--secondary-glow); box-shadow: 0 0 35px rgba(56,189,248,0.6); }
-        .hero-search-box i.fa-brain { position: absolute; left: 26px; top: 50%; transform: translateY(-50%); color: var(--secondary-glow); font-size: 1.25rem; }
+        
+        /* Properly Centered Brain Icon for Desktop & Mobile */
+        .hero-search-box i.fa-brain { position: absolute; left: 26px; top: 50%; transform: translateY(-50%); color: var(--secondary-glow); font-size: 1.25rem; line-height: 1; }
+        
         .search-btn-submit { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); border: none; padding: 0 28px; border-radius: 30px; color: white; font-weight: 700; cursor: pointer; transition: 0.3s; }
         .search-btn-submit:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(56,189,248,0.6); }
 
@@ -89,7 +91,6 @@
         .match-score { font-size: 0.85rem; font-weight: 700; color: #38bdf8; display: flex; align-items: center; gap: 6px; }
         .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 26px; }
 
-        /* Cascading Accordion */
         .cascade-accordion { display: flex; flex-direction: column; gap: 16px; }
         .cascade-item { background: var(--panel-bg); border: 1px solid var(--glass-border); border-radius: 20px; overflow: hidden; backdrop-filter: blur(20px); transition: 0.3s; }
         .cascade-header { padding: 22px 28px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: 700; font-size: 1.1rem; color: var(--secondary-glow); }
@@ -108,7 +109,6 @@
         .nova-banner-clean { background: linear-gradient(135deg, rgba(192,132,252,0.2), rgba(56,189,248,0.2)); border: 1px solid var(--secondary-glow); border-radius: 28px; padding: 30px 35px; display: flex; align-items: center; justify-content: space-between; gap: 22px; backdrop-filter: blur(20px); }
         .nova-banner-clean img { width: 70px; height: 70px; object-fit: contain; }
 
-        /* Modal styling */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2, 0, 8, 0.9); z-index: 200; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.35s; backdrop-filter: blur(25px); padding: 20px; }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         .modal-content { display: flex; gap: 30px; width: 850px; max-width: 100%; max-height: 85vh; background: linear-gradient(135deg, #120c30, #070314); padding: 35px; border-radius: 28px; position: relative; border: 1px solid var(--glass-border-hover); box-shadow: 0 40px 100px rgba(0,0,0,0.95); overflow-y: auto; }
@@ -177,7 +177,6 @@
                 <img src="CineMind-Logo.png" alt="CineMind Logo" class="logo-unboxed" onerror="this.src='nova.png'">
             </div>
 
-            <!-- Prominently Placed at the Top -->
             <div class="account-top-btn" id="openProfile" title="Click to log in or switch account">
                 <i class="fa-solid fa-user-shield" style="color: var(--secondary-glow); font-size: 1.2rem;"></i>
                 <div class="account-info">
