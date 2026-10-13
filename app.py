@@ -4,15 +4,19 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import requests
 import hashlib
+from google import genai
 
 # ==========================================
-# 1. INITIALIZE FLASK APP (MUST BE AT THE VERY TOP)
+# 1. INITIALIZE FLASK & GEMINI CLIENT
 # ==========================================
 app = Flask(__name__)
 CORS(app)
 
 TMDB_API_KEY = "3dc27f9ae386c422fdc5994e6fda6823"
 DB_NAME = "cinemind.db"
+
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
 def init_db():
     conn = sqlite3.connect(DB_NAME)
@@ -51,13 +55,9 @@ def init_db():
 
 init_db()
 
-# ==========================================
-# 2. ROUTES
-# ==========================================
-
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind AI Neural Backend Live", "version": "4.4"})
+    return jsonify({"status": "CineMind Gemini AI Backend Live", "version": "5.1"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -149,7 +149,7 @@ def toggle_library():
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.get_json() or {}
-    user_message = data.get("message", "").strip().lower()
+    user_message = data.get("message", "").strip()
     profile = data.get("profile", {"name": "Movie Fan"})
     region = data.get("region", "PH")
     username = profile.get("name", "Movie Fan")
@@ -157,35 +157,48 @@ def chat():
     if not user_message:
         return jsonify({"reply": f"Hey {username}! Tell me what kind of movie you're looking for.", "movies": []})
 
-    genre_map = {
-        "action": 28, "adventure": 12, "animation": 16, "comedy": 35,
-        "crime": 80, "documentary": 99, "drama": 18, "family": 10751,
-        "fantasy": 14, "history": 36, "horror": 27, "music": 10402,
-        "mystery": 9648, "romance": 10749, "sci-fi": 878, "science fiction": 878,
-        "thriller": 53, "war": 10752, "western": 37
-    }
+    ai_reply = f"Here are the best matches for your mood, {username}!"
+    search_query = user_message
+    lower_msg = user_message.lower()
 
-    detected_genres = [gid for word, gid in genre_map.items() if word in user_message]
-    
-    if detected_genres:
-        genres_str = ",".join(map(str, detected_genres))
-        tmdb_url = f"https://api.themoviedb.org/3/discover/movie?api_key={TMDB_API_KEY}&with_genres={genres_str}&sort_by=vote_average.desc"
+    if client:
+        try:
+            prompt = f"User message: '{user_message}'. Respond as Nova, a friendly, warm AI movie companion. Also extract the best concise movie search query terms for TMDB. Output format: REPLY: [friendly response] | QUERY: [search terms]"
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+            )
+            text = response.text
+            if "|" in text:
+                parts = text.split("|")
+                ai_reply = parts[0].replace("REPLY:", "").strip()
+                search_query = parts[1].replace("QUERY:", "").strip()
+        except Exception as e:
+            pass
+
+    # Enforce strict language filtering based on regional keywords
+    lang_filter = ""
+    if "thailand" in lower_msg or "thai" in lower_msg:
+        lang_filter = "&with_original_language=th"
+    elif "korea" in lower_msg or "korean" in lower_msg:
+        lang_filter = "&with_original_language=ko"
+    elif "japan" in lower_msg or "japanese" in lower_msg:
+        lang_filter = "&with_original_language=ja"
+
+    if lang_filter:
+        tmdb_url = f"https://api.themoviedb.org/3/discover/movie?api_key={TMDB_API_KEY}{lang_filter}&sort_by=popularity.desc"
     else:
-        stop_words = {"i", "want", "a", "movie", "set", "in", "with", "twist", "of", "and", "the", "to", "about", "an", "is", "that"}
-        query_words = [w for w in user_message.split() if w not in stop_words]
-        query_str = " ".join(query_words) if query_words else user_message
-        tmdb_url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&query={requests.utils.quote(query_str)}"
-
+        tmdb_url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&query={requests.utils.quote(search_query)}"
+    
     try:
         res = requests.get(tmdb_url).json()
         results = res.get("results", [])
         
         if not results:
-            fallback_res = requests.get(f"https://api.themoviedb.org/3/movie/popular?api_key={TMDB_API_KEY}&page=1").json()
-            results = fallback_res.get("results", [])
+            fallback = requests.get(f"https://api.themoviedb.org/3/movie/popular?api_key={TMDB_API_KEY}&page=1").json()
+            results = fallback.get("results", [])
 
         selected_pool = results[:4]
-
         movies = []
         for m in selected_pool:
             movie_id = m.get("id")
@@ -202,15 +215,12 @@ def chat():
                 "vote_average": m.get("vote_average", 0.0),
                 "release_date": m.get("release_date", "2026"),
                 "overview": m.get("overview") or "No overview available.",
-                "match": 98,
+                "match": 99,
                 "platforms": platforms,
-                "rationale": f"Matched via intent & genre filtering for '{user_message}'."
+                "rationale": f"Curated via Gemini & regional filter for '{user_message}'."
             })
-
-        ai_reply = f"Here are the most accurate movie matches for your prompt, {username}:"
     except Exception as e:
         movies = []
-        ai_reply = "Neural search hit a temporary glitch. Try asking me again!"
 
     return jsonify({"reply": ai_reply, "movies": movies})
 
