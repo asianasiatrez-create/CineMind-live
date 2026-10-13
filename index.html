@@ -242,7 +242,7 @@ z-index: -2; pointer-events: none;
 <i class="fa-solid fa-tv"></i> <span>Checking streaming availability...</span>
 </div>
 <div class="ai-rationale-box">
-<span class="ai-rationale-title"><i class="fa-solid fa-brain"></i> CineMind AI Rationale</span>
+<span class="ai-rationale-title"><i class="fa-solid fa-brain"></i> CineMind AI Explainable Rationale (XAI)</span>
 <span class="ai-rationale-text" id="modalRationale">Analyzing vector confidence...</span>
 </div>
 <p class="modal-overview" id="modalOverview"></p>
@@ -312,7 +312,7 @@ z-index: -2; pointer-events: none;
 
 <script>
 const TMDB_API_KEY = "3dc27f9ae386c422fdc5994e6fda6823"; 
-const BACKEND_URL = "https://cinemind-live.onrender.com"; // Connected to live Render server
+const BACKEND_URL = "https://cinemind-live.onrender.com"; // Live Render backend
 
 let currentMovieData = null;
 let currentUser = localStorage.getItem('cinemind_auth_user') || null;
