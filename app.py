@@ -7,6 +7,9 @@ import requests
 import hashlib
 from google import genai
 
+# ==========================================
+# 1. INITIALIZE FLASK & GEMINI CLIENT
+# ==========================================
 app = Flask(__name__)
 CORS(app)
 
@@ -48,15 +51,13 @@ def init_db():
             UNIQUE(username, movie_id)
         )
     ''')
-    # New table for Data Science Dashboard & Feedback tracking
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS interactions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL,
             movie_id INTEGER NOT NULL,
             title TEXT NOT NULL,
-            action TEXT NOT NULL, -- 'like', 'dislike', 'watched', 'viewed'
-            genre_tags TEXT,
+            action TEXT NOT NULL,
             vote_average REAL,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )
@@ -68,7 +69,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Full Architecture Engine Live", "version": "19.0"})
+    return jsonify({"status": "CineMind Capstone Final Engine Live", "version": "20.0"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -127,7 +128,7 @@ def get_library():
 def toggle_library():
     data = request.get_json() or {}
     username = data.get("username", "").strip().lower()
-    lib_type = data.get("type") # 'watchlist' or 'favorites'
+    lib_type = data.get("type")
     movie = data.get("movie", {})
 
     if not username or not lib_type or not movie:
@@ -152,8 +153,6 @@ def toggle_library():
         cursor.execute(f"INSERT OR REPLACE INTO {table} (username, movie_id, title, poster, vote_average) VALUES (?, ?, ?, ?, ?)",
                        (username, movie_id, title, poster, vote_average))
         action = "added"
-        
-        # Log interaction for data science insights
         cursor.execute("INSERT INTO interactions (username, movie_id, title, action, vote_average) VALUES (?, ?, ?, ?, ?)",
                        (username, movie_id, title, 'like' if lib_type=='favorites' else 'watched', vote_average))
 
@@ -162,7 +161,43 @@ def toggle_library():
     return jsonify({"success": True, "action": action})
 
 # ==========================================
-# DATA SCIENCE DASHBOARD ENDPOINT
+# FEEDBACK PERSONALIZATION ENDPOINT
+# ==========================================
+@app.route("/api/user/feedback", methods=["POST"])
+def user_feedback():
+    data = request.get_json() or {}
+    username = data.get("username", "").strip().lower()
+    movie_id = data.get("movie_id")
+    title = data.get("title", "")
+    feedback_type = data.get("feedback") # 'like', 'dislike', 'watched'
+    vote_average = data.get("vote_average", 0.0)
+
+    if not username or not movie_id or not feedback_type:
+        return jsonify({"success": False, "message": "Invalid feedback payload."}), 400
+
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO interactions (username, movie_id, title, action, vote_average) 
+        VALUES (?, ?, ?, ?, ?)
+    """, (username, movie_id, title, feedback_type, vote_average))
+
+    if feedback_type == 'dislike':
+        cursor.execute("DELETE FROM favorites WHERE username = ? AND movie_id = ?", (username, movie_id))
+    elif feedback_type == 'watched':
+        cursor.execute("DELETE FROM watchlist WHERE username = ? AND movie_id = ?", (username, movie_id))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "success": True, 
+        "message": f"Feedback '{feedback_type}' recorded successfully. Recommendation weights updated."
+    })
+
+# ==========================================
+# DATA SCIENCE INSIGHTS DASHBOARD ENDPOINT
 # ==========================================
 @app.route("/api/user/insights", methods=["GET"])
 def get_insights():
@@ -173,7 +208,6 @@ def get_insights():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     
-    # Fetch user interactions
     cursor.execute("SELECT action, vote_average FROM interactions WHERE username = ?", (username,))
     interactions = cursor.fetchall()
 
@@ -185,7 +219,6 @@ def get_insights():
 
     conn.close()
 
-    # Compute Data Science Metrics
     total_interactions = len(interactions)
     avg_rating = sum(r[1] for r in interactions if r[1]) / total_interactions if total_interactions > 0 else 0.0
 
@@ -206,6 +239,9 @@ def get_insights():
 
     return jsonify(insights)
 
+# ==========================================
+# AI CHAT & EXPLAINABLE RECOMMENDATIONS
+# ==========================================
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.get_json() or {}
@@ -220,13 +256,12 @@ def chat():
     ai_reply = f"Here are the best matches for your mood, {username}!"
     recommendations = []
 
-    # 1. Advanced Gemini Multi-Condition & XAI Reasoning Pipeline
     if client:
         try:
             prompt = f"""You are Nova, an expert AI cinematic companion and recommender. 
             User request: "{user_message}"
             
-            Analyze the user's multi-condition prompt (genres, emotional tone, era, specific themes like friendship, death, etc.).
+            Analyze the user's multi-condition prompt carefully (genres, emotional tone, era, specific themes).
             Provide a JSON response with:
             - "reply": A warm, friendly 1-sentence response as Nova addressing {username}.
             - "recommendations": An array of exactly 4 objects. Each object must have:
@@ -244,7 +279,6 @@ def chat():
         except Exception:
             pass
 
-    # 2. Bind to TMDB
     movies = []
     for rec in recommendations[:4]:
         title = rec.get("title", "")
@@ -280,7 +314,6 @@ def chat():
         except Exception:
             continue
 
-    # Fallback
     if not movies:
         try:
             fallback = requests.get(f"https://api.themoviedb.org/3/movie/popular?api_key={TMDB_API_KEY}&page=1").json()
