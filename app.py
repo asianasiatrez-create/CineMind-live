@@ -66,7 +66,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Final Defense Engine Live", "version": "25.0"})
+    return jsonify({"status": "CineMind Defense Engine Live", "version": "30.0"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -163,7 +163,7 @@ def user_feedback():
     username = data.get("username", "").strip().lower()
     movie_id = data.get("movie_id")
     title = data.get("title", "")
-    feedback_type = data.get("feedback")
+    feedback_type = data.get("feedback") # 'like', 'dislike', 'watched'
     vote_average = data.get("vote_average", 0.0)
 
     if not username or not movie_id or not feedback_type:
@@ -206,7 +206,7 @@ def get_insights():
         "total_liked": total_liked,
         "total_watchlist": total_watchlist,
         "average_rating_of_interest": round(avg_rating, 2),
-        "dominant_mood": "Immersive & Narrative-Driven",
+        "dominant_mood": "Immersive & Multi-Condition",
         "genre_distribution": {"Drama": 35, "Sci-Fi": 25, "Romance": 20, "Action": 20}
     }
     return jsonify(insights)
@@ -269,12 +269,6 @@ def chat():
                 flatrate = reg_prov.get("flatrate", [])
                 platforms = [p.get("provider_name") for p in flatrate] if flatrate else ["TMDB VOD Catalog"]
 
-                match_val = 99
-                try:
-                    match_val = int(rec.get("match", 99))
-                except Exception:
-                    pass
-
                 movies.append({
                     "id": movie_id,
                     "title": m.get("title"),
@@ -282,7 +276,7 @@ def chat():
                     "vote_average": m.get("vote_average", 0.0),
                     "release_date": m.get("release_date", "2026"),
                     "overview": m.get("overview") or "No overview available.",
-                    "match": match_val,
+                    "match": 99,
                     "platforms": platforms,
                     "rationale": rationale
                 })
