@@ -1,5 +1,4 @@
 import os
-import json
 import sqlite3
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -55,7 +54,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Debug Engine Live", "version": "15.0"})
+    return jsonify({"status": "CineMind Ultimate Engine Live", "version": "16.0"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -159,43 +158,26 @@ def chat():
     ai_reply = f"Here are the best matches for your mood, {username}!"
     movie_titles = []
 
-    # 1. Attempt Gemini AI
+    # 1. Standard Safe Gemini Call
     if client:
         try:
             prompt = f"""You are Nova, an expert AI movie recommender. 
             User request: "{user_message}"
-            Provide a JSON response with:
-            - "reply": A warm, friendly 1-sentence response as Nova addressing {username}.
-            - "titles": An array of exactly 4 real, existing movie titles that accurately match the user's request."""
+            List exactly 4 real, existing movie titles that match this request, separated ONLY by commas. Do not include numbers or extra text. Example: Titanic, Inception, Interstellar, Gladiator"""
 
             response = client.models.generate_content(
                 model="gemini-1.5-flash",
-                contents=prompt,
-                config={'response_mime_type': 'application/json'}
+                contents=prompt
             )
-            res_data = json.loads(response.text)
-            ai_reply = res_data.get("reply", ai_reply)
-            movie_titles = res_data.get("titles", [])
-        except Exception as e:
-            ai_reply = f"I processed your request, {username}!"
+            if response and response.text:
+                text = response.text.strip()
+                movie_titles = [t.strip() for t in text.split(",") if t.strip()]
+        except Exception:
+            pass
 
-    # 2. GUARANTEED FALLBACK: If Gemini failed or key is missing, parse words so it NEVER falls back to Spider-Man
-    if not movie_titles:
-        stop_words = {"i", "want", "a", "movie", "wherein", "the", "main", "character", "will", "die", "about", "set", "in", "with", "and", "to", "an", "is", "that"}
-        keywords = [w for w in lower_msg.split() if w not in stop_words and len(w) > 2]
-        query_str = " ".join(keywords) if keywords else user_message
-        
-        # Search TMDB using their actual words
-        search_url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&query={requests.utils.quote(query_str)}"
-        s_res = requests.get(search_url).json()
-        results = s_res.get("results", [])
-        movie_titles = [m.get("title") for m in results[:4]]
-
-    # 3. Fetch movies from TMDB
+    # 2. Fetch movies from TMDB based on AI titles
     movies = []
-    titles_to_fetch = movie_titles if isinstance(movie_titles, list) else [user_message]
-    
-    for title in titles_to_fetch[:4]:
+    for title in movie_titles[:4]:
         try:
             search_url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&query={requests.utils.quote(title)}"
             s_res = requests.get(search_url).json()
@@ -223,6 +205,33 @@ def chat():
                 })
         except Exception:
             continue
+
+    # 3. GUARANTEED DISCOVER/TOP-RATED FALLBACK (Never returns empty [])
+    if not movies:
+        genre_map = {"action": 28, "comedy": 35, "horror": 27, "romance": 10749, "drama": 18, "thriller": 53, "sci-fi": 878}
+        detected_genre = next((str(gid) for word, gid in genre_map.items() if word in lower_msg), "18") # Default to Drama if emotional/dying
+        lang_code = "th" if "thai" in lower_msg else ("ko" if "korean" in lower_msg or "korea" in lower_msg else ("ja" if "japan" in lower_msg else ""))
+        
+        fallback_url = f"https://api.themoviedb.org/3/discover/movie?api_key={TMDB_API_KEY}&with_genres={detected_genre}&sort_by=popularity.desc"
+        if lang_code:
+            fallback_url += f"&with_original_language={lang_code}"
+            
+        try:
+            f_res = requests.get(fallback_url).json()
+            for m in f_res.get("results", [])[:4]:
+                movies.append({
+                    "id": m.get("id"),
+                    "title": m.get("title"),
+                    "poster": f"https://image.tmdb.org/t/p/w500{m.get('poster_path')}" if m.get('poster_path') else "",
+                    "vote_average": m.get("vote_average", 0.0),
+                    "release_date": m.get("release_date", "2026"),
+                    "overview": m.get("overview") or "No overview available.",
+                    "match": 98,
+                    "platforms": ["TMDB VOD Catalog"],
+                    "rationale": "Curated via smart fallback filter."
+                })
+        except Exception:
+            pass
 
     return jsonify({"reply": ai_reply, "movies": movies})
 
