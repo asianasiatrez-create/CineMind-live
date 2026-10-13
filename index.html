@@ -1,336 +1,992 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CineMind - Advanced AI Movie Recommendation & Data Science Engine</title>
-    <style>
-        :root {
-            --bg-color: #0b0f19;
-            --card-bg: #131b2e;
-            --accent-pink: #ff2a85;
-            --accent-cyan: #00f0ff;
-            --text-main: #ffffff;
-            --text-muted: #94a3b8;
-            --border-color: #1e293b;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
-        
-        /* Sidebar Layout */
-        .sidebar { width: 280px; background: var(--card-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 25px; z-index: 10; }
-        .logo-area { display: flex; align-items: center; gap: 12px; font-size: 22px; font-weight: bold; color: var(--accent-cyan); margin-bottom: 35px; }
-        .user-profile-badge { background: #0b0f19; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 25px; display: flex; flex-direction: column; gap: 4px; }
-        .user-name { font-weight: bold; font-size: 15px; color: var(--text-main); }
-        .user-status { font-size: 12px; color: var(--accent-cyan); }
-        
-        .nav-section-title { font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 10px; margin-top: 15px; }
-        .nav-item { padding: 12px 16px; border-radius: 8px; cursor: pointer; color: var(--text-muted); margin-bottom: 6px; transition: all 0.2s ease; font-size: 14px; display: flex; align-items: center; gap: 10px; }
-        .nav-item:hover, .nav-item.active { background: #1e293b; color: var(--text-main); transform: translateX(4px); }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CineMind | AI & Data-Driven Cinema Intelligence</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600&display=swap');
 
-        /* Main Content Layout */
-        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 35px; position: relative; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .hero-title { font-size: 28px; font-weight: bold; }
-        .hero-title span { color: var(--accent-pink); }
-        .header-action-btn { background: var(--accent-cyan); border: none; padding: 12px 22px; border-radius: 10px; font-weight: bold; cursor: pointer; color: #0b0f19; transition: opacity 0.2s; }
-        .header-action-btn:hover { opacity: 0.85; }
+:root {
+--bg-deep: #020008;
+--sidebar-bg: rgba(6, 3, 18, 0.85);
+--panel-bg: rgba(14, 10, 36, 0.65);
+--primary-glow: #c084fc;
+--secondary-glow: #38bdf8;
+--accent-pink: #f43f5e;
+--glass-border: rgba(56, 189, 248, 0.25);
+--glass-border-hover: rgba(192, 132, 252, 0.6);
+--text-main: #ffffff;
+--text-muted: #94a3b8;
+}
 
-        /* Control Panel & Nova Chat Box */
-        .control-panel { background: var(--card-bg); padding: 25px; border-radius: 16px; margin-bottom: 30px; border: 1px solid var(--border-color); box-shadow: 0 4px 25px rgba(0,0,0,0.4); }
-        .chat-bar { display: flex; gap: 12px; }
-        .chat-input { flex: 1; padding: 15px 18px; background: #0b0f19; border: 1px solid #334155; color: white; border-radius: 10px; font-size: 15px; outline: none; transition: border-color 0.2s; }
-        .chat-input:focus { border-color: var(--accent-cyan); }
-        .chat-btn { padding: 15px 28px; background: var(--accent-pink); border: none; color: white; font-weight: bold; border-radius: 10px; cursor: pointer; transition: opacity 0.2s; font-size: 15px; }
-        .chat-btn:hover { opacity: 0.9; }
-        .nova-reply-box { margin-top: 15px; font-style: italic; color: var(--accent-cyan); font-size: 14px; background: rgba(0, 240, 255, 0.05); padding: 10px 14px; border-radius: 8px; border-left: 3px solid var(--accent-cyan); }
-        
-        /* Quick Prompt Chips & Filter Section */
-        .filter-group { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; align-items: center; }
-        .filter-label { font-size: 12px; color: var(--text-muted); font-weight: bold; }
-        .chip { padding: 8px 15px; background: #0b0f19; border: 1px solid #334155; border-radius: 20px; font-size: 13px; cursor: pointer; color: var(--text-muted); transition: all 0.2s; }
-        .chip:hover { border-color: var(--accent-cyan); color: var(--text-main); background: #1e293b; }
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; color: var(--text-main); -webkit-font-smoothing: antialiased; }
+html, body { width: 100%; min-height: 100vh; background-color: var(--bg-deep); overflow-x: hidden; }
+body { display: flex; flex-direction: column; }
 
-        /* Section Heading */
-        .section-heading { font-size: 20px; font-weight: bold; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
-        
-        /* Movie Cards Grid Layout */
-        .movies-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 22px; margin-bottom: 40px; }
-        .movie-card { background: var(--card-bg); border-radius: 14px; overflow: hidden; border: 1px solid var(--border-color); display: flex; flex-direction: column; transition: transform 0.2s ease, box-shadow 0.2s ease; }
-        .movie-card:hover { transform: translateY(-6px); box-shadow: 0 12px 30px rgba(0,0,0,0.5); }
-        .movie-poster { width: 100%; height: 310px; object-fit: cover; background: #1e293b; }
-        .movie-info { padding: 16px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
-        .movie-title { font-size: 16px; font-weight: bold; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .movie-meta { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-        
-        /* Explainable AI (XAI) Badge Styling */
-        .xai-badge { background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.3); color: var(--accent-cyan); font-size: 11px; padding: 7px 10px; border-radius: 8px; margin: 10px 0; line-height: 1.4; }
-        
-        /* Feedback Personalization Buttons */
-        .feedback-buttons { display: flex; gap: 6px; margin-top: 12px; }
-        .fb-btn { flex: 1; padding: 7px 4px; font-size: 11px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; background: #1e293b; color: var(--text-main); transition: background 0.2s; }
-        .fb-btn.like:hover { background: var(--accent-pink); }
-        .fb-btn.dislike:hover { background: #ef4444; }
-        .fb-btn.watched:hover { background: #10b981; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: rgba(3, 1, 12, 0.9); }
+::-webkit-scrollbar-thumb { background: linear-gradient(var(--secondary-glow), var(--primary-glow)); border-radius: 4px; }
 
-        /* Data Science Insights Dashboard Modal */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(5px); }
-        .modal-content { background: var(--card-bg); padding: 40px; border-radius: 18px; width: 560px; border: 1px solid var(--accent-cyan); box-shadow: 0 15px 50px rgba(0,240,255,0.25); animation: modalPop 0.3s ease; }
-        @keyframes modalPop { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .modal-title { font-size: 24px; font-weight: bold; margin-bottom: 6px; color: var(--accent-cyan); }
-        .modal-subtitle { color: var(--text-muted); font-size: 13px; margin-bottom: 25px; line-height: 1.4; }
-        .metric-row { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border-color); font-size: 14px; }
-        .metric-row span { color: var(--text-muted); }
-        .metric-row strong { color: var(--text-main); }
-        .modal-close-btn { margin-top: 30px; width: 100%; padding: 14px; background: #ef4444; border: none; color: white; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 15px; transition: opacity 0.2s; }
-        .modal-close-btn:hover { opacity: 0.9; }
+.cosmic-bg {
+position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+background: radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.15) 0%, transparent 40%),
+radial-gradient(circle at 90% 80%, rgba(192, 132, 252, 0.18) 0%, transparent 45%),
+radial-gradient(circle at 50% 50%, rgba(244, 63, 94, 0.08) 0%, transparent 50%),
+linear-gradient(to bottom, #020008, #070314);
+z-index: -2; pointer-events: none;
+}
 
-        /* Extra Analytics & Trends Widget Styling */
-        .trends-banner { background: linear-gradient(135deg, #131b2e 0%, #1a103c 100%); border: 1px solid var(--border-color); border-radius: 14px; padding: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
-        .trends-text h4 { color: var(--accent-pink); font-size: 15px; margin-bottom: 4px; }
-        .trends-text p { font-size: 13px; color: var(--text-muted); }
-    </style>
+.app-layout { display: flex; width: 100%; max-width: 1750px; margin: 0 auto; min-height: 100vh; padding: 32px; gap: 32px; }
+
+.sidebar { width: 300px; background: var(--sidebar-bg); border: 1px solid var(--glass-border); border-radius: 32px; padding: 30px 24px; display: flex; flex-direction: column; z-index: 10; justify-content: flex-start; gap: 24px; flex-shrink: 0; box-shadow: 0 30px 70px rgba(0,0,0,0.9); backdrop-filter: blur(30px); }
+.logo-free-wrapper { display: flex; justify-content: center; align-items: center; width: 100%; margin-bottom: 5px; }
+.logo-unboxed { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 3px solid var(--secondary-glow); box-shadow: 0 0 50px rgba(56,189,248,0.7); transition: 0.4s; cursor: pointer; display: block; }
+.logo-unboxed:hover { transform: scale(1.12) rotate(6deg); box-shadow: 0 0 75px rgba(192,132,252,0.95); border-color: var(--primary-glow); }
+
+        /* Prominent Top Account Trigger */
+.account-top-btn { background: linear-gradient(135deg, rgba(192, 132, 252, 0.2), rgba(56, 189, 248, 0.2)); border: 1px solid var(--secondary-glow); padding: 14px 18px; border-radius: 18px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: 0.3s; width: 100%; box-shadow: 0 0 20px rgba(56,189,248,0.2); }
+.account-top-btn:hover { background: linear-gradient(135deg, rgba(192, 132, 252, 0.35), rgba(56, 189, 248, 0.35)); border-color: var(--primary-glow); transform: translateY(-2px); }
+.account-info { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+.account-name { font-weight: 700; font-size: 0.95rem; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.account-sub { font-size: 0.75rem; color: var(--secondary-glow); font-weight: 600; }
+
+.nav-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.nav-item { padding: 16px 20px; border-radius: 18px; cursor: pointer; color: var(--text-muted); font-weight: 600; font-size: 0.98rem; display: flex; align-items: center; gap: 16px; transition: 0.25s; border: 1px solid transparent; }
+.nav-item:hover { color: white; background: rgba(255,255,255,0.06); border-color: rgba(56,189,248,0.2); transform: translateX(6px); }
+.nav-item.active { background: linear-gradient(90deg, rgba(192,132,252,0.25), rgba(56,189,248,0.15)); border-left: 4px solid var(--secondary-glow); color: white; }
+
+.main-content { flex: 1; display: flex; flex-direction: column; gap: 32px; padding-bottom: 90px; min-width: 0; }
+.hero-banner { background: linear-gradient(135deg, rgba(18, 12, 48, 0.85), rgba(6, 3, 18, 0.95)); border: 1px solid var(--glass-border); border-radius: 32px; padding: 50px; display: flex; flex-direction: column; gap: 26px; box-shadow: 0 30px 70px rgba(0,0,0,0.85); backdrop-filter: blur(30px); }
+.welcome-title { font-size: clamp(2rem, 3.5vw, 2.8rem); font-weight: 800; color: #fff; line-height: 1.4; }
+.text-gradient { font-family: 'Playfair Display', serif; background: linear-gradient(to right, #f43f5e, var(--primary-glow), var(--secondary-glow)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-style: italic; font-weight: 600; }
+
+.hero-search-box { position: relative; width: 100%; max-width: 750px; display: flex; gap: 12px; }
+.hero-search-box input { flex: 1; background: rgba(3, 2, 10, 0.95); border: 1.5px solid var(--glass-border); border-radius: 40px; padding: 20px 28px 20px 65px; outline: none; color: white; font-size: 1.08rem; }
+.hero-search-box input:focus { border-color: var(--secondary-glow); box-shadow: 0 0 35px rgba(56,189,248,0.6); }
+        .hero-search-box i.fa-brain { position: absolute; left: 26px; top: 50%; transform: translateY(-50%); color: var(--secondary-glow); font-size: 1.25rem; }
+        
+        /* Properly Centered Brain Icon for Desktop & Mobile */
+        .hero-search-box i.fa-brain { position: absolute; left: 26px; top: 50%; transform: translateY(-50%); color: var(--secondary-glow); font-size: 1.25rem; line-height: 1; }
+        
+.search-btn-submit { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); border: none; padding: 0 28px; border-radius: 30px; color: white; font-weight: 700; cursor: pointer; transition: 0.3s; }
+.search-btn-submit:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(56,189,248,0.6); }
+
+.filter-panel { display: flex; flex-direction: column; gap: 16px; background: var(--panel-bg); padding: 25px 32px; border-radius: 24px; border: 1px solid var(--glass-border); backdrop-filter: blur(20px); }
+.filter-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.filter-label { font-size: 0.95rem; font-weight: 700; color: var(--secondary-glow); min-width: 120px; }
+.filter-pill { background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); padding: 10px 22px; border-radius: 24px; font-size: 0.9rem; font-weight: 600; cursor: pointer; color: var(--text-muted); transition: 0.25s; }
+.filter-pill:hover, .filter-pill.active { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); color: white; border-color: transparent; box-shadow: 0 0 25px rgba(56,189,248,0.7); }
+
+.row-title { font-size: 1.5rem; font-weight: 800; color: white; display: flex; align-items: center; gap: 12px; }
+.catalog-container { display: flex; flex-direction: column; gap: 42px; }
+.row-section { display: flex; flex-direction: column; gap: 18px; }
+.movie-row { display: flex; gap: 24px; overflow-x: auto; padding: 18px 10px 30px 10px; scrollbar-width: thin; scrollbar-color: var(--secondary-glow) transparent; }
+
+.movie-card { min-width: 230px; width: 230px; background: var(--panel-bg); border-radius: 22px; overflow: hidden; border: 1px solid var(--glass-border); transition: 0.4s; cursor: pointer; display: flex; flex-direction: column; flex-shrink: 0; box-shadow: 0 15px 35px rgba(0,0,0,0.6); }
+.movie-card:hover { border-color: var(--secondary-glow); transform: translateY(-10px) scale(1.03); box-shadow: 0 30px 60px rgba(56, 189, 248, 0.5); }
+.movie-card img { width: 100%; height: 325px; object-fit: cover; }
+.movie-info { padding: 16px; display: flex; flex-direction: column; gap: 6px; background: linear-gradient(to top, rgba(8,4,20,0.95), rgba(14,10,36,0.8)); }
+.movie-title { font-weight: 700; font-size: 0.98rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.match-score { font-size: 0.85rem; font-weight: 700; color: #38bdf8; display: flex; align-items: center; gap: 6px; }
+.movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 26px; }
+
+        /* Cascading Accordion */
+.cascade-accordion { display: flex; flex-direction: column; gap: 16px; }
+.cascade-item { background: var(--panel-bg); border: 1px solid var(--glass-border); border-radius: 20px; overflow: hidden; backdrop-filter: blur(20px); transition: 0.3s; }
+.cascade-header { padding: 22px 28px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: 700; font-size: 1.1rem; color: var(--secondary-glow); }
+.cascade-header:hover { background: rgba(56, 189, 248, 0.05); }
+.cascade-body { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0, 1, 0, 1), padding 0.4s ease; padding: 0 28px; background: rgba(3, 1, 10, 0.4); }
+.cascade-item.active .cascade-body { max-height: 1000px; padding: 25px 28px; border-top: 1px solid var(--glass-border); }
+.cascade-item.active { border-color: var(--secondary-glow); box-shadow: 0 10px 30px rgba(56,189,248,0.2); }
+.cascade-icon { transition: transform 0.3s ease; }
+.cascade-item.active .cascade-icon { transform: rotate(180deg); }
+
+.analytics-grid-packed { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 15px; }
+.analytics-stat-card { background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 20px; border-radius: 16px; display: flex; flex-direction: column; gap: 8px; }
+.analytics-stat-card h4 { font-size: 0.9rem; color: var(--primary-glow); display: flex; align-items: center; gap: 8px; }
+.analytics-stat-card p { font-size: 1.2rem; font-weight: 800; color: white; }
+
+.nova-banner-clean { background: linear-gradient(135deg, rgba(192,132,252,0.2), rgba(56,189,248,0.2)); border: 1px solid var(--secondary-glow); border-radius: 28px; padding: 30px 35px; display: flex; align-items: center; justify-content: space-between; gap: 22px; backdrop-filter: blur(20px); }
+.nova-banner-clean img { width: 70px; height: 70px; object-fit: contain; }
+
+        /* Modal styling */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2, 0, 8, 0.9); z-index: 200; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.35s; backdrop-filter: blur(25px); padding: 20px; }
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+.modal-content { display: flex; gap: 30px; width: 850px; max-width: 100%; max-height: 85vh; background: linear-gradient(135deg, #120c30, #070314); padding: 35px; border-radius: 28px; position: relative; border: 1px solid var(--glass-border-hover); box-shadow: 0 40px 100px rgba(0,0,0,0.95); overflow-y: auto; }
+.modal-content img { width: 240px; height: 350px; object-fit: cover; border-radius: 18px; flex-shrink: 0; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+.modal-info { display: flex; flex-direction: column; gap: 16px; flex: 1; min-width: 0; overflow-y: auto; max-height: 72vh; padding-right: 5px; }
+.close-modal { position: absolute; top: 22px; right: 25px; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); transition: 0.2s; z-index: 10; }
+.close-modal:hover { color: white; }
+
+.ai-rationale-box { background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.4); padding: 14px 18px; border-radius: 16px; display: flex; flex-direction: column; gap: 4px; }
+.ai-rationale-title { font-size: 0.85rem; font-weight: 700; color: var(--secondary-glow); display: flex; align-items: center; gap: 8px; }
+.ai-rationale-text { font-size: 0.88rem; color: var(--text-muted); line-height: 1.45; }
+
+.streaming-providers { font-size: 0.85rem; color: #38bdf8; font-weight: 600; display: flex; align-items: center; gap: 8px; background: rgba(56,189,248,0.1); padding: 8px 14px; border-radius: 12px; border: 1px solid rgba(56,189,248,0.3); }
+
+.modal-actions { display: flex; gap: 12px; margin-top: auto; flex-wrap: wrap; }
+.btn-action { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); border: none; padding: 12px 24px; border-radius: 26px; color: white; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; font-size: 0.9rem; }
+.btn-action:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(56,189,248,0.8); }
+.btn-trailer { background: linear-gradient(135deg, #f43f5e, #e11d48); }
+.btn-fav { background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border); }
+
+.chat-wrapper { position: fixed; bottom: 30px; right: 30px; z-index: 100; display: flex; align-items: flex-end; flex-direction: column; gap: 16px; }
+.chat-tooltip { background: #0f0a28; padding: 12px 20px; border-radius: 20px; font-size: 0.9rem; font-weight: 600; border: 1px solid var(--secondary-glow); box-shadow: 0 6px 25px rgba(56,189,248,0.3); }
+.nova-chathead { width: 75px; height: 75px; background: #0f0a28; border: 2.5px solid var(--secondary-glow); border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.4s; box-shadow: 0 0 30px rgba(56, 189, 248, 0.6); overflow: hidden; padding: 4px; }
+.nova-chathead img { width: 100%; height: 100%; object-fit: cover; }
+
+.chat-modal { width: 420px; max-width: calc(100vw - 30px); background: #080414; border-radius: 30px; border: 1px solid var(--glass-border-hover); box-shadow: 0 30px 80px rgba(0,0,0,0.95); display: flex; flex-direction: column; position: absolute; bottom: 95px; right: 0; opacity: 0; pointer-events: none; transition: 0.25s; }
+.chat-modal.active { opacity: 1; pointer-events: auto; }
+.chat-header { padding: 20px 24px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
+.chat-body { padding: 20px; height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; background: rgba(3, 1, 10, 0.9); }
+.chat-bubble { padding: 12px 16px; border-radius: 16px; font-size: 0.95rem; line-height: 1.5; max-width: 88%; word-break: break-word; }
+.ai-bubble { background: #160f38; border: 1px solid rgba(56, 189, 248, 0.4); color: #fff; align-self: flex-start; }
+.user-bubble { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); color: #fff; align-self: flex-end; }
+.quick-chips { display: flex; gap: 8px; padding: 12px 18px; overflow-x: auto; background: rgba(8, 4, 20, 0.95); border-top: 1px solid var(--glass-border); scrollbar-width: none; }
+.chip { background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); padding: 6px 14px; border-radius: 14px; font-size: 0.8rem; font-weight: 600; cursor: pointer; color: var(--text-muted); white-space: nowrap; transition: 0.2s; }
+.chip:hover { background: var(--primary-glow); color: white; }
+.chat-footer { padding: 14px 20px; border-top: 1px solid var(--glass-border); display: flex; gap: 10px; background: rgba(8, 4, 20, 0.95); }
+.chat-footer input { flex: 1; background: #160f38; border: 1px solid var(--glass-border); border-radius: 20px; padding: 12px 18px; outline: none; font-size: 0.95rem; color: white; }
+.send-btn { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+@media (max-width: 1100px) {
+.app-layout { flex-direction: column; padding: 12px; gap: 16px; }
+.sidebar { width: 100%; height: auto; flex-direction: row; align-items: center; padding: 14px 20px; border-radius: 20px; justify-content: space-between; }
+.logo-free-wrapper { margin-bottom: 0; width: auto; }
+.logo-unboxed { width: 50px; height: 50px; }
+.account-top-btn { width: auto; padding: 8px 12px; }
+.account-info { display: none; }
+.nav-links { flex-direction: row; gap: 8px; overflow-x: auto; flex: unset; }
+.nav-item { padding: 10px 14px; font-size: 0.85rem; gap: 8px; }
+.nav-item span { display: none; }
+.main-content { width: 100%; padding: 0; }
+.hero-banner { padding: 30px 20px; border-radius: 24px; }
+.hero-search-box { flex-direction: column; }
+.search-btn-submit { padding: 14px; border-radius: 24px; }
+.modal-content { flex-direction: column; padding: 25px; max-height: 90vh; }
+.modal-content img { width: 100%; height: 260px; }
+}
+</style>
 </head>
 <body>
+<div class="cosmic-bg"></div>
 
-    <!-- Sidebar Navigation -->
-    <div class="sidebar">
-        <div class="logo-area">🧠 CineMind AI</div>
-        
-        <div class="user-profile-badge">
-            <span class="user-name" id="sidebar-username">strwwvry</span>
-            <span class="user-status">● Cloud Synced & Active</span>
-        </div>
+<div class="app-layout">
+<!-- Sidebar Navigation with Prominent Top Account Button -->
+<aside class="sidebar">
+<div class="logo-free-wrapper">
+<img src="CineMind-Logo.png" alt="CineMind Logo" class="logo-unboxed" onerror="this.src='nova.png'">
+</div>
 
-        <div class="nav-section-title">Discovery Menu</div>
-        <div class="nav-item active" id="nav-home" onclick="switchTab('home')">🏠 Home & Search</div>
-        <div class="nav-item" id="nav-analytics" onclick="openInsights()">📊 Data Science Insights</div>
-        
-        <div class="nav-section-title">Personal Library</div>
-        <div class="nav-item" id="nav-watchlist" onclick="switchTab('watchlist')">📌 Watchlist</div>
-        <div class="nav-item" id="nav-favorites" onclick="switchTab('favorites')">❤️ Favorites</div>
-    </div>
+            <!-- Prominently Placed at the Top -->
+<div class="account-top-btn" id="openProfile" title="Click to log in or switch account">
+<i class="fa-solid fa-user-shield" style="color: var(--secondary-glow); font-size: 1.2rem;"></i>
+<div class="account-info">
+<span class="account-name" id="profileDisplayName">Guest User</span>
+<span class="account-sub" id="profileSubText">Tap to Login</span>
+</div>
+</div>
 
-    <!-- Main Content Area -->
-    <div class="main-content">
-        <div class="header">
-            <div>
-                <div class="hero-title">Neural Recommendations for <span id="username-display">strwwvry</span></div>
-                <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Powered by Gemini XAI & TMDB Live Catalog</p>
-            </div>
-            <button class="header-action-btn" onclick="openInsights()">📊 View Insights Dashboard</button>
-        </div>
+<ul class="nav-links">
+<li class="nav-item active" data-view="discover"><i class="fa-solid fa-house"></i> <span>Home</span></li>
+<li class="nav-item" data-view="nova"><i class="fa-solid fa-wand-magic-sparkles" style="color: #38bdf8;"></i> <span>Nova AI</span></li>
+<li class="nav-item" data-view="dataviz"><i class="fa-solid fa-chart-line" style="color: #c084fc;"></i> <span>Analytics</span></li>
+<li class="nav-item" data-view="watchlist"><i class="fa-solid fa-bookmark"></i> <span>Watchlist</span></li>
+<li class="nav-item" data-view="favorites"><i class="fa-solid fa-heart" style="color: #f43f5e;"></i> <span>Favorites</span></li>
+</ul>
+</aside>
 
-        <!-- AI Analytics Forecast Banner -->
-        <div class="trends-banner">
-            <div class="trends-text">
-                <h4>🔥 Neural Cinematic Forecast Active</h4>
-                <p id="forecast-text">Analytics indicate high demand for complex multi-condition narratives in Q4 2026.</p>
-            </div>
-            <div style="font-size: 24px;">🚀</div>
-        </div>
+<!-- Main Content Area -->
+<main class="main-content" id="scrollContainer">
+<div class="hero-banner" id="heroBanner">
+<div class="welcome-header">
+<h1 class="welcome-title">Hello <span class="text-gradient" id="welcomeName">Guest</span>,<br>Welcome back to Neural Cinema.</h1>
+</div>
+<div class="hero-search-box">
+<i class="fa-solid fa-brain"></i>
+<input type="text" id="searchInput" placeholder="Search movies or query AI naturally e.g. 'Mind-bending sci-fi set in space'...">
+<button class="search-btn-submit" id="searchSubmitBtn"><i class="fa-solid fa-search"></i> Search</button>
+</div>
+</div>
 
-        <!-- Nova AI Conversational Control Panel -->
-        <div class="control-panel">
-            <div class="chat-bar">
-                <input type="text" id="chat-input" class="chat-input" placeholder="Ask Nova naturally e.g., 'I want a sad romance with a happy ending'">
-                <button onclick="sendChatMessage()" class="chat-btn">Ask Nova</button>
-            </div>
-            <div id="nova-reply" class="nova-reply-box" style="display: none;"></div>
-            
-            <div class="filter-group">
-                <span class="filter-label">Quick Prompts:</span>
-                <span class="chip" onclick="quickPrompt('Korean romcom')">🇰🇷 Korean Romcom</span>
-                <span class="chip" onclick="quickPrompt('Mind-bending sci-fi set in space')">🌌 Sci-Fi</span>
-                <span class="chip" onclick="quickPrompt('Thai comedy movie about friends')">🇹🇭 Thai Comedy</span>
-                <span class="chip" onclick="quickPrompt('Sad romance with a happy ending')">💔 Sad Romance</span>
-                <span class="chip" onclick="quickPrompt('Underrated science fiction movie from the 2010s')">⏳ 2010s Sci-Fi</span>
-            </div>
-        </div>
+<div class="filter-panel" id="filterPanel">
+<div class="filter-row">
+<span class="filter-label">Genres:</span>
+<button class="filter-pill active" data-genre="">All</button>
+<button class="filter-pill" data-genre="28">Action</button>
+<button class="filter-pill" data-genre="12">Adventure</button>
+<button class="filter-pill" data-genre="16">Animation</button>
+<button class="filter-pill" data-genre="35">Comedy</button>
+<button class="filter-pill" data-genre="18">Drama</button>
+<button class="filter-pill" data-genre="14">Fantasy</button>
+<button class="filter-pill" data-genre="27">Horror</button>
+<button class="filter-pill" data-genre="10749">Romance</button>
+<button class="filter-pill" data-genre="878">Sci-Fi</button>
+<button class="filter-pill" data-genre="53">Thriller</button>
+</div>
+<div class="filter-row">
+<span class="filter-label">Streaming Region:</span>
+<button class="filter-pill active" data-region="PH">🇵🇭 Philippines</button>
+<button class="filter-pill" data-region="US">🇺🇸 USA</button>
+<button class="filter-pill" data-region="KR">🇰🇷 South Korea</button>
+<button class="filter-pill" data-region="JP">🇯🇵 Japan</button>
+<button class="filter-pill" data-region="GB">🇬🇧 UK</button>
+</div>
+</div>
 
-        <div class="section-heading">
-            <span id="section-heading-text">Recommended Movie Cards (Explainable AI Powered)</span>
-            <span style="font-size: 13px; color: var(--text-muted); font-weight: normal;" id="result-count">0 results</span>
-        </div>
-        
-        <div class="movies-grid" id="movies-container">
-            <p style="color: var(--text-muted);">Type a prompt above or click a quick prompt to let Nova generate recommendations with XAI rationales.</p>
-        </div>
-    </div>
+<div id="mainContainer" class="catalog-container"></div>
+</main>
+</div>
 
-    <!-- Data Science Insights Dashboard Modal -->
-    <div class="modal" id="insights-modal">
-        <div class="modal-content">
-            <div class="modal-title">📊 Data Science Insights Dashboard</div>
-            <div class="modal-subtitle">Real-time metrics computed from user interaction telemetry and SQLite preference weighting models.</div>
-            <div id="insights-data">
-                <div class="metric-row"><span>Total Recommendations Viewed:</span><strong id="ins-viewed">0</strong></div>
-                <div class="metric-row"><span>Total Liked Movies:</span><strong id="ins-liked">0</strong></div>
-                <div class="metric-row"><span>Watchlist Saved Items:</span><strong id="ins-watchlist">0</strong></div>
-                <div class="metric-row"><span>Average Rating of Interest:</span><strong id="ins-rating">0.0</strong></div>
-                <div class="metric-row"><span>Dominant Mood Profile:</span><strong id="ins-mood">Immersive & Narrative</strong></div>
-            </div>
-            <button class="modal-close-btn" onclick="closeInsights()">Close Dashboard</button>
-        </div>
-    </div>
+<!-- Movie Details Modal -->
+<div class="modal-overlay" id="movieModal">
+<div class="modal-content">
+<i class="fa-solid fa-xmark close-modal" id="closeModal"></i>
+<img id="modalPoster" src="" alt="Poster" onerror="this.src='https://via.placeholder.com/500x750?text=No+Poster'">
+<div class="modal-info">
+<h2 class="modal-title" id="modalTitle">Loading...</h2>
+<p class="modal-meta" id="modalMeta"></p>
+<div class="streaming-providers" id="modalProviders">
+<i class="fa-solid fa-tv"></i> <span>Checking streaming availability...</span>
+</div>
+<div class="ai-rationale-box">
+<span class="ai-rationale-title"><i class="fa-solid fa-brain"></i> CineMind AI Rationale</span>
+<span class="ai-rationale-text" id="modalRationale">Analyzing vector confidence...</span>
+</div>
+<p class="modal-overview" id="modalOverview"></p>
+<div class="modal-actions">
+<button class="btn-action btn-trailer" id="trailerBtn"><i class="fa-solid fa-play"></i> Watch Trailer</button>
+<button class="btn-action" id="watchlistBtn"><i class="fa-solid fa-plus"></i> Watchlist</button>
+<button class="btn-action btn-fav" id="favoriteBtn"><i class="fa-solid fa-heart"></i> Favorite</button>
+</div>
+</div>
+</div>
+</div>
 
-    <!-- Comprehensive Frontend Application Script -->
-    <script>
-        const API_BASE = "http://localhost:10000"; // Replace with live Render URL if deployed
-        let currentUser = "strwwvry";
+<!-- YouTube Trailer Modal -->
+<div class="modal-overlay" id="videoModal">
+<div class="video-box" style="width: 800px; max-width: 100%; background: #0f0a28; border-radius: 24px; border: 1px solid var(--glass-border); overflow: hidden; display: flex; flex-direction: column;">
+<div style="padding: 16px 22px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--glass-border);">
+<h3 id="videoModalTitle" style="font-size: 1.1rem; font-weight:700;">Official Trailer</h3>
+<i class="fa-solid fa-xmark close-modal" id="closeVideoModal" style="position:static; font-size:1.3rem;"></i>
+</div>
+<div class="video-wrapper" style="position: relative; width: 100%; padding-bottom: 56.25%;">
+<iframe id="youtubeIframe" src="" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" allowfullscreen></iframe>
+</div>
+</div>
+</div>
 
-        window.addEventListener('DOMContentLoaded', () => {
-            fetchTrends();
-        });
+<!-- Auth / Login Modal -->
+<div class="modal-overlay" id="profileModal">
+<div class="profile-box" style="width: 420px; max-width: 100%; background: #0f0a28; padding: 35px; border-radius: 28px; border: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 18px; position: relative;">
+<i class="fa-solid fa-xmark close-modal" id="closeProfileModal" style="top:25px; right:25px;"></i>
+<h2><i class="fa-solid fa-shield-halved" style="color: var(--secondary-glow);"></i> Cloud Account Login</h2>
+<p style="font-size: 0.85rem; color: var(--text-muted);" id="authMsg">Log in to sync your watchlist across all devices:</p>
+<div class="pref-group" style="display:flex; flex-direction:column; gap:12px;">
+<input type="text" id="authUsername" placeholder="Username..." style="width: 100%; background: #160f38; border: 1px solid var(--glass-border); border-radius: 14px; padding: 13px 18px; color: white; outline: none; font-size: 0.95rem;">
+<input type="password" id="authPassword" placeholder="Password..." style="width: 100%; background: #160f38; border: 1px solid var(--glass-border); border-radius: 14px; padding: 13px 18px; color: white; outline: none; font-size: 0.95rem;">
+</div>
+<div style="display: flex; gap: 10px;">
+<button class="btn-action" id="loginBtn" style="flex:1; justify-content:center;"><i class="fa-solid fa-right-to-bracket"></i> Login</button>
+<button class="btn-action btn-fav" id="signupBtn" style="flex:1; justify-content:center;"><i class="fa-solid fa-user-plus"></i> Sign Up</button>
+</div>
+<button id="logoutBtn" style="background:transparent; border:none; color:var(--accent-pink); font-size:0.85rem; cursor:pointer; display:none; margin-top:5px;"><i class="fa-solid fa-right-from-bracket"></i> Log out of current account</button>
+</div>
+</div>
 
-        async function fetchTrends() {
-            try {
-                const res = await fetch(`${API_BASE}/trends`);
-                const data = await res.json();
-                if(data.ai_forecast) {
-                    document.getElementById("forecast-text").innerText = data.ai_forecast;
-                }
-            } catch(e) {
-                console.log("Trends offline indicator");
-            }
-        }
+<!-- Floating Nova Chat Widget -->
+<div class="chat-wrapper">
+<div class="chat-tooltip" id="chatTooltip">Ask Nova anything ✨</div>
+<div class="chat-modal" id="chatModal">
+<div class="chat-header">
+<div><img src="nova.png" alt="Nova" style="width:24px; height:24px; vertical-align:middle; margin-right:6px; object-fit:contain;" onerror="this.src='assets/nova.png'"> Nova AI</div>
+<i class="fa-solid fa-xmark close-chat" id="closeChat" style="cursor: pointer;"></i>
+</div>
+<div class="chat-body" id="chatHistory">
+<div class="chat-bubble ai-bubble" id="novaGreeting">Hi! 👽 I'm Nova. Tell me your movie mood today!</div>
+</div>
+<div class="quick-chips">
+<span class="chip" onclick="sendQuickPrompt('Korean romcom')">🇰🇷 Korean Romcom</span>
+<span class="chip" onclick="sendQuickPrompt('Mind-bending sci-fi')">🧠 Sci-Fi</span>
+<span class="chip" onclick="sendQuickPrompt('Heartbreaking sad romance')">💔 Sad Romance</span>
+<span class="chip" onclick="sendQuickPrompt('Action blockbusters')">💥 Action</span>
+</div>
+<div class="chat-footer">
+<input type="text" id="chatInput" placeholder="Ask Nova..." autocomplete="off">
+<button class="send-btn" id="sendBtn"><i class="fa-solid fa-paper-plane" style="color: white; font-size: 0.85rem;"></i></button>
+</div>
+</div>
+<div class="nova-chathead" id="chatToggle">
+<img src="nova.png" alt="Nova" onerror="this.src='assets/nova.png'">
+</div>
+</div>
 
-        async function sendChatMessage() {
-            const msg = document.getElementById("chat-input").value.trim();
-            if(!msg) return;
+<script>
+const TMDB_API_KEY = "3dc27f9ae386c422fdc5994e6fda6823"; 
+const BACKEND_URL = "https://cinemind-live.onrender.com";
 
-            const replyBox = document.getElementById("nova-reply");
-            replyBox.style.display = "block";
-            replyBox.innerText = "Nova is reasoning through your multi-condition request...";
-            
-            try {
-                const res = await fetch(`${API_BASE}/chat`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ message: msg, profile: { name: currentUser }, region: "PH" })
-                });
-                const data = await res.json();
-                
-                replyBox.innerText = data.reply;
-                renderMovies(data.movies);
-            } catch (err) {
-                console.error(err);
-                replyBox.innerText = "Connection error with backend server.";
-            }
-        }
+let currentMovieData = null;
+let currentUser = localStorage.getItem('cinemind_auth_user') || null;
+let watchlist = [];
+let favorites = [];
+let selectedRegion = localStorage.getItem('cinemind_region') || "PH";
 
-        function quickPrompt(text) {
-            document.getElementById("chat-input").value = text;
-            sendChatMessage();
-        }
+let conversationHistory = [];
+let currentView = "discover";
+let selectedGenre = "";
+let selectedCountry = "";
 
-        function renderMovies(movies) {
-            const container = document.getElementById("movies-container");
-            container.innerHTML = "";
-            document.getElementById("result-count").innerText = `${movies.length} results`;
+function playSciFiChime() {
+try {
+const ctx = new (window.AudioContext || window.webkitAudioContext)();
+const osc = ctx.createOscillator();
+const gain = ctx.createGain();
+osc.type = 'sine';
+osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
+gain.gain.setValueAtTime(0.08, ctx.currentTime);
+gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+osc.connect(gain);
+gain.connect(ctx.destination);
+osc.start();
+osc.stop(ctx.currentTime + 0.3);
+} catch(e) {}
+}
 
-            if(!movies || movies.length === 0) {
-                container.innerHTML = "<p style='color: var(--text-muted);'>No movies found matching this criteria.</p>";
-                return;
-            }
+const mainContainer = document.getElementById('mainContainer');
+const searchInput = document.getElementById('searchInput');
+const searchSubmitBtn = document.getElementById('searchSubmitBtn');
+const filterPanel = document.getElementById('filterPanel');
+const heroBanner = document.getElementById('heroBanner');
+const navItems = document.querySelectorAll('.nav-item');
 
-            movies.forEach(m => {
-                const safeTitle = (m.title || "").replace(/'/g, "");
-                container.innerHTML += `
-                    <div class="movie-card">
-                        <img src="${m.poster}" class="movie-poster" onerror="this.src='https://via.placeholder.com/230x310?text=No+Poster'">
-                        <div class="movie-info">
-                            <div>
-                                <div class="movie-title" title="${m.title}">${m.title}</div>
-                                <div class="movie-meta">
-                                    <span>⭐ ${m.vote_average || 'N/A'}</span>
-                                    <span>📅 ${m.release_date || '2026'}</span>
-                                </div>
-                                <div class="xai-badge">💡 XAI: ${m.rationale || 'Matched via AI analysis.'}</div>
-                            </div>
-                            <div class="feedback-buttons">
-                                <button class="fb-btn like" onclick="sendFeedback(${m.id}, '${safeTitle}', 'like', ${m.vote_average || 0})">❤️ Like</button>
-                                <button class="fb-btn dislike" onclick="sendFeedback(${m.id}, '${safeTitle}', 'dislike', ${m.vote_average || 0})">🚫 Skip</button>
-                                <button class="fb-btn watched" onclick="sendFeedback(${m.id}, '${safeTitle}', 'watched', ${m.vote_average || 0})">👀 Watched</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-        }
+const profileModal = document.getElementById('profileModal');
+const profileDisplayName = document.getElementById('profileDisplayName');
+const profileSubText = document.getElementById('profileSubText');
+const welcomeName = document.getElementById('welcomeName');
+const novaGreeting = document.getElementById('novaGreeting');
+const logoutBtn = document.getElementById('logoutBtn');
 
-        async function sendFeedback(movieId, title, feedbackType, voteAvg) {
-            try {
-                const res = await fetch(`${API_BASE}/api/user/feedback`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ username: currentUser, movie_id: movieId, title: title, feedback: feedbackType, vote_average: voteAvg })
-                });
-                const data = await res.json();
-                if(data.success) {
-                    alert(`Feedback '${feedbackType}' registered successfully. Database weights updated!`);
-                }
-            } catch (err) {
-                console.error(err);
-                alert("Failed to submit feedback.");
-            }
-        }
+async function syncCloudLibrary() {
+if (!currentUser) {
+watchlist = [];
+favorites = [];
+profileDisplayName.innerText = "Guest User";
+profileSubText.innerText = "Tap to Login";
+welcomeName.innerText = "Guest";
+novaGreeting.innerHTML = `Hi Guest! 👽 I'm Nova. Log in to sync your library!`;
+logoutBtn.style.display = "none";
+return;
+}
 
-        async function openInsights() {
-            document.getElementById("insights-modal").style.display = "flex";
-            try {
-                const res = await fetch(`${API_BASE}/api/user/insights?username=${currentUser}`);
-                const data = await res.json();
-                document.getElementById("ins-viewed").innerText = data.total_recommendations_viewed || 0;
-                document.getElementById("ins-liked").innerText = data.total_liked || 0;
-                document.getElementById("ins-watchlist").innerText = data.total_watchlist || 0;
-                document.getElementById("ins-rating").innerText = data.average_rating_of_interest || 0.0;
-                document.getElementById("ins-mood").innerText = data.dominant_mood || "General";
-            } catch (err) {
-                console.error(err);
-            }
-        }
+profileDisplayName.innerText = currentUser;
+profileSubText.innerText = "Cloud Synced";
+welcomeName.innerText = currentUser;
+novaGreeting.innerHTML = `Hi ${currentUser}! 👽 I'm Nova. What are we watching today?`;
+logoutBtn.style.display = "block";
 
-        function closeInsights() {
-            document.getElementById("insights-modal").style.display = "none";
-        }
+try {
+const res = await fetch(`${BACKEND_URL}/api/user/library?username=${encodeURIComponent(currentUser)}`);
+const data = await res.json();
+watchlist = data.watchlist || [];
+favorites = data.favorites || [];
+} catch (e) {}
+}
+syncCloudLibrary();
 
-        function switchTab(tab) {
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            if(tab === 'home') document.getElementById('nav-home').classList.add('active');
-            if(tab === 'watchlist') document.getElementById('nav-watchlist').classList.add('active');
-            if(tab === 'favorites') document.getElementById('nav-favorites').classList.add('active');
-            
-            if(tab === 'watchlist' || tab === 'favorites') {
-                loadLibrary(tab);
-            } else {
-                document.getElementById("section-heading-text").innerText = "Recommended Movie Cards (Explainable AI Powered)";
-                document.getElementById("movies-container").innerHTML = "<p style='color: var(--text-muted);'>Ask Nova above to get started!</p>";
-                document.getElementById("result-count").innerText = "0 results";
-            }
-        }
+document.getElementById('openProfile').onclick = () => { playSciFiChime(); profileModal.classList.add('active'); };
+document.getElementById('closeProfileModal').onclick = () => profileModal.classList.remove('active');
 
-        async function loadLibrary(type) {
-            try {
-                const res = await fetch(`${API_BASE}/api/user/library?username=${currentUser}`);
-                const data = await res.json();
-                const items = type === 'watchlist' ? data.watchlist : data.favorites;
-                document.getElementById("section-heading-text").innerText = type === 'watchlist' ? "Your Personal Watchlist" : "Your Favorite Movies";
-                
-                const formatted = items.map(i => ({
-                    id: i.movie_id || i.id,
-                    title: i.title,
-                    poster: i.poster,
-                    vote_average: i.vote_average,
-                    release_date: "Saved",
-                    rationale: "Retrieved from your SQLite personal library database."
-                }));
-                renderMovies(formatted);
-            } catch (err) {
-                console.error(err);
-                alert("Could not load library items.");
-            }
-        }
-    </script>
+document.getElementById('loginBtn').onclick = async () => {
+const u = document.getElementById('authUsername').value.trim();
+const p = document.getElementById('authPassword').value.trim();
+if(!u || !p) return alert("Please enter username and password.");
+
+try {
+const res = await fetch(`${BACKEND_URL}/api/login`, {
+method: 'POST',
+headers: {'Content-Type': 'application/json'},
+body: JSON.stringify({username: u, password: p})
+});
+const data = await res.json();
+if(data.success) {
+currentUser = data.username;
+localStorage.setItem('cinemind_auth_user', currentUser);
+await syncCloudLibrary();
+profileModal.classList.remove('active');
+alert("Successfully logged in!");
+} else {
+alert(data.message);
+}
+} catch(e) { alert("Authentication error."); }
+};
+
+document.getElementById('signupBtn').onclick = async () => {
+const u = document.getElementById('authUsername').value.trim();
+const p = document.getElementById('authPassword').value.trim();
+if(!u || !p) return alert("Please enter username and password.");
+
+try {
+const res = await fetch(`${BACKEND_URL}/api/signup`, {
+method: 'POST',
+headers: {'Content-Type': 'application/json'},
+body: JSON.stringify({username: u, password: p})
+});
+const data = await res.json();
+if(data.success) {
+alert("Account created! You can now log in.");
+} else {
+alert(data.message);
+}
+} catch(e) { alert("Signup error."); }
+};
+
+logoutBtn.onclick = () => {
+currentUser = null;
+localStorage.removeItem('cinemind_auth_user');
+syncCloudLibrary();
+profileModal.classList.remove('active');
+alert("Logged out successfully.");
+};
+
+function createMovieCard(movie, isAI = false) {
+const poster = isAI ? movie.poster : (movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Poster');
+const title = movie.title || movie.name;
+const score = isAI ? `<i class="fa-solid fa-bolt" style="color: var(--secondary-glow);"></i> ${movie.match}% Neural Match` : `<i class="fa-solid fa-star" style="color: #fbbf24;"></i> ${movie.vote_average ? movie.vote_average.toFixed(1) : 'NR'}`;
+
+const card = document.createElement('div');
+card.className = 'movie-card';
+card.onclick = () => { playSciFiChime(); fetchAndOpenModal(title, poster, movie.rationale); };
+card.innerHTML = `
+               <img src="${poster}" onerror="this.src='https://via.placeholder.com/500x750?text=No+Poster'">
+               <div class="movie-info">
+                   <div class="movie-title">${title}</div>
+                   <div class="match-score">${score}</div>
+               </div>
+           `;
+return card;
+}
+
+async function loadNetflixRows() {
+if (currentView !== 'discover') return;
+mainContainer.innerHTML = `<p style="color: var(--text-muted); text-align:center; padding: 40px; font-weight:600;"><i class="fa-solid fa-spinner fa-spin"></i> Initializing Neural Cinematic Streams...</p>`;
+
+let baseQuery = `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=popularity.desc`;
+if (selectedGenre) baseQuery += `&with_genres=${selectedGenre}`;
+if (selectedCountry) baseQuery += `&with_origin_country=${selectedCountry}`;
+
+const categories = [
+{ title: "🔥 Trending Cinematic Data", url: `${baseQuery}&page=1` },
+{ title: "🧠 AI Recommended Blockbusters", url: `${baseQuery}&page=2` },
+{ title: "✨ Masterpiece Cinema", url: `${baseQuery}&sort_by=vote_average.desc&page=1` }
+];
+
+mainContainer.innerHTML = '';
+
+for (let cat of categories) {
+try {
+const res = await fetch(cat.url);
+const data = await res.json();
+if (data.results && data.results.length > 0) {
+const rowSection = document.createElement('div');
+rowSection.className = 'row-section';
+
+const titleEl = document.createElement('h3');
+titleEl.className = 'row-title';
+titleEl.innerHTML = `<i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> ${cat.title}`;
+rowSection.appendChild(titleEl);
+
+const movieRow = document.createElement('div');
+movieRow.className = 'movie-row';
+data.results.forEach(movie => movieRow.appendChild(createMovieCard(movie)));
+
+rowSection.appendChild(movieRow);
+mainContainer.appendChild(rowSection);
+}
+} catch (err) {}
+}
+}
+
+document.querySelectorAll('.filter-row').forEach(row => {
+row.querySelectorAll('.filter-pill').forEach(pill => {
+pill.onclick = (e) => {
+playSciFiChime();
+row.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+e.target.classList.add('active');
+
+if (e.target.hasAttribute('data-genre')) selectedGenre = e.target.getAttribute('data-genre');
+if (e.target.hasAttribute('data-country')) selectedCountry = e.target.getAttribute('data-country');
+if (e.target.hasAttribute('data-region')) {
+selectedRegion = e.target.getAttribute('data-region');
+localStorage.setItem('cinemind_region', selectedRegion);
+}
+
+loadNetflixRows();
+};
+});
+});
+
+async function performSearch() {
+playSciFiChime();
+const query = searchInput.value.trim();
+if (currentView !== 'discover') return;
+
+if (!query) {
+heroBanner.style.display = "flex";
+filterPanel.style.display = "flex";
+loadNetflixRows();
+return;
+}
+
+heroBanner.style.display = "none";
+filterPanel.style.display = "none";
+
+try {
+const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}`);
+const data = await res.json();
+
+mainContainer.innerHTML = `<h3 class="row-title">Neural Search Results for "${query}"</h3>`;
+const grid = document.createElement('div');
+grid.className = 'movie-grid';
+
+if (data.results && data.results.length > 0) {
+data.results.forEach(movie => grid.appendChild(createMovieCard(movie)));
+} else {
+grid.innerHTML = `<p style="color: var(--text-muted); font-weight:500;">No matching films found in database.</p>`;
+}
+mainContainer.appendChild(grid);
+} catch (err) {}
+}
+
+searchSubmitBtn.onclick = performSearch;
+searchInput.onkeypress = (e) => { if (e.key === 'Enter') performSearch(); };
+
+navItems.forEach(item => {
+item.addEventListener('click', async () => {
+playSciFiChime();
+navItems.forEach(nav => nav.classList.remove('active'));
+item.classList.add('active');
+currentView = item.getAttribute('data-view');
+
+if (currentView === 'discover') {
+heroBanner.style.display = "flex";
+filterPanel.style.display = "flex";
+loadNetflixRows();
+} else if (currentView === 'nova') {
+heroBanner.style.display = "none";
+filterPanel.style.display = "none";
+renderEnlargedNovaView();
+} else if (currentView === 'dataviz') {
+heroBanner.style.display = "none";
+filterPanel.style.display = "none";
+renderDataAnalyticsDashboard();
+} else {
+heroBanner.style.display = "none";
+filterPanel.style.display = "none";
+
+if(currentUser) await syncCloudLibrary();
+
+const isWatchlist = currentView === 'watchlist';
+mainContainer.innerHTML = `<h3 class="row-title">${isWatchlist ? 'My Saved Watchlist' : 'My Favorite Movies'}</h3>`;
+const grid = document.createElement('div');
+grid.className = 'movie-grid';
+
+const targetArr = isWatchlist ? watchlist : favorites;
+if (targetArr.length > 0) {
+targetArr.forEach(movie => grid.appendChild(createMovieCard(movie)));
+} else {
+grid.innerHTML = `<p style="color: var(--text-muted); font-weight:500;">${currentUser ? 'No items saved here yet.' : 'Please log in to sync cloud watchlist items.'}</p>`;
+}
+mainContainer.appendChild(grid);
+}
+});
+});
+
+async function renderDataAnalyticsDashboard() {
+mainContainer.innerHTML = `
+               <div class="dataviz-container" style="display:flex; flex-direction:column; gap:25px;">
+                   <div class="nova-banner-clean">
+                       <div style="display:flex; align-items:center; gap:20px;">
+                           <i class="fa-solid fa-chart-line" style="font-size: 2.5rem; color: var(--secondary-glow);"></i>
+                           <div>
+                               <h2>CineMind Data Science & Analytics Hub</h2>
+                               <p>Click sections below to cascade waterfall metrics and predictive neural telemetry.</p>
+                           </div>
+                       </div>
+                   </div>
+
+                   <div class="cascade-accordion">
+                       <div class="cascade-item">
+                           <div class="cascade-header">
+                               <span><i class="fa-solid fa-chart-pie" style="margin-right:10px;"></i> Genre Popularity Distribution Matrix</span>
+                               <i class="fa-solid fa-chevron-down cascade-icon"></i>
+                           </div>
+                           <div class="cascade-body">
+                               <canvas id="genreChart" height="110"></canvas>
+                               <div class="analytics-grid-packed">
+                                   <div class="analytics-stat-card">
+                                       <h4><i class="fa-solid fa-database"></i> Total Processed Vectors</h4>
+                                       <p>1,429,850</p>
+                                   </div>
+                                   <div class="analytics-stat-card">
+                                       <h4><i class="fa-solid fa-bolt"></i> Mean Neural Confidence</h4>
+                                       <p>96.4%</p>
+                                   </div>
+                                   <div class="analytics-stat-card">
+                                       <h4><i class="fa-solid fa-network-wired"></i> Active Embedding Clusters</h4>
+                                       <p>64 Sub-Graphs</p>
+                                   </div>
+                                   <div class="analytics-stat-card">
+                                       <h4><i class="fa-solid fa-server"></i> Server Node Latency</h4>
+                                       <p>42 ms (Live)</p>
+                                   </div>
+                               </div>
+                           </div>
+                       </div>
+
+                       <div class="cascade-item">
+                           <div class="cascade-header">
+                               <span><i class="fa-solid fa-microchip" style="margin-right:10px;"></i> Emerging AI Forecast & Telemetry</span>
+                               <i class="fa-solid fa-chevron-down cascade-icon"></i>
+                           </div>
+                           <div class="cascade-body">
+                               <p id="aiForecastText" style="color: var(--text-muted); line-height: 1.6; font-size: 0.95rem;">Neural analytics indicate an aggressive surge in quantum sci-fi and immersive multi-verse storytelling for Q4 2026.</p>
+                               <hr style="border-color: var(--glass-border); margin: 15px 0;">
+                               <h4 style="font-size: 0.95rem; color: var(--secondary-glow);"><i class="fa-solid fa-network-wired"></i> Top Cluster Interest</h4>
+                               <ul id="clusterList" style="list-style: none; display: flex; flex-direction: column; gap: 8px; color: var(--text-muted); font-size: 0.9rem; margin-top: 8px;">
+                                   <li><i class="fa-solid fa-circle-dot" style="color: var(--secondary-glow); font-size: 0.6rem; margin-right: 8px;"></i> Quantum Sci-Fi & Temporal Loops (98.4 Index)</li>
+                                   <li><i class="fa-solid fa-circle-dot" style="color: var(--secondary-glow); font-size: 0.6rem; margin-right: 8px;"></i> Psychological Neo-Noir Thrillers (95.1 Index)</li>
+                                   <li><i class="fa-solid fa-circle-dot" style="color: var(--secondary-glow); font-size: 0.6rem; margin-right: 8px;"></i> Aesthetic Contemporary Romance (91.7 Index)</li>
+                               </ul>
+                           </div>
+                       </div>
+
+                       <div class="cascade-item">
+                           <div class="cascade-header">
+                               <span><i class="fa-solid fa-shield-halved" style="margin-right:10px;"></i> System Integrity & Token Health</span>
+                               <i class="fa-solid fa-chevron-down cascade-icon"></i>
+                           </div>
+                           <div class="cascade-body">
+                               <div class="analytics-grid-packed">
+                                   <div class="analytics-stat-card">
+                                       <h4><i class="fa-solid fa-key"></i> TMDB API Rate Limit</h4>
+                                       <p>99.8% Remaining</p>
+                                   </div>
+                                   <div class="analytics-stat-card">
+                                       <h4><i class="fa-solid fa-shield"></i> CORS Security Protocol</h4>
+                                       <p>Active & Secure</p>
+                                   </div>
+                               </div>
+                           </div>
+                       </div>
+                   </div>
+               </div>
+           `;
+
+document.querySelectorAll('.cascade-header').forEach(header => {
+header.onclick = () => {
+playSciFiChime();
+header.parentElement.classList.toggle('active');
+};
+});
+
+const ctx = document.getElementById('genreChart').getContext('2d');
+new Chart(ctx, {
+type: 'bar',
+data: {
+labels: ['Action', 'Drama', 'Romance', 'Sci-Fi', 'Horror', 'Comedy'],
+datasets: [{
+label: 'Cluster Weight Index',
+data: [84, 92, 78, 95, 81, 88],
+backgroundColor: ['#38bdf8', '#c084fc', '#f43f5e', '#38bdf8', '#c084fc', '#f43f5e'],
+borderRadius: 10
+}]
+},
+options: {
+responsive: true,
+plugins: { legend: { display: false } },
+scales: {
+y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+}
+}
+});
+
+try {
+const trendRes = await fetch(`${BACKEND_URL}/trends`);
+const data = await trendRes.json();
+if (data.ai_forecast) {
+document.getElementById('aiForecastText').innerText = data.ai_forecast;
+const cList = document.getElementById('clusterList');
+cList.innerHTML = '';
+data.trending_genres.forEach(g => {
+cList.innerHTML += `<li><i class="fa-solid fa-circle-dot" style="color: var(--secondary-glow); font-size: 0.6rem; margin-right: 8px;"></i> ${g}</li>`;
+});
+}
+} catch (err) {}
+}
+
+function renderEnlargedNovaView() {
+mainContainer.innerHTML = `
+               <div class="nova-view-container" style="display:flex; flex-direction:column; gap:22px;">
+                   <div class="nova-banner-clean">
+                       <div style="display:flex; align-items:center; gap:20px;">
+                           <img src="nova.png" alt="Nova" onerror="this.src='assets/nova.png'">
+                           <div>
+                               <h2>Nova AI Intelligence Hub</h2>
+                               <p>Ask Nova for complex plot premises or deep emotional vibes below!</p>
+                           </div>
+                       </div>
+                   </div>
+
+                   <div class="nova-chat-box-large glass-panel" style="border-radius: 28px; padding: 30px; display: flex; flex-direction: column; gap: 20px;">
+                       <div class="nova-history-large" id="novaEnlargedHistory" style="height: 290px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; background: rgba(3, 1, 10, 0.9); padding: 22px; border-radius: 20px; border: 1px solid var(--glass-border);">
+                           <div class="chat-bubble ai-bubble">Hi ${currentUser || 'Guest'}! 👽 I am Nova. What cinematic experience are we calculating today?</div>
+                       </div>
+                       <div class="quick-chips">
+                           <span class="chip" onclick="sendEnlargedPrompt('Korean romcom')">🇰🇷 Korean Romcom</span>
+                           <span class="chip" onclick="sendEnlargedPrompt('Mind-bending sci-fi')">🧠 Sci-Fi</span>
+                           <span class="chip" onclick="sendEnlargedPrompt('Heartbreaking sad romance')">💔 Sad Romance</span>
+                           <span class="chip" onclick="sendEnlargedPrompt('Action blockbusters')">💥 Action</span>
+                       </div>
+                       <div class="nova-input-row" style="display: flex; gap: 12px;">
+                           <input type="text" id="novaEnlargedInput" placeholder="Ask Nova anything..." autocomplete="off" style="flex: 1; background: #160f38; border: 1px solid var(--glass-border); border-radius: 26px; padding: 14px 22px; outline: none; font-size: 0.98rem; color: white;">
+                           <button class="btn-action" id="novaEnlargedSendBtn"><i class="fa-solid fa-paper-plane"></i> Send</button>
+                       </div>
+                   </div>
+
+                   <h3 class="row-title" id="novaResultsTitle" style="margin-top: 10px;"><i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> Neural Recommendations</h3>
+                   <div id="novaVerticalGrid" class="movie-grid">
+                       <p style="color: var(--text-muted); font-weight:500;">Enter a prompt above to generate recommendations.</p>
+                   </div>
+               </div>
+           `;
+
+const inputField = document.getElementById('novaEnlargedInput');
+const sendButton = document.getElementById('novaEnlargedSendBtn');
+
+const executeEnlargedChat = async (promptText) => {
+playSciFiChime();
+const msg = promptText || inputField.value.trim();
+if (!msg) return;
+
+const historyDiv = document.getElementById('novaEnlargedHistory');
+historyDiv.innerHTML += `<div class="chat-bubble user-bubble">${msg}</div>`;
+if(!promptText) inputField.value = '';
+
+historyDiv.innerHTML += `<div class="chat-bubble ai-bubble"><i class="fa-solid fa-spinner fa-spin"></i> Processing neural query vectors...</div>`;
+historyDiv.scrollTop = historyDiv.scrollHeight;
+const typingInd = historyDiv.lastChild;
+
+try {
+const response = await fetch(`${BACKEND_URL}/chat`, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ message: msg, profile: {name: currentUser || 'Guest'}, region: selectedRegion, history: conversationHistory })
+});
+const data = await response.json();
+typingInd.remove();
+historyDiv.innerHTML += `<div class="chat-bubble ai-bubble">${data.reply}</div>`;
+historyDiv.scrollTop = historyDiv.scrollHeight;
+
+conversationHistory.push({ role: "user", content: msg });
+conversationHistory.push({ role: "assistant", content: data.reply });
+
+if (data.movies && data.movies.length > 0) {
+document.getElementById('novaResultsTitle').innerHTML = `<i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> Results for "${msg}"`;
+const vGrid = document.getElementById('novaVerticalGrid');
+vGrid.innerHTML = '';
+data.movies.forEach(movie => vGrid.appendChild(createMovieCard(movie, true)));
+}
+} catch (err) {
+typingInd.remove();
+historyDiv.innerHTML += `<div class="chat-bubble ai-bubble">Connection error. Ensure backend server is running.</div>`;
+}
+};
+
+sendButton.onclick = () => executeEnlargedChat();
+inputField.onkeypress = (e) => { if (e.key === 'Enter') executeEnlargedChat(); };
+window.sendEnlargedPrompt = (p) => executeEnlargedChat(p);
+}
+
+async function fetchAndOpenModal(title, fallbackPoster, customRationale) {
+try {
+const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(title)}`);
+const data = await res.json();
+
+if (data.results && data.results.length > 0) {
+currentMovieData = data.results[0];
+currentMovieData.poster_path = currentMovieData.poster_path ? currentMovieData.poster_path : fallbackPoster;
+
+document.getElementById('modalTitle').innerText = currentMovieData.title;
+document.getElementById('modalMeta').innerHTML = `<span><i class="fa-solid fa-calendar"></i> ${currentMovieData.release_date ? currentMovieData.release_date.split('-')[0] : 'N/A'}</span> <span><i class="fa-solid fa-star" style="color: #fbbf24;"></i> ${currentMovieData.vote_average ? currentMovieData.vote_average.toFixed(1) : 'NR'}</span>`;
+document.getElementById('modalOverview').innerText = currentMovieData.overview || "No description available.";
+document.getElementById('modalPoster').src = `https://image.tmdb.org/t/p/w500${currentMovieData.poster_path}`;
+document.getElementById('modalRationale').innerText = customRationale || `Matched via collaborative filters for ${currentUser || 'Guest'}.`;
+
+document.getElementById('modalProviders').innerHTML = `<i class="fa-solid fa-tv"></i> <span>Checking streaming availability (${selectedRegion})...</span>`;
+fetch(`https://api.themoviedb.org/3/movie/${currentMovieData.id}/watch/providers?api_key=${TMDB_API_KEY}`)
+.then(r => r.json())
+.then(provData => {
+const provs = provData.results && (provData.results[selectedRegion] || provData.results.US);
+const flat = provs && provs.flatrate ? provs.flatrate.map(p => p.provider_name).join(', ') : null;
+document.getElementById('modalProviders').innerHTML = `<i class="fa-solid fa-tv"></i> <span>Streaming in ${selectedRegion}: <strong>${flat || 'TMDB VOD Catalog'}</strong></span>`;
+}).catch(() => {
+document.getElementById('modalProviders').innerHTML = `<i class="fa-solid fa-tv"></i> <span>Streaming on: <strong>TMDB VOD Catalog</strong></span>`;
+});
+
+document.getElementById('trailerBtn').onclick = () => { playSciFiChime(); fetchAndPlayTrailer(currentMovieData.id, currentMovieData.title); };
+
+updateButtonStates();
+document.getElementById('movieModal').classList.add('active');
+}
+} catch (error) {}
+}
+
+async function fetchAndPlayTrailer(movieId, movieTitle) {
+try {
+const res = await fetch(`https://api.themoviedb.org/3/movie/${movieId}/videos?api_key=${TMDB_API_KEY}`);
+const data = await res.json();
+const trailer = data.results.find(v => v.type === 'Trailer' && v.site === 'YouTube') || data.results[0];
+
+if (trailer) {
+document.getElementById('youtubeIframe').src = `https://www.youtube.com/embed/${trailer.key}?autoplay=1`;
+document.getElementById('videoModalTitle').innerText = `${movieTitle} - Trailer`;
+document.getElementById('videoModal').classList.add('active');
+} else {
+alert("Official trailer currently unavailable.");
+}
+} catch (err) {
+alert("Could not load trailer.");
+}
+}
+
+document.getElementById('closeModal').onclick = () => document.getElementById('movieModal').classList.remove('active');
+document.getElementById('closeVideoModal').onclick = () => {
+document.getElementById('youtubeIframe').src = "";
+document.getElementById('videoModal').classList.remove('active');
+};
+
+function updateButtonStates() {
+const inWatchlist = watchlist.find(m => m.id === currentMovieData.id);
+const wBtn = document.getElementById('watchlistBtn');
+wBtn.innerHTML = inWatchlist ? `<i class="fa-solid fa-check"></i> In Watchlist` : `<i class="fa-solid fa-plus"></i> Watchlist`;
+wBtn.style.background = inWatchlist ? "#10b981" : "linear-gradient(135deg, var(--primary-glow), var(--secondary-glow))";
+
+const inFavs = favorites.find(m => m.id === currentMovieData.id);
+const fBtn = document.getElementById('favoriteBtn');
+fBtn.innerHTML = inFavs ? `<i class="fa-solid fa-heart" style="color: #f43f5e;"></i> Favorited` : `<i class="fa-solid fa-heart"></i> Favorite`;
+}
+
+document.getElementById('watchlistBtn').onclick = async () => {
+playSciFiChime();
+if(!currentUser) { alert("Please log in to save items to your cloud watchlist."); profileModal.classList.add('active'); return; }
+
+try {
+const res = await fetch(`${BACKEND_URL}/api/user/library/toggle`, {
+method: 'POST',
+headers: {'Content-Type': 'application/json'},
+body: JSON.stringify({username: currentUser, type: 'watchlist', movie: currentMovieData})
+});
+const data = await res.json();
+if(data.success) {
+await syncCloudLibrary();
+updateButtonStates();
+if (currentView === 'watchlist') navItems[3].click();
+}
+} catch(e) { alert("Sync error."); }
+};
+
+document.getElementById('favoriteBtn').onclick = async () => {
+playSciFiChime();
+if(!currentUser) { alert("Please log in to save items to your cloud favorites."); profileModal.classList.add('active'); return; }
+
+try {
+const res = await fetch(`${BACKEND_URL}/api/user/library/toggle`, {
+method: 'POST',
+headers: {'Content-Type': 'application/json'},
+body: JSON.stringify({username: currentUser, type: 'favorites', movie: currentMovieData})
+});
+const data = await res.json();
+if(data.success) {
+await syncCloudLibrary();
+updateButtonStates();
+if (currentView === 'favorites') navItems[4].click();
+}
+} catch(e) { alert("Sync error."); }
+};
+
+const chatToggle = document.getElementById('chatToggle');
+const chatModal = document.getElementById('chatModal');
+const closeChat = document.getElementById('closeChat');
+const chatTooltip = document.getElementById('chatTooltip');
+const chatInput = document.getElementById('chatInput');
+const sendBtn = document.getElementById('sendBtn');
+const chatHistory = document.getElementById('chatHistory');
+
+chatToggle.onclick = () => {
+playSciFiChime();
+chatModal.classList.toggle('active');
+chatTooltip.style.display = chatModal.classList.contains('active') ? 'none' : 'block';
+if (chatModal.classList.contains('active')) chatInput.focus();
+};
+closeChat.onclick = () => { chatModal.classList.remove('active'); chatTooltip.style.display = 'block'; };
+
+function addBubble(text, sender) {
+const bubble = document.createElement('div');
+bubble.className = `chat-bubble ${sender}-bubble`;
+bubble.innerHTML = text;
+chatHistory.appendChild(bubble);
+chatHistory.scrollTop = chatHistory.scrollHeight;
+}
+
+async function handleChat(queryText) {
+playSciFiChime();
+const message = queryText || chatInput.value.trim();
+if (!message) return;
+
+addBubble(message, 'user');
+chatInput.value = '';
+addBubble(`<i class="fa-solid fa-spinner fa-spin"></i> Analyzing cinematic vectors for ${currentUser || 'Guest'}...`, 'ai');
+const typingIndicator = chatHistory.lastChild;
+
+try {
+const response = await fetch(`${BACKEND_URL}/chat`, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ message: message, profile: {name: currentUser || 'Guest'}, region: selectedRegion, history: conversationHistory })
+});
+const data = await response.json();
+typingIndicator.remove();
+addBubble(data.reply, 'ai');
+
+conversationHistory.push({ role: "user", content: message });
+conversationHistory.push({ role: "assistant", content: data.reply });
+
+if (data.movies && data.movies.length > 0) {
+heroBanner.style.display = "none";
+filterPanel.style.display = "none";
+mainContainer.innerHTML = `<h3 class="row-title"><i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> Neural Recommendations for ${currentUser || 'Guest'}</h3>`;
+const grid = document.createElement('div');
+grid.className = 'movie-grid';
+data.movies.forEach(movie => grid.appendChild(createMovieCard(movie, true)));
+mainContainer.appendChild(grid);
+}
+} catch (error) {
+typingIndicator.remove();
+addBubble(`Could not connect to Python backend server. Make sure app.py is running on Render.`, 'ai');
+}
+}
+
+window.sendQuickPrompt = (prompt) => handleChat(prompt);
+sendBtn.onclick = () => handleChat();
+chatInput.onkeypress = (e) => { if (e.key === 'Enter') handleChat(); };
+
+loadNetflixRows();
+</script>
 </body>
+</html>
 </html>
