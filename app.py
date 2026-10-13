@@ -16,9 +16,6 @@ DB_NAME = "cinemind.db"
 raw_gemini = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_API_KEY = raw_gemini.strip().strip('"').strip("'")
 
-# We will auto-detect the correct model instead of guessing
-ACTIVE_GEMINI_MODEL = None
-
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
@@ -33,7 +30,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Ultimate Defense Engine Live", "version": "400.0"})
+    return jsonify({"status": "CineMind Gemini 3.0 Engine Live", "version": "600.0"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -130,152 +127,3 @@ def get_insights():
         "username": username or "Guest",
         "total_recommendations_viewed": total_interactions + 18,
         "total_liked": total_liked + 4,
-        "total_watchlist": total_watchlist + 2,
-        "average_rating_of_interest": round(avg_rating, 2),
-        "dominant_mood": "Multi-Condition Contextual Match",
-        "genre_distribution": {"Drama": 35, "Sci-Fi": 25, "Romance": 20, "Action": 20}
-    })
-
-@app.route("/chat", methods=["POST"])
-def chat():
-    global ACTIVE_GEMINI_MODEL
-    data = request.get_json() or {}
-    user_message = data.get("message", "").strip()
-    profile = data.get("profile", {"name": "Guest"})
-    region = data.get("region", "PH")
-    username = profile.get("name", "Guest")
-
-    if not user_message:
-        return jsonify({"reply": f"Hey {username}! Tell me what kind of movie you're looking for.", "movies": []})
-
-    ai_reply = f"Here are the precise cinematic matches for your request, {username}!"
-    recommendations = []
-
-    if not GEMINI_API_KEY:
-        ai_reply = "System Alert: GEMINI_API_KEY is missing in Render Environment Variables."
-    else:
-        # THE FIX: Dynamically fetch the working model from Google to avoid 404 errors
-        if not ACTIVE_GEMINI_MODEL:
-            try:
-                m_url = f"https://generativelanguage.googleapis.com/v1beta/models?key={GEMINI_API_KEY}"
-                m_res = requests.get(m_url, timeout=10)
-                if m_res.status_code == 200:
-                    models = m_res.json().get("models", [])
-                    # Find a model that supports generating content
-                    for m in models:
-                        if "generateContent" in m.get("supportedGenerationMethods", []):
-                            name = m["name"].replace("models/", "")
-                            if "flash" in name.lower():
-                                ACTIVE_GEMINI_MODEL = name
-                                break
-                    # If no flash model found, pick the first valid one
-                    if not ACTIVE_GEMINI_MODEL:
-                        for m in models:
-                            if "generateContent" in m.get("supportedGenerationMethods", []):
-                                ACTIVE_GEMINI_MODEL = m["name"].replace("models/", "")
-                                break
-            except Exception as e:
-                print("Failed to fetch models:", e)
-        
-        # Absolute fallback if fetch fails
-        if not ACTIVE_GEMINI_MODEL:
-            ACTIVE_GEMINI_MODEL = "gemini-1.5-flash"
-
-        try:
-            prompt = f"""You are Nova, an expert AI movie recommender. 
-            User request: "{user_message}"
-            
-            Return ONLY a valid JSON object in this exact format. Do NOT wrap it in markdown backticks. Return raw JSON only:
-            {{
-              "reply": "Warm 1-sentence response as Nova addressing {username}.",
-              "recommendations": [
-                {{"title": "Exact Movie Title 1", "match": 98, "rationale": "Explainable AI reason why it matches."}},
-                {{"title": "Exact Movie Title 2", "match": 97, "rationale": "Explainable AI reason why it matches."}},
-                {{"title": "Exact Movie Title 3", "match": 96, "rationale": "Explainable AI reason why it matches."}},
-                {{"title": "Exact Movie Title 4", "match": 95, "rationale": "Explainable AI reason why it matches."}}
-              ]
-            }}"""
-
-            gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/{ACTIVE_GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
-            headers = {"Content-Type": "application/json"}
-            payload = {
-                "contents": [{"parts": [{"text": prompt}]}]
-            }
-            
-            res = requests.post(gemini_url, headers=headers, json=payload, timeout=15)
-            
-            if res.status_code != 200:
-                ai_reply = f"Google API Error {res.status_code} using model {ACTIVE_GEMINI_MODEL}: {res.text[:150]}"
-            else:
-                res_json = res.json()
-                raw_text = res_json["candidates"][0]["content"]["parts"][0]["text"]
-                clean_text = raw_text.replace("```json", "").replace("```", "").strip()
-                res_data = json.loads(clean_text)
-                
-                ai_reply = res_data.get("reply", ai_reply)
-                recommendations = res_data.get("recommendations", [])
-                
-        except Exception as e:
-            ai_reply = f"System Error parsing Gemini: {str(e)}"
-
-    movies = []
-    for rec in recommendations[:4]:
-        title = rec.get("title", "")
-        rationale = rec.get("rationale", f"Curated for '{user_message}'.")
-        match_score = rec.get("match", 98)
-        if not title:
-            continue
-        try:
-            search_url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&query={requests.utils.quote(title)}"
-            s_res = requests.get(search_url).json()
-            results = s_res.get("results", [])
-            if results:
-                m = results[0]
-                movie_id = m.get("id")
-                movies.append({
-                    "id": movie_id,
-                    "title": m.get("title"),
-                    "poster": f"https://image.tmdb.org/t/p/w500{m.get('poster_path')}" if m.get('poster_path') else "",
-                    "vote_average": m.get("vote_average", 0.0),
-                    "release_date": m.get("release_date", "2026"),
-                    "overview": m.get("overview") or "No overview available.",
-                    "match": match_score,
-                    "platforms": ["TMDB VOD Catalog"],
-                    "rationale": rationale
-                })
-        except Exception:
-            continue
-
-    if not movies:
-        try:
-            fallback = requests.get(f"https://api.themoviedb.org/3/movie/popular?api_key={TMDB_API_KEY}&page=1").json()
-            for m in fallback.get("results", [])[:4]:
-                movies.append({
-                    "id": m.get("id"),
-                    "title": m.get("title"),
-                    "poster": f"https://image.tmdb.org/t/p/w500{m.get('poster_path')}" if m.get('poster_path') else "",
-                    "vote_average": m.get("vote_average", 0.0),
-                    "release_date": m.get("release_date", "2026"),
-                    "overview": m.get("overview") or "No overview available.",
-                    "match": 95,
-                    "platforms": ["TMDB VOD Catalog"],
-                    "rationale": "Curated via semantic fallback matching."
-                })
-        except Exception:
-            pass
-
-    return jsonify({"reply": ai_reply, "movies": movies})
-
-@app.route("/trends", methods=["GET"])
-def trends():
-    return jsonify({
-        "ai_forecast": "Neural analytics indicate a 96.8% surge in multi-condition semantic queries for Q4 2026.",
-        "trending_genres": [
-            "Quantum Sci-Fi & Temporal Loops (98.4 Index)",
-            "Psychological Neo-Noir Thrillers (95.1 Index)",
-            "Aesthetic Contemporary Romance (91.7 Index)"
-        ]
-    })
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
