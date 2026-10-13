@@ -2,4 +2,4 @@ flask
 flask-cors
 requests
 gunicorn
-google-genai
+google-generativeai
