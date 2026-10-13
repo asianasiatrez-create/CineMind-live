@@ -31,7 +31,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Final Defense Engine Live", "version": "900.0"})
+    return jsonify({"status": "CineMind Final Defense Engine Live", "version": "950.0"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -169,17 +169,22 @@ def chat():
             headers = {"Content-Type": "application/json"}
             payload = {"contents": [{"parts": [{"text": prompt}]}]}
             
-            # DEFENSE-SAFE SILENT RETRY LOOP
+            # Increased timeout to 60 seconds to allow Google enough time to respond
             max_retries = 3
             res = None
             for attempt in range(max_retries):
-                res = requests.post(gemini_url, headers=headers, json=payload, timeout=15)
-                if res.status_code == 200:
-                    break
-                elif res.status_code == 503:
-                    time.sleep(2) # Wait 2 seconds and try again quietly if Google is busy
-                else:
-                    break # Break on other errors (like 404) to avoid pointless retries
+                try:
+                    res = requests.post(gemini_url, headers=headers, json=payload, timeout=60)
+                    if res.status_code == 200:
+                        break
+                    elif res.status_code == 503:
+                        time.sleep(3) 
+                    else:
+                        break 
+                except requests.exceptions.ReadTimeout:
+                    # If it times out even at 60s, wait a moment and try one more time
+                    time.sleep(2)
+                    continue
             
             if res and res.status_code != 200:
                 ai_reply = f"Google API Error {res.status_code}: {res.text}"
