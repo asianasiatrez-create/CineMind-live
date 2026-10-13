@@ -54,7 +54,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Final Search Bridge Live", "version": "9.0"})
+    return jsonify({"status": "CineMind Semantic AI Engine Live", "version": "11.0"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -154,68 +154,84 @@ def chat():
     if not user_message:
         return jsonify({"reply": f"Hey {username}! Tell me what kind of movie you're looking for.", "movies": []})
 
-    # Let Gemini generate the conversational reply AND clean keywords for search
     ai_reply = f"Here are the best matches for your mood, {username}!"
-    search_query = user_message
+    movie_titles = []
 
+    # 1. Let Gemini use its semantic brain to recommend specific matching movie titles
     if client:
         try:
-            prompt = f"""You are Nova, a warm AI movie companion. 
-            User prompt: "{user_message}"
-            Task: Provide a short, friendly response AND extract concise movie themes/keywords for a database search.
-            Format strictly as:
-            REPLY: [friendly response]
-            SEARCH: [concise keywords or movie titles]"""
+            prompt = f"""You are Nova, an expert AI movie recommender. 
+            User request: "{user_message}"
+            Task 1: Write a short, warm, friendly 1-sentence response as Nova addressing {username}.
+            Task 2: List exactly 4 real, existing movie titles that best match the user's request.
             
+            Format your output strictly like this:
+            REPLY: [your friendly response]
+            TITLES: [Title 1], [Title 2], [Title 3], [Title 4]"""
+
             response = client.models.generate_content(
                 model="gemini-2.5-flash",
                 contents=prompt,
             )
             text = response.text
-            lines = text.split("\n")
-            for line in lines:
+            for line in text.split("\n"):
                 if line.startswith("REPLY:"):
                     ai_reply = line.replace("REPLY:", "").strip()
-                elif line.startswith("SEARCH:"):
-                    search_query = line.replace("SEARCH:", "").strip()
+                elif line.startswith("TITLES:"):
+                    titles_raw = line.replace("TITLES:", "").strip()
+                    movie_titles = [t.strip() for t in titles_raw.split(",") if t.strip()]
         except Exception:
-            search_query = user_message
+            pass
 
-    # Query TMDB using the AI-refined search query
-    tmdb_url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&query={requests.utils.quote(search_query)}"
+    # 2. Fetch those AI-recommended titles from TMDB to get posters, ratings, and providers
+    movies = []
+    for title in movie_titles[:4]:
+        try:
+            search_url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&query={requests.utils.quote(title)}"
+            s_res = requests.get(search_url).json()
+            results = s_res.get("results", [])
+            if results:
+                m = results[0]  # Take the top matching result for that title
+                movie_id = m.get("id")
+                
+                providers_url = f"https://api.themoviedb.org/3/movie/{movie_id}/watch/providers?api_key={TMDB_API_KEY}"
+                prov_res = requests.get(providers_url).json().get("results", {})
+                reg_prov = prov_res.get(region, prov_res.get("US", {}))
+                flatrate = reg_prov.get("flatrate", [])
+                platforms = [p.get("provider_name") for p in flatrate] if flatrate else ["TMDB VOD Catalog"]
 
-    try:
-        res = requests.get(tmdb_url).json()
-        results = res.get("results", [])
+                movies.append({
+                    "id": movie_id,
+                    "title": m.get("title"),
+                    "poster": f"https://image.tmdb.org/t/p/w500{m.get('poster_path')}" if m.get('poster_path') else "",
+                    "vote_average": m.get("vote_average", 0.0),
+                    "release_date": m.get("release_date", "2026"),
+                    "overview": m.get("overview") or "No overview available.",
+                    "match": 99,
+                    "platforms": platforms,
+                    "rationale": f"Curated by Gemini AI semantic engine for '{user_message}'."
+                })
+        except Exception:
+            continue
 
-        # Fallback to popular if nothing found
-        if not results:
+    # Ultimate fallback if titles failed to resolve
+    if not movies:
+        try:
             fallback = requests.get(f"https://api.themoviedb.org/3/movie/popular?api_key={TMDB_API_KEY}&page=1").json()
-            results = fallback.get("results", [])
-
-        selected_pool = results[:4]
-        movies = []
-        for m in selected_pool:
-            movie_id = m.get("id")
-            providers_url = f"https://api.themoviedb.org/3/movie/{movie_id}/watch/providers?api_key={TMDB_API_KEY}"
-            prov_res = requests.get(providers_url).json().get("results", {})
-            reg_prov = prov_res.get(region, prov_res.get("US", {}))
-            flatrate = reg_prov.get("flatrate", [])
-            platforms = [p.get("provider_name") for p in flatrate] if flatrate else ["TMDB VOD Catalog"]
-
-            movies.append({
-                "id": movie_id,
-                "title": m.get("title"),
-                "poster": f"https://image.tmdb.org/t/p/w500{m.get('poster_path')}" if m.get('poster_path') else "",
-                "vote_average": m.get("vote_average", 0.0),
-                "release_date": m.get("release_date", "2026"),
-                "overview": m.get("overview") or "No overview available.",
-                "match": 99,
-                "platforms": platforms,
-                "rationale": f"Curated via Gemini & TMDB search for '{user_message}'."
-            })
-    except Exception as e:
-        movies = []
+            for m in fallback.get("results", [])[:4]:
+                movies.append({
+                    "id": m.get("id"),
+                    "title": m.get("title"),
+                    "poster": f"https://image.tmdb.org/t/p/w500{m.get('poster_path')}" if m.get('poster_path') else "",
+                    "vote_average": m.get("vote_average", 0.0),
+                    "release_date": m.get("release_date", "2026"),
+                    "overview": m.get("overview") or "No overview available.",
+                    "match": 95,
+                    "platforms": ["TMDB VOD Catalog"],
+                    "rationale": "Popular recommendation."
+                })
+        except Exception:
+            pass
 
     return jsonify({"reply": ai_reply, "movies": movies})
 
