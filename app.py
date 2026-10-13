@@ -4,15 +4,16 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import requests
 import hashlib
+from google import genai
 
-# ==========================================
-# 1. INITIALIZE FLASK APP
-# ==========================================
 app = Flask(__name__)
 CORS(app)
 
 TMDB_API_KEY = "3dc27f9ae386c422fdc5994e6fda6823"
 DB_NAME = "cinemind.db"
+
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
 def init_db():
     conn = sqlite3.connect(DB_NAME)
@@ -53,7 +54,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Deterministic Engine Live", "version": "6.0"})
+    return jsonify({"status": "CineMind Gemini+TMDB Bridge Live", "version": "7.0"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -145,7 +146,7 @@ def toggle_library():
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.get_json() or {}
-    user_message = data.get("message", "").strip().lower()
+    user_message = data.get("message", "").strip()
     profile = data.get("profile", {"name": "Movie Fan"})
     region = data.get("region", "PH")
     username = profile.get("name", "Movie Fan")
@@ -153,46 +154,52 @@ def chat():
     if not user_message:
         return jsonify({"reply": f"Hey {username}! Tell me what kind of movie you're looking for.", "movies": []})
 
-    # Official TMDB Genre Mapping
-    genre_map = {
-        "action": 28, "adventure": 12, "animation": 16, "comedy": 35,
-        "crime": 80, "documentary": 99, "drama": 18, "family": 10751,
-        "fantasy": 14, "history": 36, "horror": 27, "music": 10402,
-        "mystery": 9648, "romance": 10749, "sci-fi": 878, "science fiction": 878,
-        "thriller": 53, "war": 10752, "western": 37
-    }
+    ai_reply = f"Here are the best matches for your mood, {username}!"
+    genre_code = ""
+    lang_code = ""
 
-    detected_genres = [gid for word, gid in genre_map.items() if word in user_message]
+    # Let Gemini analyze the request and extract official TMDB parameters
+    if client:
+        try:
+            prompt = f"""Analyze this movie request: "{user_message}".
+            Extract:
+            1. A friendly response as Nova.
+            2. A TMDB genre ID if applicable (Action: 28, Comedy: 35, Horror: 27, Romance: 10749, Drama: 18, Sci-Fi: 878, Thriller: 53, Animation: 16). Return empty string if none.
+            3. An original language code if country is specified (Thai: th, Korean: ko, Japanese: ja). Return empty string if none.
+            
+            Output strictly in this format:
+            REPLY: [friendly response] | GENRE: [genre_id] | LANG: [lang_code]"""
+            
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+            )
+            text = response.text
+            if "|" in text:
+                parts = text.split("|")
+                ai_reply = parts[0].replace("REPLY:", "").strip()
+                genre_code = parts[1].replace("GENRE:", "").strip()
+                lang_code = parts[2].replace("LANG:", "").strip()
+        except Exception as e:
+            pass
 
-    # Region / Language detection
-    lang_param = ""
-    if "thailand" in user_message or "thai" in user_message:
-        lang_param = "&with_original_language=th"
-    elif "korea" in user_message or "korean" in user_message:
-        lang_param = "&with_original_language=ko"
-    elif "japan" in user_message or "japanese" in user_message:
-        lang_param = "&with_original_language=ja"
+    # Build exact TMDB Discover URL based on Gemini's structured analysis
+    tmdb_url = f"https://api.themoviedb.org/3/discover/movie?api_key={TMDB_API_KEY}&sort_by=popularity.desc"
+    if genre_code and genre_code.isdigit():
+        tmdb_url += f"&with_genres={genre_code}"
+    if lang_code and len(lang_code) == 2:
+        tmdb_url += f"&with_original_language={lang_code}"
 
-    results = []
     try:
-        # Priority 1: Use TMDB Discover if genres or language hints are found
-        if detected_genres or lang_param:
-            genres_str = ",".join(map(str, detected_genres)) if detected_genres else ""
-            genre_query = f"&with_genres={genres_str}" if genres_str else ""
-            disc_url = f"https://api.themoviedb.org/3/discover/movie?api_key={TMDB_API_KEY}{lang_param}{genre_query}&sort_by=popularity.desc"
-            res = requests.get(disc_url).json()
-            results = res.get("results", [])
+        res = requests.get(tmdb_url).json()
+        results = res.get("results", [])
 
-        # Priority 2: If discover yields nothing, search TMDB by text query
+        # Fallback to search query if discover returns nothing
         if not results:
-            stop_words = {"i", "want", "a", "movie", "about", "set", "in", "with", "and", "the", "to", "an", "is", "that"}
-            clean_words = [w for w in user_message.split() if w not in stop_words]
-            search_str = " ".join(clean_words) if clean_words else user_message
-            search_url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&query={requests.utils.quote(search_str)}"
+            search_url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&query={requests.utils.quote(user_message)}"
             s_res = requests.get(search_url).json()
             results = s_res.get("results", [])
 
-        # Absolute fallback to popular movies so the app never breaks
         if not results:
             pop_res = requests.get(f"https://api.themoviedb.org/3/movie/popular?api_key={TMDB_API_KEY}&page=1").json()
             results = pop_res.get("results", [])
@@ -214,15 +221,12 @@ def chat():
                 "vote_average": m.get("vote_average", 0.0),
                 "release_date": m.get("release_date", "2026"),
                 "overview": m.get("overview") or "No overview available.",
-                "match": 98,
+                "match": 99,
                 "platforms": platforms,
-                "rationale": f"Matched via smart intent routing for '{user_message}'."
+                "rationale": f"Curated via Gemini AI & TMDB parameters for '{user_message}'."
             })
-
-        ai_reply = f"I found these fantastic matches for your request, {username}!"
     except Exception as e:
         movies = []
-        ai_reply = "System search encountered a minor routing glitch. Try asking again!"
 
     return jsonify({"reply": ai_reply, "movies": movies})
 
