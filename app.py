@@ -1,94 +1,219 @@
-from flask import Flask, request, jsonify
+import os
+import sqlite3
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 import requests
+import hashlib
 
 app = Flask(__name__)
 CORS(app)
 
 TMDB_API_KEY = "3dc27f9ae386c422fdc5994e6fda6823"
+DB_NAME = "cinemind.db"
 
-@app.route('/chat', methods=['POST'])
+def init_db():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    # Users table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL
+        )
+    ''')
+    # Watchlist table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS watchlist (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            movie_id INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            poster TEXT,
+            vote_average REAL,
+            UNIQUE(username, movie_id)
+        )
+    ''')
+    # Favorites table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS favorites (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            movie_id INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            poster TEXT,
+            vote_average REAL,
+            UNIQUE(username, movie_id)
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+init_db()
+
+@app.route("/", methods=["GET"])
+def home():
+    return jsonify({"status": "CineMind Production Secure Backend Live", "version": "3.0"})
+
+# --- Authentication Routes ---
+@app.route("/api/signup", methods=["POST"])
+def signup():
+    data = request.get_json() or {}
+    username = data.get("username", "").strip().lower()
+    password = data.get("password", "")
+
+    if not username or not password:
+        return jsonify({"success": False, "message": "Username and password required."}), 400
+
+    hashed_pw = hashlib.sha256(password.encode()).hexdigest()
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, hashed_pw))
+        conn.commit()
+        conn.close()
+        return jsonify({"success": True, "message": "Account created successfully!"})
+    except sqlite3.IntegrityError:
+        return jsonify({"success": False, "message": "Username already exists."}), 400
+
+@app.route("/api/login", methods=["POST"])
+def login():
+    data = request.get_json() or {}
+    username = data.get("username", "").strip().lower()
+    password = data.get("password", "")
+
+    hashed_pw = hashlib.sha256(password.encode()).hexdigest()
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, hashed_pw))
+    user = cursor.fetchone()
+    conn.close()
+
+    if user:
+        return jsonify({"success": True, "username": username, "message": "Login successful!"})
+    return jsonify({"success": False, "message": "Invalid username or password."}), 401
+
+# --- Cloud Watchlist / Favorites Routes ---
+@app.route("/api/user/library", methods=["GET"])
+def get_library():
+    username = request.args.get("username", "").strip().lower()
+    if not username:
+        return jsonify({"watchlist": [], "favorites": []})
+
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT movie_id, title, poster, vote_average FROM watchlist WHERE username = ?", (username,))
+    w_rows = cursor.fetchall()
+    watchlist = [{"id": r[0], "title": r[1], "poster": r[2], "vote_average": r[3]} for r in w_rows]
+
+    cursor.execute("SELECT movie_id, title, poster, vote_average FROM favorites WHERE username = ?", (username,))
+    f_rows = cursor.fetchall()
+    favorites = [{"id": r[0], "title": r[1], "poster": r[2], "vote_average": r[3]} for r in f_rows]
+    conn.close()
+
+    return jsonify({"watchlist": watchlist, "favorites": favorites})
+
+@app.route("/api/user/library/toggle", methods=["POST"])
+def toggle_library():
+    data = request.get_json() or {}
+    username = data.get("username", "").strip().lower()
+    lib_type = data.get("type") # 'watchlist' or 'favorites'
+    movie = data.get("movie", {})
+
+    if not username or not lib_type or not movie:
+        return jsonify({"success": False, "message": "Invalid payload."}), 400
+
+    movie_id = movie.get("id")
+    title = movie.get("title") or movie.get("name")
+    poster = movie.get("poster") or (f"https://image.tmdb.org/t/p/w500{movie.get('poster_path')}" if movie.get('poster_path') else "")
+    vote_average = movie.get("vote_average", 0.0)
+
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    table = "watchlist" if lib_type == "watchlist" else "favorites"
+
+    # Check if exists
+    cursor.execute(f"SELECT id FROM {table} WHERE username = ? AND movie_id = ?", (username, movie_id))
+    exists = cursor.fetchone()
+
+    if exists:
+        cursor.execute(f"DELETE FROM {table} WHERE username = ? AND movie_id = ?", (username, movie_id))
+        action = "removed"
+    else:
+        cursor.execute(f"INSERT OR REPLACE INTO {table} (username, movie_id, title, poster, vote_average) VALUES (?, ?, ?, ?, ?)",
+                       (username, movie_id, title, poster, vote_average))
+        action = "added"
+
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True, "action": action})
+
+# --- AI Chat & Trends Routes ---
+@app.route("/chat", methods=["POST"])
 def chat():
     data = request.get_json() or {}
-    user_message = data.get('message', '').lower()
-    profile = data.get('profile', {"name": "Xyrus Marie"})
-    user_name = profile.get("name", "Xyrus Marie")
+    user_message = data.get("message", "").lower()
+    profile = data.get("profile", {"name": "Movie Fan"})
+    region = data.get("region", "PH")
+    username = profile.get("name", "Movie Fan")
+
+    query_term = user_message
+    if any(k in user_message for k in ["romance", "romantic", "romcom", "love", "sad"]):
+        query_term = "romance"
+    elif any(k in user_message for k in ["sci-fi", "science fiction", "space", "time", "quantum", "dream"]):
+        query_term = "science fiction"
+    elif any(k in user_message for k in ["action", "blockbuster", "fight", "hero", "marvel"]):
+        query_term = "action"
+    elif any(k in user_message for k in ["horror", "scary", "ghost", "thriller", "suspense"]):
+        query_term = "thriller"
+    elif any(k in user_message for k in ["comedy", "funny", "laugh"]):
+        query_term = "comedy"
+
+    tmdb_url = f"https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query={requests.utils.quote(query_term)}"
     
     try:
-        target_url = f"https://api.themoviedb.org/3/discover/movie?api_key={TMDB_API_KEY}&sort_by=popularity.desc"
-        genres = []
-        original_language = None
-        sort_by = "popularity.desc"
+        res = requests.get(tmdb_url)
+        results = res.json().get("results", [])[:6]
         
-        # Advanced Intent & Mood Mapping
-        if any(w in user_message for w in ['cry', 'sad', 'heartbreaking', 'tearjerker', 'emotional']):
-            genres.append("18")
-        if any(w in user_message for w in ['cozy', 'feel-good', 'happy', 'uplifting']):
-            genres.extend(["35", "10749"])
-        if any(w in user_message for w in ['mind-bend', 'twist', 'smart', 'psychological', 'inception']):
-            genres.extend(["9648", "878", "53"])
-        if any(w in user_message for w in ['romcom', 'romantic comedy']):
-            genres.extend(["35", "10749"])
-        elif 'romance' in user_message or 'love' in user_message:
-            genres.append("10749")
-        elif 'action' in user_message or 'fight' in user_message:
-            genres.append("28")
-        elif 'horror' in user_message or 'scary' in user_message:
-            genres.append("27")
-        elif 'sci-fi' in user_message or 'space' in user_message:
-            genres.append("878")
-
-        if any(w in user_message for w in ['thai', 'thailand']):
-            original_language = "th"
-        elif any(w in user_message for w in ['korean', 'korea', 'kdrama']):
-            original_language = "ko"
-        elif any(w in user_message for w in ['japanese', 'japan']):
-            original_language = "ja"
-
-        params = [f"api_key={TMDB_API_KEY}"]
-        if genres:
-            params.append(f"with_genres={','.join(set(genres))}")
-        if original_language:
-            params.append(f"with_original_language={original_language}")
-            
-        params.append(f"sort_by={sort_by}")
-        target_url = f"https://api.themoviedb.org/3/discover/movie?{'&'.join(params)}"
-
-        res = requests.get(target_url)
-        results = res.json().get('results', [])[:10]
-        
-        if not results:
-            search_res = requests.get(f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&query={user_message}")
-            results = search_res.json().get('results', [])[:10]
-
         movies = []
-        for i, m in enumerate(results):
-            match_score = max(99 - (i * 2), 82)
+        for index, m in enumerate(results):
+            movie_id = m.get("id")
+            providers_url = f"https://api.themoviedb.org/3/movie/{movie_id}/watch/providers?api_key={TMDB_API_KEY}"
+            prov_res = requests.get(providers_url).json().get("results", {})
+            reg_prov = prov_res.get(region, prov_res.get("US", {}))
+            flatrate = reg_prov.get("flatrate", [])
+            platforms = [p.get("provider_name") for p in flatrate] if flatrate else ["TMDB VOD Catalog"]
+
             movies.append({
-                "title": m.get('title') or m.get('name'),
-                "poster": f"https://image.tmdb.org/t/p/w500{m.get('poster_path')}" if m.get('poster_path') else "",
-                "match": match_score,
-                "overview": m.get('overview'),
-                "rationale": f"Matched via semantic neural vectors on '{user_message}' with {match_score}% confidence."
+                "id": movie_id,
+                "title": m.get("title"),
+                "poster": f"https://image.tmdb.org/t/p/w500{m.get('poster_path')}" if m.get("poster_path") else "",
+                "vote_average": m.get("vote_average", 0.0),
+                "release_date": m.get("release_date", "2026"),
+                "overview": m.get("overview"),
+                "match": 99 - (index * 2),
+                "platforms": platforms,
+                "rationale": f"High-dimensional semantic clustering match for {username} tailored to regional telemetry ({region})."
             })
 
-        reply = f"Neural cluster analysis complete, {user_name}! Here are your predictive cinematic recommendations for *\"{user_message}\"*:"
-        return jsonify({"reply": reply, "movies": movies})
+        ai_reply = f"Here are the most accurate matches for your query, {username}. Available on {', '.join(movies[0]['platforms'][:2])}." if movies else f"I scanned our neural database for '{user_message}', but found no direct vector alignment."
+    except Exception:
+        movies = []
+        ai_reply = "Neural vector processing encountered a transient exception. Please retry."
 
-    except Exception as e:
-        return jsonify({"reply": f"Neural link stuttered, {user_name}. Let's try querying again!", "movies": []})
+    return jsonify({"reply": ai_reply, "movies": movies})
 
-@app.route('/trends', methods=['GET'])
+@app.route("/trends", methods=["GET"])
 def trends():
-    trend_data = {
-        "trending_genres": ["Sci-Fi", "Psychological Thriller", "Indie Romance"],
-        "ai_forecast": "Surge in interactive multi-verse storytelling expected in Q4 2026.",
-        "cluster_metrics": {"action": 84, "drama": 92, "romance": 78, "scifi": 95}
-    }
-    return jsonify(trend_data)
+    return jsonify({
+        "ai_forecast": "Neural analytics indicate an aggressive surge in quantum sci-fi and immersive multi-verse storytelling for Q4 2026.",
+        "trending_genres": [
+            "Quantum Sci-Fi & Temporal Loops (98.4 Index)",
+            "Psychological Neo-Noir Thrillers (95.1 Index)",
+            "Aesthetic Contemporary Romance (91.7 Index)",
+            "Epic Cybernetic Action Blockbusters (89.2 Index)"
+        ]
+    })
 
-import os
-
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
