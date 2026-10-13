@@ -30,7 +30,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Defense Engine Live", "version": "1000.0"})
+    return jsonify({"status": "CineMind Final Engine Live", "version": "1100.0"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -150,6 +150,20 @@ def chat():
         ai_reply = "System Alert: GEMINI_API_KEY is missing in Render Environment Variables."
     else:
         try:
+            # DYNAMIC MODEL FETCH: Google tells us exactly what model to use
+            valid_model = None
+            m_url = f"https://generativelanguage.googleapis.com/v1beta/models?key={GEMINI_API_KEY}"
+            m_res = requests.get(m_url, timeout=10)
+            
+            if m_res.status_code == 200:
+                for m in m_res.json().get("models", []):
+                    if "generateContent" in m.get("supportedGenerationMethods", []):
+                        valid_model = m["name"].split("/")[-1]
+                        break
+            
+            if not valid_model:
+                raise Exception("No valid generateContent models found for this API key.")
+
             prompt = f"""You are Nova, an expert AI movie recommender. 
             User request: "{user_message}"
             
@@ -164,11 +178,10 @@ def chat():
               ]
             }}"""
 
-            gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+            gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/{valid_model}:generateContent?key={GEMINI_API_KEY}"
             headers = {"Content-Type": "application/json"}
             payload = {"contents": [{"parts": [{"text": prompt}]}]}
             
-            # Safe timeout of 25 seconds prevents Gunicorn from crashing the server
             res = requests.post(gemini_url, headers=headers, json=payload, timeout=25)
             
             if res.status_code != 200:
