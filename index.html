@@ -72,7 +72,6 @@
         /* Main Content Area */
         .main-content { flex: 1; display: flex; flex-direction: column; gap: 32px; padding-bottom: 90px; min-width: 0; overflow: visible; }
         
-        /* Hero Banner with Inner Neon Glow */
         .hero-banner { background: linear-gradient(135deg, rgba(18, 12, 48, 0.85), rgba(6, 3, 18, 0.95)); border: 1px solid var(--glass-border); border-radius: 32px; padding: 50px; display: flex; flex-direction: column; gap: 26px; box-shadow: 0 30px 70px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.15); position: relative; overflow: visible; backdrop-filter: blur(30px); }
         .hero-banner::after { content: ''; position: absolute; top: 0; right: 0; width: 300px; height: 300px; background: radial-gradient(circle, rgba(56,189,248,0.15) 0%, transparent 70%); pointer-events: none; border-radius: 50%; }
         
@@ -85,7 +84,6 @@
         .hero-search-box input:focus { border-color: var(--secondary-glow); box-shadow: 0 0 35px rgba(56,189,248,0.6), inset 0 3px 20px rgba(0,0,0,0.9); }
         .hero-search-box i { position: absolute; left: 26px; top: 50%; transform: translateY(-50%); color: var(--secondary-glow); font-size: 1.25rem; filter: drop-shadow(0 0 10px var(--secondary-glow)); }
 
-        /* Filter Panel */
         .filter-panel { display: flex; flex-direction: column; gap: 16px; background: var(--panel-bg); padding: 25px 32px; border-radius: 24px; border: 1px solid var(--glass-border); backdrop-filter: blur(20px); box-shadow: 0 15px 40px rgba(0,0,0,0.6); overflow: visible; }
         .filter-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 6px 0; }
         .filter-label { font-size: 0.95rem; font-weight: 700; color: var(--secondary-glow); min-width: 100px; flex-shrink: 0; text-shadow: 0 0 10px rgba(56,189,248,0.4); }
@@ -101,7 +99,6 @@
         .movie-row::-webkit-scrollbar { height: 6px; }
         .movie-row::-webkit-scrollbar-thumb { background: var(--secondary-glow); border-radius: 10px; }
 
-        /* Cinematic Movie Cards with Refined Glow */
         .movie-card { min-width: 230px; width: 230px; background: var(--panel-bg); border-radius: 22px; overflow: hidden; border: 1px solid var(--glass-border); transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; display: flex; flex-direction: column; flex-shrink: 0; position: relative; backdrop-filter: blur(15px); box-shadow: 0 15px 35px rgba(0,0,0,0.6); }
         .movie-card:hover { border-color: var(--secondary-glow); transform: translateY(-10px) scale(1.03); box-shadow: 0 30px 60px rgba(56, 189, 248, 0.5), 0 0 20px rgba(192,132,252,0.4); z-index: 10; }
         .movie-card img { width: 100%; height: 325px; object-fit: cover; transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -115,12 +112,10 @@
         .nova-banner-clean { background: linear-gradient(135deg, rgba(192,132,252,0.2), rgba(56,189,248,0.2)); border: 1px solid var(--secondary-glow); border-radius: 28px; padding: 30px 35px; display: flex; align-items: center; gap: 22px; backdrop-filter: blur(20px); box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.2); }
         .nova-banner-clean img { width: 70px; height: 70px; object-fit: contain; filter: drop-shadow(0 0 20px #38bdf8); flex-shrink: 0; }
 
-        /* Dashboard Grid */
         .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
         .card-stat { background: var(--panel-bg); border: 1px solid var(--glass-border); border-radius: 28px; padding: 35px; display: flex; flex-direction: column; gap: 20px; backdrop-filter: blur(20px); box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
         .card-stat h3 { font-size: 1.2rem; font-weight: 700; color: var(--secondary-glow); display: flex; align-items: center; gap: 10px; text-shadow: 0 0 10px rgba(56,189,248,0.4); }
 
-        /* Modals */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2, 0, 8, 0.9); z-index: 200; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: all 0.35s ease; backdrop-filter: blur(25px); padding: 20px; overflow-y: auto; }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         
@@ -142,7 +137,7 @@
         .btn-fav { background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border); box-shadow: none; }
         .btn-fav:hover { background: rgba(255,255,255,0.12); border-color: var(--secondary-glow); }
 
-        /* Floating Nova Chat Widget with Synchronized Neon Hover */
+        /* Floating Nova Chat Widget */
         .chat-wrapper { position: fixed; bottom: 40px; right: 40px; z-index: 100; display: flex; align-items: flex-end; flex-direction: column; gap: 16px; }
         .chat-tooltip { background: #0f0a28; padding: 14px 24px; border-radius: 24px; font-size: 0.95rem; font-weight: 600; border: 1px solid var(--secondary-glow); animation: float 3s infinite; margin-right: 16px; box-shadow: 0 6px 25px rgba(56,189,248,0.3); backdrop-filter: blur(15px); }
         
@@ -299,7 +294,7 @@
         <div class="chat-tooltip" id="chatTooltip">Ask Nova anything ✨</div>
         <div class="chat-modal" id="chatModal">
             <div class="chat-header">
-                <div><img src="assets/nova.png" alt="Nova" style="width:24px; height:24px; vertical-align:middle; margin-right:6px; object-fit:contain;"> Nova AI</div>
+                <div><img src="nova.png" alt="Nova" style="width:24px; height:24px; vertical-align:middle; margin-right:6px; object-fit:contain;" onerror="this.src='assets/nova.png'"> Nova AI</div>
                 <i class="fa-solid fa-xmark close-chat" id="closeChat"></i>
             </div>
             <div class="chat-body" id="chatHistory">
@@ -317,14 +312,16 @@
             </div>
         </div>
         <div class="nova-chathead" id="chatToggle">
-            <img src="assets/nova.png" alt="Nova" onerror="this.src='nova.png'">
+            <img src="nova.png" alt="Nova" onerror="this.src='assets/nova.png'">
         </div>
     </div>
 
     <script>
         const TMDB_API_KEY = "3dc27f9ae386c422fdc5994e6fda6823"; 
-        const PYTHON_BACKEND_URL = "http://127.0.0.1:5000/chat";
-        const PYTHON_TRENDS_URL = "http://127.0.0.1:5000/trends";
+        
+        // LIVE RENDER BACKEND URLS
+        const PYTHON_BACKEND_URL = "https://cinemind-live.onrender.com/chat";
+        const PYTHON_TRENDS_URL = "https://cinemind-live.onrender.com/trends";
 
         let currentMovieData = null;
         let watchlist = JSON.parse(localStorage.getItem('cinemind_watchlist')) || [];
@@ -582,7 +579,7 @@
             mainContainer.innerHTML = `
                 <div class="nova-view-container" style="display:flex; flex-direction:column; gap:22px;">
                     <div class="nova-banner-clean">
-                        <img src="assets/nova.png" alt="Nova" onerror="this.src='nova.png'">
+                        <img src="nova.png" alt="Nova" onerror="this.src='assets/nova.png'">
                         <div class="nova-banner-text">
                             <h2>Nova AI Intelligence Hub</h2>
                             <p>Ask Nova for complex plot premises, deep emotional vibes, or cross-genre recommendations below!</p>
@@ -646,7 +643,7 @@
                     }
                 } catch (err) {
                     typingInd.remove();
-                    historyDiv.innerHTML += `<div class="chat-bubble ai-bubble">Connection error. Ensure app.py is running.</div>`;
+                    historyDiv.innerHTML += `<div class="chat-bubble ai-bubble">Connection error. Ensure backend server is running.</div>`;
                 }
             };
 
