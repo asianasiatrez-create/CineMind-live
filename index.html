@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineMind | AI & Data-Driven Cinema Intelligence</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600&display=swap');
+
+        :root {
+            --bg-deep: #020008;
+            --sidebar-bg: rgba(6, 3, 18, 0.85);
+            --panel-bg: rgba(14, 10, 36, 0.65);
+            --primary-glow: #c084fc;
+            --secondary-glow: #38bdf8;
+            --accent-pink: #f43f5e;
+            --glass-border: rgba(56, 189, 248, 0.25);
+            --glass-border-hover: rgba(192, 132, 252, 0.6);
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; color: var(--text-main); -webkit-font-smoothing: antialiased; }
+        
+        html, body { width: 100%; min-height: 100vh; background-color: var(--bg-deep); overflow-x: hidden; }
+        body { display: flex; flex-direction: column; }
+
+        /* Custom Neon Scrollbars */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(3, 1, 12, 0.9); }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(var(--secondary-glow), var(--primary-glow)); border-radius: 4px; }
+
+        /* Cinematic Atmospheric Lighting Background */
+        .cosmic-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.15) 0%, transparent 40%),
+                        radial-gradient(circle at 90% 80%, rgba(192, 132, 252, 0.18) 0%, transparent 45%),
+                        radial-gradient(circle at 50% 50%, rgba(244, 63, 94, 0.08) 0%, transparent 50%),
+                        linear-gradient(to bottom, #020008, #070314);
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        .glass-panel { 
+            background: var(--panel-bg); 
+            border: 1px solid var(--glass-border); 
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1); 
+            backdrop-filter: blur(25px); 
+        }
+        
+        .app-layout { display: flex; width: 100%; max-width: 1750px; margin: 0 auto; min-height: 100vh; padding: 32px; gap: 32px; }
+
+        /* Sidebar: High-End Frosted Glass */
+        .sidebar { width: 300px; background: var(--sidebar-bg); border: 1px solid var(--glass-border); border-radius: 32px; padding: 40px 24px; display: flex; flex-direction: column; z-index: 10; justify-content: space-between; flex-shrink: 0; box-shadow: 0 30px 70px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.15); backdrop-filter: blur(30px); }
+        
+        .logo-free-wrapper { display: flex; justify-content: center; align-items: center; width: 100%; margin-bottom: 25px; background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; }
+        .logo-unboxed { width: 125px; height: 125px; border-radius: 50%; object-fit: cover; border: 3px solid var(--secondary-glow); box-shadow: 0 0 50px rgba(56,189,248,0.7), 0 0 25px rgba(192,132,252,0.6); transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; display: block; background: transparent; }
+        .logo-unboxed:hover { transform: scale(1.12) rotate(6deg); box-shadow: 0 0 75px rgba(192,132,252,0.95); border-color: var(--primary-glow); }
+
+        .nav-links { list-style: none; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+        .nav-item { padding: 16px 20px; border-radius: 18px; cursor: pointer; color: var(--text-muted); font-weight: 600; font-size: 0.98rem; display: flex; align-items: center; gap: 16px; transition: 0.25s; border: 1px solid transparent; }
+        .nav-item:hover { color: white; background: rgba(255,255,255,0.06); border-color: rgba(56,189,248,0.2); transform: translateX(6px); }
+        .nav-item.active { background: linear-gradient(90deg, rgba(192,132,252,0.25), rgba(56,189,248,0.15)); border-left: 4px solid var(--secondary-glow); border-color: rgba(56,189,248,0.3); color: white; box-shadow: inset 0 0 20px rgba(56,189,248,0.2); }
+
+        .profile-widget { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); padding: 16px; border-radius: 20px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; transition: 0.25s; }
+        .profile-widget:hover { border-color: var(--secondary-glow); background: rgba(255, 255, 255, 0.07); box-shadow: 0 0 25px rgba(56,189,248,0.35); }
+        .profile-name { font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; color: #fff; }
+        .profile-sub { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
+
+        /* Main Content Area */
+        .main-content { flex: 1; display: flex; flex-direction: column; gap: 32px; padding-bottom: 90px; min-width: 0; overflow: visible; }
+        
+        /* Hero Banner with Inner Neon Glow */
+        .hero-banner { background: linear-gradient(135deg, rgba(18, 12, 48, 0.85), rgba(6, 3, 18, 0.95)); border: 1px solid var(--glass-border); border-radius: 32px; padding: 50px; display: flex; flex-direction: column; gap: 26px; box-shadow: 0 30px 70px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.15); position: relative; overflow: visible; backdrop-filter: blur(30px); }
+        .hero-banner::after { content: ''; position: absolute; top: 0; right: 0; width: 300px; height: 300px; background: radial-gradient(circle, rgba(56,189,248,0.15) 0%, transparent 70%); pointer-events: none; border-radius: 50%; }
+        
+        .welcome-header { width: 100%; overflow: visible; }
+        .welcome-title { font-size: clamp(2rem, 3.5vw, 2.8rem); font-weight: 800; color: #fff; line-height: 1.4; letter-spacing: -0.5px; text-shadow: 0 2px 20px rgba(0,0,0,0.5); }
+        .text-gradient { font-family: 'Playfair Display', serif; background: linear-gradient(to right, #f43f5e, var(--primary-glow), var(--secondary-glow)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-style: italic; font-weight: 600; filter: drop-shadow(0 0 25px rgba(192,132,252,0.4)); }
+
+        .hero-search-box { position: relative; width: 100%; max-width: 750px; }
+        .hero-search-box input { width: 100%; background: rgba(3, 2, 10, 0.95); border: 1.5px solid var(--glass-border); border-radius: 40px; padding: 20px 28px 20px 65px; outline: none; color: white; font-weight: 500; font-size: 1.08rem; transition: 0.3s; box-shadow: inset 0 3px 20px rgba(0,0,0,0.9), 0 10px 30px rgba(0,0,0,0.5); }
+        .hero-search-box input:focus { border-color: var(--secondary-glow); box-shadow: 0 0 35px rgba(56,189,248,0.6), inset 0 3px 20px rgba(0,0,0,0.9); }
+        .hero-search-box i { position: absolute; left: 26px; top: 50%; transform: translateY(-50%); color: var(--secondary-glow); font-size: 1.25rem; filter: drop-shadow(0 0 10px var(--secondary-glow)); }
+
+        /* Filter Panel */
+        .filter-panel { display: flex; flex-direction: column; gap: 16px; background: var(--panel-bg); padding: 25px 32px; border-radius: 24px; border: 1px solid var(--glass-border); backdrop-filter: blur(20px); box-shadow: 0 15px 40px rgba(0,0,0,0.6); overflow: visible; }
+        .filter-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 6px 0; }
+        .filter-label { font-size: 0.95rem; font-weight: 700; color: var(--secondary-glow); min-width: 100px; flex-shrink: 0; text-shadow: 0 0 10px rgba(56,189,248,0.4); }
+        .filter-pill { background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); padding: 10px 22px; border-radius: 24px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: 0.25s; color: var(--text-muted); }
+        .filter-pill:hover, .filter-pill.active { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); color: white; border-color: transparent; box-shadow: 0 0 25px rgba(56,189,248,0.7); transform: translateY(-2px); }
+
+        .row-title { font-size: 1.5rem; font-weight: 800; color: white; letter-spacing: 0.5px; display: flex; align-items: center; gap: 12px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        
+        .catalog-container { display: flex; flex-direction: column; gap: 42px; overflow: visible; }
+        .row-section { display: flex; flex-direction: column; gap: 18px; overflow: visible; }
+        
+        .movie-row { display: flex; gap: 24px; overflow-x: auto; padding: 18px 10px 30px 10px; scrollbar-width: thin; scrollbar-color: var(--secondary-glow) transparent; }
+        .movie-row::-webkit-scrollbar { height: 6px; }
+        .movie-row::-webkit-scrollbar-thumb { background: var(--secondary-glow); border-radius: 10px; }
+
+        /* Cinematic Movie Cards with Refined Glow */
+        .movie-card { min-width: 230px; width: 230px; background: var(--panel-bg); border-radius: 22px; overflow: hidden; border: 1px solid var(--glass-border); transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; display: flex; flex-direction: column; flex-shrink: 0; position: relative; backdrop-filter: blur(15px); box-shadow: 0 15px 35px rgba(0,0,0,0.6); }
+        .movie-card:hover { border-color: var(--secondary-glow); transform: translateY(-10px) scale(1.03); box-shadow: 0 30px 60px rgba(56, 189, 248, 0.5), 0 0 20px rgba(192,132,252,0.4); z-index: 10; }
+        .movie-card img { width: 100%; height: 325px; object-fit: cover; transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        .movie-card:hover img { transform: scale(1.05); }
+        .movie-info { padding: 16px; display: flex; flex-direction: column; gap: 6px; background: linear-gradient(to top, rgba(8,4,20,0.95), rgba(14,10,36,0.8)); }
+        .movie-title { font-weight: 700; font-size: 0.98rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+        .match-score { font-size: 0.85rem; font-weight: 700; color: #38bdf8; display: flex; align-items: center; gap: 6px; text-shadow: 0 0 10px rgba(56,189,248,0.4); }
+
+        .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 26px; }
+
+        .nova-banner-clean { background: linear-gradient(135deg, rgba(192,132,252,0.2), rgba(56,189,248,0.2)); border: 1px solid var(--secondary-glow); border-radius: 28px; padding: 30px 35px; display: flex; align-items: center; gap: 22px; backdrop-filter: blur(20px); box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.2); }
+        .nova-banner-clean img { width: 70px; height: 70px; object-fit: contain; filter: drop-shadow(0 0 20px #38bdf8); flex-shrink: 0; }
+
+        /* Dashboard Grid */
+        .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
+        .card-stat { background: var(--panel-bg); border: 1px solid var(--glass-border); border-radius: 28px; padding: 35px; display: flex; flex-direction: column; gap: 20px; backdrop-filter: blur(20px); box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
+        .card-stat h3 { font-size: 1.2rem; font-weight: 700; color: var(--secondary-glow); display: flex; align-items: center; gap: 10px; text-shadow: 0 0 10px rgba(56,189,248,0.4); }
+
+        /* Modals */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2, 0, 8, 0.9); z-index: 200; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: all 0.35s ease; backdrop-filter: blur(25px); padding: 20px; overflow-y: auto; }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        
+        .modal-content { display: flex; gap: 35px; width: 950px; max-width: 100%; background: linear-gradient(135deg, #120c30, #070314); padding: 50px; border-radius: 32px; position: relative; border: 1px solid var(--glass-border-hover); box-shadow: 0 40px 100px rgba(0,0,0,0.95), 0 0 40px rgba(192,132,252,0.2); max-height: 90vh; overflow-y: auto; }
+        .modal-content img { width: 290px; height: 425px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.7); flex-shrink: 0; }
+        .modal-info { display: flex; flex-direction: column; gap: 20px; flex: 1; min-width: 0; }
+        .close-modal { position: absolute; top: 24px; right: 30px; font-size: 1.7rem; cursor: pointer; color: var(--text-muted); transition: 0.2s; z-index: 10; }
+        .close-modal:hover { color: white; transform: scale(1.1); }
+
+        .ai-rationale-box { background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.4); padding: 18px 22px; border-radius: 18px; display: flex; flex-direction: column; gap: 6px; box-shadow: inset 0 0 15px rgba(56,189,248,0.1); }
+        .ai-rationale-title { font-size: 0.9rem; font-weight: 700; color: var(--secondary-glow); display: flex; align-items: center; gap: 8px; text-shadow: 0 0 10px rgba(56,189,248,0.4); }
+        .ai-rationale-text { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; }
+
+        .modal-actions { display: flex; gap: 15px; margin-top: auto; flex-wrap: wrap; }
+        .btn-action { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); border: none; padding: 14px 28px; border-radius: 30px; color: white; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; transition: 0.3s; font-size: 0.98rem; box-shadow: 0 5px 25px rgba(192,132,252,0.5); }
+        .btn-action:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(56,189,248,0.8); }
+        .btn-trailer { background: linear-gradient(135deg, #f43f5e, #e11d48); box-shadow: 0 5px 25px rgba(244, 63, 94, 0.5); }
+        .btn-trailer:hover { box-shadow: 0 8px 30px rgba(244, 63, 94, 0.8); }
+        .btn-fav { background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border); box-shadow: none; }
+        .btn-fav:hover { background: rgba(255,255,255,0.12); border-color: var(--secondary-glow); }
+
+        /* Floating Nova Chat Widget with Synchronized Neon Hover */
+        .chat-wrapper { position: fixed; bottom: 40px; right: 40px; z-index: 100; display: flex; align-items: flex-end; flex-direction: column; gap: 16px; }
+        .chat-tooltip { background: #0f0a28; padding: 14px 24px; border-radius: 24px; font-size: 0.95rem; font-weight: 600; border: 1px solid var(--secondary-glow); animation: float 3s infinite; margin-right: 16px; box-shadow: 0 6px 25px rgba(56,189,248,0.3); backdrop-filter: blur(15px); }
+        
+        .nova-chathead { width: 85px; height: 85px; background: #0f0a28; border: 2.5px solid var(--secondary-glow); border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 0 40px rgba(56, 189, 248, 0.6); overflow: hidden; padding: 4px; }
+        .nova-chathead:hover { transform: scale(1.15) rotate(6deg); box-shadow: 0 0 60px rgba(192, 132, 252, 0.95); border-color: var(--primary-glow); }
+        .nova-chathead img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+        .nova-chathead:hover img { transform: scale(1.05); }
+        
+        .chat-modal { width: 440px; max-width: calc(100vw - 40px); background: #080414; border-radius: 30px; border: 1px solid var(--glass-border-hover); box-shadow: 0 30px 80px rgba(0,0,0,0.95), 0 0 30px rgba(56,189,248,0.2); display: flex; flex-direction: column; position: absolute; bottom: 110px; right: 0; opacity: 0; pointer-events: none; transition: 0.25s; backdrop-filter: blur(25px); }
+        .chat-modal.active { opacity: 1; pointer-events: auto; }
+        .chat-header { padding: 22px 26px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 1.1rem; }
+        .chat-body { padding: 22px; height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; background: rgba(3, 1, 10, 0.9); }
+        .chat-bubble { padding: 14px 18px; border-radius: 18px; font-size: 0.98rem; font-weight: 500; line-height: 1.55; max-width: 88%; word-break: break-word; }
+        .ai-bubble { background: #160f38; border: 1px solid rgba(56, 189, 248, 0.4); color: #ffffff; align-self: flex-start; box-shadow: 0 4px 15px rgba(56,189,248,0.15); }
+        .user-bubble { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); color: #ffffff; align-self: flex-end; box-shadow: 0 4px 20px rgba(192,132,252,0.4); }
+        .quick-chips { display: flex; gap: 8px; padding: 14px 22px; overflow-x: auto; background: rgba(8, 4, 20, 0.95); border-top: 1px solid var(--glass-border); scrollbar-width: none; }
+        .chip { background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); padding: 8px 16px; border-radius: 16px; font-size: 0.82rem; font-weight: 600; cursor: pointer; color: var(--text-muted); white-space: nowrap; transition: 0.2s; }
+        .chip:hover { background: var(--primary-glow); color: white; border-color: transparent; box-shadow: 0 0 15px rgba(192,132,252,0.6); }
+        .chat-footer { padding: 16px 22px; border-top: 1px solid var(--glass-border); display: flex; gap: 12px; background: rgba(8, 4, 20, 0.95); }
+        .chat-footer input { flex: 1; background: #160f38; border: 1px solid var(--glass-border); border-radius: 24px; padding: 13px 20px; outline: none; font-size: 0.98rem; color: white; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); }
+        .send-btn { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(192,132,252,0.5); }
+
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+
+        @media (max-width: 1100px) {
+            .app-layout { flex-direction: column; padding: 15px; gap: 15px; }
+            .sidebar { width: 100%; height: auto; flex-direction: row; align-items: center; padding: 15px 25px; border-radius: 20px; }
+            .logo-free-wrapper { margin-bottom: 0; width: auto; }
+            .logo-unboxed { width: 65px; height: 65px; }
+            .nav-links { flex-direction: row; margin-top: 0; gap: 12px; overflow-x: auto; }
+            .nav-item { padding: 10px 16px; font-size: 0.9rem; }
+            .profile-widget { display: none; }
+            .main-content { width: 100%; padding: 0; }
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="cosmic-bg"></div>
+
+    <div class="app-layout">
+        <!-- Sidebar Navigation with Unboxed Circular Logo -->
+        <aside class="sidebar">
+            <div class="logo-free-wrapper">
+                <img src="CineMind-Logo.png" alt="CineMind Logo" class="logo-unboxed" onerror="this.src='nova.png'">
+            </div>
+
+            <ul class="nav-links">
+                <li class="nav-item active" data-view="discover"><i class="fa-solid fa-house"></i> Home</li>
+                <li class="nav-item" data-view="nova"><i class="fa-solid fa-wand-magic-sparkles" style="color: #38bdf8;"></i> Nova AI</li>
+                <li class="nav-item" data-view="dataviz"><i class="fa-solid fa-chart-line" style="color: #c084fc;"></i> Analytics</li>
+                <li class="nav-item" data-view="watchlist"><i class="fa-solid fa-bookmark"></i> Watchlist</li>
+                <li class="nav-item" data-view="favorites"><i class="fa-solid fa-heart" style="color: #f43f5e;"></i> Favorites</li>
+            </ul>
+
+            <div class="profile-widget" id="openProfile">
+                <div class="profile-name"><i class="fa-solid fa-user-circle" style="color: var(--secondary-glow);"></i> <span id="profileDisplayName">Movie Fan</span></div>
+                <div class="profile-sub">Click to edit profile</div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content" id="scrollContainer">
+            <div class="hero-banner" id="heroBanner">
+                <div class="welcome-header">
+                    <h1 class="welcome-title">Hello <span class="text-gradient" id="welcomeName">Movie Fan</span>,<br>Welcome back to Neural Cinema.</h1>
+                </div>
+                <div class="hero-search-box">
+                    <i class="fa-solid fa-brain"></i>
+                    <input type="text" id="searchInput" placeholder="Search movies or query AI naturally e.g. 'Mind-bending sci-fi set in space'...">
+                </div>
+            </div>
+
+            <div class="filter-panel" id="filterPanel">
+                <div class="filter-row">
+                    <span class="filter-label">Genres:</span>
+                    <button class="filter-pill active" data-genre="">All</button>
+                    <button class="filter-pill" data-genre="28">Action</button>
+                    <button class="filter-pill" data-genre="12">Adventure</button>
+                    <button class="filter-pill" data-genre="16">Animation</button>
+                    <button class="filter-pill" data-genre="35">Comedy</button>
+                    <button class="filter-pill" data-genre="18">Drama</button>
+                    <button class="filter-pill" data-genre="14">Fantasy</button>
+                    <button class="filter-pill" data-genre="27">Horror</button>
+                    <button class="filter-pill" data-genre="10749">Romance</button>
+                    <button class="filter-pill" data-genre="878">Sci-Fi</button>
+                    <button class="filter-pill" data-genre="53">Thriller</button>
+                </div>
+                <div class="filter-row">
+                    <span class="filter-label">Countries:</span>
+                    <button class="filter-pill active" data-country="">Global</button>
+                    <button class="filter-pill" data-country="US">USA</button>
+                    <button class="filter-pill" data-country="KR">South Korea</button>
+                    <button class="filter-pill" data-country="JP">Japan</button>
+                    <button class="filter-pill" data-country="TH">Thailand</button>
+                    <button class="filter-pill" data-country="IN">India</button>
+                </div>
+            </div>
+
+            <div id="mainContainer" class="catalog-container"></div>
+        </main>
+    </div>
+
+    <!-- Movie Details Modal -->
+    <div class="modal-overlay" id="movieModal">
+        <div class="modal-content">
+            <i class="fa-solid fa-xmark close-modal" id="closeModal"></i>
+            <img id="modalPoster" src="" alt="Poster">
+            <div class="modal-info">
+                <h2 class="modal-title" id="modalTitle">Loading...</h2>
+                <p class="modal-meta" id="modalMeta"></p>
+                <div class="ai-rationale-box">
+                    <span class="ai-rationale-title"><i class="fa-solid fa-brain"></i> CineMind AI Rationale</span>
+                    <span class="ai-rationale-text" id="modalRationale">Analyzing vector confidence...</span>
+                </div>
+                <p class="modal-overview" id="modalOverview"></p>
+                <div class="modal-actions">
+                    <button class="btn-action btn-trailer" id="trailerBtn"><i class="fa-solid fa-play"></i> Watch Trailer</button>
+                    <button class="btn-action" id="watchlistBtn"><i class="fa-solid fa-plus"></i> Watchlist</button>
+                    <button class="btn-action btn-fav" id="favoriteBtn"><i class="fa-solid fa-heart"></i> Favorite</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- YouTube Trailer Modal -->
+    <div class="modal-overlay" id="videoModal">
+        <div class="video-box" style="width: 800px; max-width: 100%; background: #0f0a28; border-radius: 24px; border: 1px solid var(--glass-border); overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 30px 80px rgba(0,0,0,0.95);">
+            <div style="padding: 16px 22px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--glass-border);">
+                <h3 id="videoModalTitle" style="font-size: 1.1rem; font-weight:700;">Official Trailer</h3>
+                <i class="fa-solid fa-xmark close-modal" id="closeVideoModal" style="position:static; font-size:1.3rem;"></i>
+            </div>
+            <div class="video-wrapper" style="position: relative; width: 100%; padding-bottom: 56.25%;">
+                <iframe id="youtubeIframe" src="" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div class="modal-overlay" id="profileModal">
+        <div class="profile-box" style="width: 420px; max-width: 100%; background: #0f0a28; padding: 35px; border-radius: 28px; border: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 20px; position: relative; box-shadow: 0 30px 80px rgba(0,0,0,0.95);">
+            <i class="fa-solid fa-xmark close-modal" id="closeProfileModal" style="top:25px; right:25px;"></i>
+            <h2><i class="fa-solid fa-user-pen" style="color: var(--secondary-glow);"></i> User Profile</h2>
+            <div class="pref-group">
+                <span class="pref-label">What should Nova call you?</span>
+                <input type="text" id="userNameInput" value="Movie Fan" style="background: #160f38; border: 1px solid var(--glass-border); border-radius: 14px; padding: 13px 18px; color: white; outline: none; font-size: 0.95rem; font-weight: 500;">
+            </div>
+            <button class="btn-action" id="saveProfileBtn"><i class="fa-solid fa-check"></i> Save Profile</button>
+        </div>
+    </div>
+
+    <!-- Floating Nova Chat Widget -->
+    <div class="chat-wrapper">
+        <div class="chat-tooltip" id="chatTooltip">Ask Nova anything ✨</div>
+        <div class="chat-modal" id="chatModal">
+            <div class="chat-header">
+                <div><img src="assets/nova.png" alt="Nova" style="width:24px; height:24px; vertical-align:middle; margin-right:6px; object-fit:contain;"> Nova AI</div>
+                <i class="fa-solid fa-xmark close-chat" id="closeChat"></i>
+            </div>
+            <div class="chat-body" id="chatHistory">
+                <div class="chat-bubble ai-bubble" id="novaGreeting">Hi! 👽 I'm Nova. Tell me your movie mood today!</div>
+            </div>
+            <div class="quick-chips">
+                <span class="chip" onclick="sendQuickPrompt('Korean romcom')">🇰🇷 Korean Romcom</span>
+                <span class="chip" onclick="sendQuickPrompt('Mind-bending sci-fi')">🧠 Sci-Fi</span>
+                <span class="chip" onclick="sendQuickPrompt('Heartbreaking sad romance')">💔 Sad Romance</span>
+                <span class="chip" onclick="sendQuickPrompt('Action blockbusters')">💥 Action</span>
+            </div>
+            <div class="chat-footer">
+                <input type="text" id="chatInput" placeholder="Ask Nova..." autocomplete="off">
+                <button class="send-btn" id="sendBtn"><i class="fa-solid fa-paper-plane" style="color: white; font-size: 0.85rem;"></i></button>
+            </div>
+        </div>
+        <div class="nova-chathead" id="chatToggle">
+            <img src="assets/nova.png" alt="Nova" onerror="this.src='nova.png'">
+        </div>
+    </div>
+
+    <script>
+        const TMDB_API_KEY = "3dc27f9ae386c422fdc5994e6fda6823"; 
+        const PYTHON_BACKEND_URL = "http://127.0.0.1:5000/chat";
+        const PYTHON_TRENDS_URL = "http://127.0.0.1:5000/trends";
+
+        let currentMovieData = null;
+        let watchlist = JSON.parse(localStorage.getItem('cinemind_watchlist')) || [];
+        let favorites = JSON.parse(localStorage.getItem('cinemind_favorites')) || [];
+        let userProfile = JSON.parse(localStorage.getItem('cinemind_profile')) || { name: "Xyrus Marie" };
+        
+        let currentView = "discover";
+        let selectedGenre = "";
+        let selectedCountry = "";
+
+        const mainContainer = document.getElementById('mainContainer');
+        const searchInput = document.getElementById('searchInput');
+        const filterPanel = document.getElementById('filterPanel');
+        const heroBanner = document.getElementById('heroBanner');
+        const navItems = document.querySelectorAll('.nav-item');
+
+        const profileModal = document.getElementById('profileModal');
+        const userNameInput = document.getElementById('userNameInput');
+        const profileDisplayName = document.getElementById('profileDisplayName');
+        const welcomeName = document.getElementById('welcomeName');
+        const novaGreeting = document.getElementById('novaGreeting');
+
+        function initProfile() {
+            userNameInput.value = userProfile.name;
+            profileDisplayName.innerText = userProfile.name;
+            welcomeName.innerText = userProfile.name;
+            novaGreeting.innerHTML = `Hi ${userProfile.name}! 👽 I'm Nova. Tell me your movie mood today!`;
+        }
+        initProfile();
+
+        document.getElementById('openProfile').onclick = () => profileModal.classList.add('active');
+        document.getElementById('closeProfileModal').onclick = () => profileModal.classList.remove('active');
+
+        document.getElementById('saveProfileBtn').onclick = () => {
+            userProfile.name = userNameInput.value.trim() || "Movie Fan";
+            localStorage.setItem('cinemind_profile', JSON.stringify(userProfile));
+            initProfile();
+            profileModal.classList.remove('active');
+        };
+
+        function createMovieCard(movie, isAI = false) {
+            const poster = isAI ? movie.poster : (movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Poster');
+            const title = movie.title || movie.name;
+            const score = isAI ? `<i class="fa-solid fa-bolt" style="color: var(--secondary-glow);"></i> ${movie.match}% Neural Match` : `<i class="fa-solid fa-star" style="color: #fbbf24;"></i> ${movie.vote_average ? movie.vote_average.toFixed(1) : 'NR'}`;
+            
+            const card = document.createElement('div');
+            card.className = 'movie-card';
+            card.onclick = () => fetchAndOpenModal(title, poster, movie.rationale);
+            card.innerHTML = `
+                <img src="${poster}" onerror="this.src='https://via.placeholder.com/500x750?text=No+Poster'">
+                <div class="movie-info">
+                    <div class="movie-title">${title}</div>
+                    <div class="match-score">${score}</div>
+                </div>
+            `;
+            return card;
+        }
+
+        async function loadNetflixRows() {
+            if (currentView !== 'discover') return;
+            mainContainer.innerHTML = `<p style="color: var(--text-muted); text-align:center; padding: 40px; font-weight:600;"><i class="fa-solid fa-spinner fa-spin"></i> Initializing Neural Cinematic Streams...</p>`;
+            
+            let baseQuery = `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=popularity.desc`;
+            if (selectedGenre) baseQuery += `&with_genres=${selectedGenre}`;
+            if (selectedCountry) baseQuery += `&with_origin_country=${selectedCountry}`;
+
+            const categories = [
+                { title: "🔥 Trending Cinematic Data", url: `${baseQuery}&page=1` },
+                { title: "🧠 AI Recommended Blockbusters", url: `${baseQuery}&page=2` },
+                { title: "✨ Masterpiece Cinema", url: `${baseQuery}&sort_by=vote_average.desc&page=1` }
+            ];
+
+            mainContainer.innerHTML = '';
+
+            for (let cat of categories) {
+                try {
+                    const res = await fetch(cat.url);
+                    const data = await res.json();
+                    if (data.results && data.results.length > 0) {
+                        const rowSection = document.createElement('div');
+                        rowSection.className = 'row-section';
+                        
+                        const titleEl = document.createElement('h3');
+                        titleEl.className = 'row-title';
+                        titleEl.innerHTML = `<i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> ${cat.title}`;
+                        rowSection.appendChild(titleEl);
+
+                        const movieRow = document.createElement('div');
+                        movieRow.className = 'movie-row';
+
+                        data.results.forEach(movie => {
+                            movieRow.appendChild(createMovieCard(movie));
+                        });
+
+                        rowSection.appendChild(movieRow);
+                        mainContainer.appendChild(rowSection);
+                    }
+                } catch (err) {
+                    console.error("Error loading category row");
+                }
+            }
+        }
+
+        document.querySelectorAll('.filter-row').forEach(row => {
+            row.querySelectorAll('.filter-pill').forEach(pill => {
+                pill.onclick = (e) => {
+                    row.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+                    e.target.classList.add('active');
+
+                    if (e.target.hasAttribute('data-genre')) selectedGenre = e.target.getAttribute('data-genre');
+                    if (e.target.hasAttribute('data-country')) selectedCountry = e.target.getAttribute('data-country');
+
+                    loadNetflixRows();
+                };
+            });
+        });
+
+        searchInput.addEventListener('input', async (e) => {
+            const query = e.target.value.trim();
+            if (currentView !== 'discover') return;
+
+            if (!query) {
+                heroBanner.style.display = "flex";
+                filterPanel.style.display = "flex";
+                loadNetflixRows();
+                return;
+            }
+
+            heroBanner.style.display = "none";
+            filterPanel.style.display = "none";
+
+            try {
+                const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}`);
+                const data = await res.json();
+                
+                mainContainer.innerHTML = `<h3 class="row-title">Neural Search Results for "${query}"</h3>`;
+                const grid = document.createElement('div');
+                grid.className = 'movie-grid';
+                
+                if (data.results && data.results.length > 0) {
+                    data.results.forEach(movie => grid.appendChild(createMovieCard(movie)));
+                } else {
+                    grid.innerHTML = `<p style="color: var(--text-muted); font-weight:500;">No matching films found in database.</p>`;
+                }
+                mainContainer.appendChild(grid);
+            } catch (err) {
+                console.error("Search error");
+            }
+        });
+
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                navItems.forEach(nav => nav.classList.remove('active'));
+                item.classList.add('active');
+                currentView = item.getAttribute('data-view');
+
+                if (currentView === 'discover') {
+                    heroBanner.style.display = "flex";
+                    filterPanel.style.display = "flex";
+                    loadNetflixRows();
+                } else if (currentView === 'nova') {
+                    heroBanner.style.display = "none";
+                    filterPanel.style.display = "none";
+                    renderEnlargedNovaView();
+                } else if (currentView === 'dataviz') {
+                    heroBanner.style.display = "none";
+                    filterPanel.style.display = "none";
+                    renderDataAnalyticsDashboard();
+                } else {
+                    heroBanner.style.display = "none";
+                    filterPanel.style.display = "none";
+                    
+                    const isWatchlist = currentView === 'watchlist';
+                    mainContainer.innerHTML = `<h3 class="row-title">${isWatchlist ? 'My Saved Watchlist' : 'My Favorite Movies'}</h3>`;
+                    const grid = document.createElement('div');
+                    grid.className = 'movie-grid';
+                    
+                    const targetArr = isWatchlist ? watchlist : favorites;
+                    if (targetArr.length > 0) {
+                        targetArr.forEach(movie => grid.appendChild(createMovieCard(movie)));
+                    } else {
+                        grid.innerHTML = `<p style="color: var(--text-muted); font-weight:500;">No items saved here yet.</p>`;
+                    }
+                    mainContainer.appendChild(grid);
+                }
+            });
+        });
+
+        async function renderDataAnalyticsDashboard() {
+            mainContainer.innerHTML = `
+                <div class="dataviz-container" style="display:flex; flex-direction:column; gap:25px;">
+                    <div class="nova-banner-clean">
+                        <i class="fa-solid fa-chart-line" style="font-size: 2.5rem; color: var(--secondary-glow);"></i>
+                        <div class="nova-banner-text">
+                            <h2>CineMind Data Science & Analytics Hub</h2>
+                            <p>Real-time vector clustering, genre distributions, and predictive modeling powered by TMDB metadata.</p>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid" style="display:grid; grid-template-columns:2fr 1fr; gap:30px;">
+                        <div class="card-stat glass-panel">
+                            <h3><i class="fa-solid fa-chart-pie" style="color: var(--secondary-glow);"></i> Genre Popularity Distribution Matrix</h3>
+                            <canvas id="genreChart" height="150"></canvas>
+                        </div>
+                        <div class="card-stat glass-panel">
+                            <h3><i class="fa-solid fa-microchip" style="color: var(--primary-glow);"></i> Emerging AI Forecast</h3>
+                            <p id="aiForecastText" style="color: var(--text-muted); line-height: 1.6; font-size: 0.95rem;">Fetching neural trend telemetry...</p>
+                            <hr style="border-color: var(--glass-border); margin: 15px 0;">
+                            <h3 style="font-size: 0.95rem; color: var(--secondary-glow);"><i class="fa-solid fa-network-wired"></i> Top Cluster Interest</h3>
+                            <ul id="clusterList" style="list-style: none; display: flex; flex-direction: column; gap: 8px; color: var(--text-muted); font-size: 0.9rem; margin-top: 5px;"></ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            try {
+                const trendRes = await fetch(PYTHON_TRENDS_URL);
+                const data = await trendRes.json();
+                
+                document.getElementById('aiForecastText').innerText = data.ai_forecast;
+                const cList = document.getElementById('clusterList');
+                cList.innerHTML = '';
+                data.trending_genres.forEach(g => {
+                    cList.innerHTML += `<li><i class="fa-solid fa-circle-dot" style="color: var(--secondary-glow); font-size: 0.6rem; margin-right: 8px;"></i> ${g}</li>`;
+                });
+
+                const ctx = document.getElementById('genreChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Action', 'Drama', 'Romance', 'Sci-Fi', 'Horror', 'Comedy'],
+                        datasets: [{
+                            label: 'Cluster Weight Index',
+                            data: [84, 92, 78, 95, 81, 88],
+                            backgroundColor: ['#38bdf8', '#c084fc', '#f43f5e', '#38bdf8', '#c084fc', '#f43f5e'],
+                            borderWidth: 0,
+                            borderRadius: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                            x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                        }
+                    }
+                });
+            } catch (err) {
+                console.error("Dashboard telemetry error");
+            }
+        }
+
+        function renderEnlargedNovaView() {
+            mainContainer.innerHTML = `
+                <div class="nova-view-container" style="display:flex; flex-direction:column; gap:22px;">
+                    <div class="nova-banner-clean">
+                        <img src="assets/nova.png" alt="Nova" onerror="this.src='nova.png'">
+                        <div class="nova-banner-text">
+                            <h2>Nova AI Intelligence Hub</h2>
+                            <p>Ask Nova for complex plot premises, deep emotional vibes, or cross-genre recommendations below!</p>
+                        </div>
+                    </div>
+
+                    <div class="nova-chat-box-large glass-panel" style="border-radius: 28px; padding: 30px; display: flex; flex-direction: column; gap: 20px;">
+                        <div class="nova-history-large" id="novaEnlargedHistory" style="height: 290px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; background: rgba(3, 1, 10, 0.9); padding: 22px; border-radius: 20px; border: 1px solid var(--glass-border);">
+                            <div class="chat-bubble ai-bubble">Hi ${userProfile.name}! 👽 I am Nova. What cinematic experience are we calculating today?</div>
+                        </div>
+                        <div class="quick-chips">
+                            <span class="chip" onclick="sendEnlargedPrompt('Korean romcom')">🇰🇷 Korean Romcom</span>
+                            <span class="chip" onclick="sendEnlargedPrompt('Mind-bending sci-fi')">🧠 Sci-Fi</span>
+                            <span class="chip" onclick="sendEnlargedPrompt('Heartbreaking sad romance')">💔 Sad Romance</span>
+                            <span class="chip" onclick="sendEnlargedPrompt('Action blockbusters')">💥 Action</span>
+                        </div>
+                        <div class="nova-input-row" style="display: flex; gap: 12px;">
+                            <input type="text" id="novaEnlargedInput" placeholder="Ask Nova anything..." autocomplete="off" style="flex: 1; background: #160f38; border: 1px solid var(--glass-border); border-radius: 26px; padding: 14px 22px; outline: none; font-size: 0.98rem; color: white;">
+                            <button class="btn-action" id="novaEnlargedSendBtn"><i class="fa-solid fa-paper-plane"></i> Send</button>
+                        </div>
+                    </div>
+
+                    <h3 class="row-title" id="novaResultsTitle" style="margin-top: 10px;"><i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> Neural Recommendations</h3>
+                    <div id="novaVerticalGrid" class="movie-grid">
+                        <p style="color: var(--text-muted); font-weight:500;">Enter a prompt above to generate recommendations.</p>
+                    </div>
+                </div>
+            `;
+
+            const inputField = document.getElementById('novaEnlargedInput');
+            const sendButton = document.getElementById('novaEnlargedSendBtn');
+
+            const executeEnlargedChat = async (promptText) => {
+                const msg = promptText || inputField.value.trim();
+                if (!msg) return;
+
+                const historyDiv = document.getElementById('novaEnlargedHistory');
+                historyDiv.innerHTML += `<div class="chat-bubble user-bubble">${msg}</div>`;
+                if(!promptText) inputField.value = '';
+                
+                historyDiv.innerHTML += `<div class="chat-bubble ai-bubble"><i class="fa-solid fa-spinner fa-spin"></i> Processing neural query vectors...</div>`;
+                historyDiv.scrollTop = historyDiv.scrollHeight;
+                const typingInd = historyDiv.lastChild;
+
+                try {
+                    const response = await fetch(PYTHON_BACKEND_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: msg, profile: userProfile })
+                    });
+                    const data = await response.json();
+                    typingInd.remove();
+                    historyDiv.innerHTML += `<div class="chat-bubble ai-bubble">${data.reply}</div>`;
+                    historyDiv.scrollTop = historyDiv.scrollHeight;
+
+                    if (data.movies && data.movies.length > 0) {
+                        document.getElementById('novaResultsTitle').innerHTML = `<i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> Results for "${msg}"`;
+                        const vGrid = document.getElementById('novaVerticalGrid');
+                        vGrid.innerHTML = '';
+                        data.movies.forEach(movie => vGrid.appendChild(createMovieCard(movie, true)));
+                    }
+                } catch (err) {
+                    typingInd.remove();
+                    historyDiv.innerHTML += `<div class="chat-bubble ai-bubble">Connection error. Ensure app.py is running.</div>`;
+                }
+            };
+
+            sendButton.onclick = () => executeEnlargedChat();
+            inputField.onkeypress = (e) => { if (e.key === 'Enter') executeEnlargedChat(); };
+            window.sendEnlargedPrompt = (p) => executeEnlargedChat(p);
+        }
+
+        async function fetchAndOpenModal(title, fallbackPoster, customRationale) {
+            try {
+                const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(title)}`);
+                const data = await res.json();
+                
+                if (data.results && data.results.length > 0) {
+                    currentMovieData = data.results[0];
+                    currentMovieData.poster_path = currentMovieData.poster_path ? currentMovieData.poster_path : fallbackPoster;
+                    
+                    document.getElementById('modalTitle').innerText = currentMovieData.title;
+                    document.getElementById('modalMeta').innerHTML = `<span><i class="fa-solid fa-calendar"></i> ${currentMovieData.release_date ? currentMovieData.release_date.split('-')[0] : 'N/A'}</span> <span><i class="fa-solid fa-star" style="color: #fbbf24;"></i> ${currentMovieData.vote_average ? currentMovieData.vote_average.toFixed(1) : 'NR'}</span>`;
+                    document.getElementById('modalOverview').innerText = currentMovieData.overview || "No description available.";
+                    document.getElementById('modalPoster').src = `https://image.tmdb.org/t/p/w500${currentMovieData.poster_path}`;
+                    document.getElementById('modalRationale').innerText = customRationale || `Matched via high-dimensional collaborative filtering algorithms and user preference weights for ${userProfile.name}.`;
+                    
+                    document.getElementById('trailerBtn').onclick = () => fetchAndPlayTrailer(currentMovieData.id, currentMovieData.title);
+
+                    updateButtonStates();
+                    document.getElementById('movieModal').classList.add('active');
+                }
+            } catch (error) {
+                console.error("Modal error");
+            }
+        }
+
+        async function fetchAndPlayTrailer(movieId, movieTitle) {
+            try {
+                const res = await fetch(`https://api.themoviedb.org/3/movie/${movieId}/videos?api_key=${TMDB_API_KEY}`);
+                const data = await res.json();
+                const trailer = data.results.find(v => v.type === 'Trailer' && v.site === 'YouTube') || data.results[0];
+                
+                if (trailer) {
+                    document.getElementById('youtubeIframe').src = `https://www.youtube.com/embed/${trailer.key}?autoplay=1`;
+                    document.getElementById('videoModalTitle').innerText = `${movieTitle} - Trailer`;
+                    document.getElementById('videoModal').classList.add('active');
+                } else {
+                    alert("Official trailer currently unavailable.");
+                }
+            } catch (err) {
+                alert("Could not load trailer.");
+            }
+        }
+
+        document.getElementById('closeModal').onclick = () => document.getElementById('movieModal').classList.remove('active');
+        document.getElementById('closeVideoModal').onclick = () => {
+            document.getElementById('youtubeIframe').src = "";
+            document.getElementById('videoModal').classList.remove('active');
+        };
+
+        function updateButtonStates() {
+            const inWatchlist = watchlist.find(m => m.id === currentMovieData.id);
+            const wBtn = document.getElementById('watchlistBtn');
+            wBtn.innerHTML = inWatchlist ? `<i class="fa-solid fa-check"></i> In Watchlist` : `<i class="fa-solid fa-plus"></i> Watchlist`;
+            wBtn.style.background = inWatchlist ? "#10b981" : "linear-gradient(135deg, var(--primary-glow), var(--secondary-glow))";
+
+            const inFavs = favorites.find(m => m.id === currentMovieData.id);
+            const fBtn = document.getElementById('favoriteBtn');
+            fBtn.innerHTML = inFavs ? `<i class="fa-solid fa-heart" style="color: #f43f5e;"></i> Favorited` : `<i class="fa-solid fa-heart"></i> Favorite`;
+        }
+
+        document.getElementById('watchlistBtn').onclick = () => {
+            const idx = watchlist.findIndex(m => m.id === currentMovieData.id);
+            if (idx !== -1) watchlist.splice(idx, 1);
+            else watchlist.push(currentMovieData);
+            localStorage.setItem('cinemind_watchlist', JSON.stringify(watchlist));
+            updateButtonStates();
+            if (currentView === 'watchlist') navItems[3].click();
+        };
+
+        document.getElementById('favoriteBtn').onclick = () => {
+            const idx = favorites.findIndex(m => m.id === currentMovieData.id);
+            if (idx !== -1) favorites.splice(idx, 1);
+            else favorites.push(currentMovieData);
+            localStorage.setItem('cinemind_favorites', JSON.stringify(favorites));
+            updateButtonStates();
+            if (currentView === 'favorites') navItems[4].click();
+        };
+
+        const chatToggle = document.getElementById('chatToggle');
+        const chatModal = document.getElementById('chatModal');
+        const closeChat = document.getElementById('closeChat');
+        const chatTooltip = document.getElementById('chatTooltip');
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const chatHistory = document.getElementById('chatHistory');
+
+        chatToggle.onclick = () => {
+            chatModal.classList.toggle('active');
+            chatTooltip.style.display = chatModal.classList.contains('active') ? 'none' : 'block';
+            if (chatModal.classList.contains('active')) chatInput.focus();
+        };
+        closeChat.onclick = () => { chatModal.classList.remove('active'); chatTooltip.style.display = 'block'; };
+
+        function addBubble(text, sender) {
+            const bubble = document.createElement('div');
+            bubble.className = `chat-bubble ${sender}-bubble`;
+            bubble.innerHTML = text;
+            chatHistory.appendChild(bubble);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        async function handleChat(queryText) {
+            const message = queryText || chatInput.value.trim();
+            if (!message) return;
+
+            addBubble(message, 'user');
+            chatInput.value = '';
+            addBubble(`<i class="fa-solid fa-spinner fa-spin"></i> Analyzing cinematic vectors for ${userProfile.name}...`, 'ai');
+            const typingIndicator = chatHistory.lastChild;
+
+            try {
+                const response = await fetch(PYTHON_BACKEND_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message, profile: userProfile })
+                });
+                const data = await response.json();
+                typingIndicator.remove();
+                addBubble(data.reply, 'ai');
+
+                if (data.movies && data.movies.length > 0) {
+                    heroBanner.style.display = "none";
+                    filterPanel.style.display = "none";
+                    mainContainer.innerHTML = `<h3 class="row-title"><i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> Neural Recommendations for ${userProfile.name}</h3>`;
+                    const grid = document.createElement('div');
+                    grid.className = 'movie-grid';
+                    data.movies.forEach(movie => grid.appendChild(createMovieCard(movie, true)));
+                    mainContainer.appendChild(grid);
+                }
+            } catch (error) {
+                typingIndicator.remove();
+                addBubble(`Could not connect to Python backend server. Make sure app.py is running.`, 'ai');
+            }
+        }
+
+        window.sendQuickPrompt = (prompt) => handleChat(prompt);
+        sendBtn.onclick = () => handleChat();
+        chatInput.onkeypress = (e) => { if (e.key === 'Enter') handleChat(); };
+
+        loadNetflixRows();
+    </script>
+</body>
+</html>
