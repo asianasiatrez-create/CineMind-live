@@ -54,7 +54,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Ultimate Engine Live", "version": "16.0"})
+    return jsonify({"status": "CineMind Theme-Strict Engine Live", "version": "17.0"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -158,12 +158,13 @@ def chat():
     ai_reply = f"Here are the best matches for your mood, {username}!"
     movie_titles = []
 
-    # 1. Standard Safe Gemini Call
+    # 1. Strict Theme-Focused Gemini Call
     if client:
         try:
             prompt = f"""You are Nova, an expert AI movie recommender. 
             User request: "{user_message}"
-            List exactly 4 real, existing movie titles that match this request, separated ONLY by commas. Do not include numbers or extra text. Example: Titanic, Inception, Interstellar, Gladiator"""
+            CRITICAL: You must choose movies that *specifically* match the exact plot, theme (e.g., friendship, revenge, survival), and country requested in the prompt. Do not just return random famous movies.
+            List exactly 4 real movie titles matching this specific request, separated ONLY by commas. No numbers, no extra text. Example: Sunny, Friend, Twenty, Hello Schoolgirl"""
 
             response = client.models.generate_content(
                 model="gemini-1.5-flash",
@@ -175,7 +176,7 @@ def chat():
         except Exception:
             pass
 
-    # 2. Fetch movies from TMDB based on AI titles
+    # 2. Fetch movies from TMDB based on strict titles
     movies = []
     for title in movie_titles[:4]:
         try:
@@ -201,24 +202,16 @@ def chat():
                     "overview": m.get("overview") or "No overview available.",
                     "match": 99,
                     "platforms": platforms,
-                    "rationale": f"Curated for '{user_message}'."
+                    "rationale": f"Curated for theme '{user_message}'."
                 })
         except Exception:
             continue
 
-    # 3. GUARANTEED DISCOVER/TOP-RATED FALLBACK (Never returns empty [])
+    # 3. Fallback if titles didn't resolve
     if not movies:
-        genre_map = {"action": 28, "comedy": 35, "horror": 27, "romance": 10749, "drama": 18, "thriller": 53, "sci-fi": 878}
-        detected_genre = next((str(gid) for word, gid in genre_map.items() if word in lower_msg), "18") # Default to Drama if emotional/dying
-        lang_code = "th" if "thai" in lower_msg else ("ko" if "korean" in lower_msg or "korea" in lower_msg else ("ja" if "japan" in lower_msg else ""))
-        
-        fallback_url = f"https://api.themoviedb.org/3/discover/movie?api_key={TMDB_API_KEY}&with_genres={detected_genre}&sort_by=popularity.desc"
-        if lang_code:
-            fallback_url += f"&with_original_language={lang_code}"
-            
         try:
-            f_res = requests.get(fallback_url).json()
-            for m in f_res.get("results", [])[:4]:
+            fallback = requests.get(f"https://api.themoviedb.org/3/movie/popular?api_key={TMDB_API_KEY}&page=1").json()
+            for m in fallback.get("results", [])[:4]:
                 movies.append({
                     "id": m.get("id"),
                     "title": m.get("title"),
@@ -226,9 +219,9 @@ def chat():
                     "vote_average": m.get("vote_average", 0.0),
                     "release_date": m.get("release_date", "2026"),
                     "overview": m.get("overview") or "No overview available.",
-                    "match": 98,
+                    "match": 95,
                     "platforms": ["TMDB VOD Catalog"],
-                    "rationale": "Curated via smart fallback filter."
+                    "rationale": "Popular recommendation."
                 })
         except Exception:
             pass
