@@ -13,7 +13,6 @@ CORS(app)
 TMDB_API_KEY = "3dc27f9ae386c422fdc5994e6fda6823"
 DB_NAME = "cinemind.db"
 
-# Cleans your API Key instantly in case of accidental quotes/spaces
 raw_gemini = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_API_KEY = raw_gemini.strip().strip('"').strip("'")
 
@@ -31,7 +30,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Final Defense Engine Live", "version": "950.0"})
+    return jsonify({"status": "CineMind Defense Engine Live", "version": "1000.0"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -165,30 +164,16 @@ def chat():
               ]
             }}"""
 
-            gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key={GEMINI_API_KEY}"
+            gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
             headers = {"Content-Type": "application/json"}
             payload = {"contents": [{"parts": [{"text": prompt}]}]}
             
-            # Increased timeout to 60 seconds to allow Google enough time to respond
-            max_retries = 3
-            res = None
-            for attempt in range(max_retries):
-                try:
-                    res = requests.post(gemini_url, headers=headers, json=payload, timeout=60)
-                    if res.status_code == 200:
-                        break
-                    elif res.status_code == 503:
-                        time.sleep(3) 
-                    else:
-                        break 
-                except requests.exceptions.ReadTimeout:
-                    # If it times out even at 60s, wait a moment and try one more time
-                    time.sleep(2)
-                    continue
+            # Safe timeout of 25 seconds prevents Gunicorn from crashing the server
+            res = requests.post(gemini_url, headers=headers, json=payload, timeout=25)
             
-            if res and res.status_code != 200:
+            if res.status_code != 200:
                 ai_reply = f"Google API Error {res.status_code}: {res.text}"
-            elif res:
+            else:
                 res_json = res.json()
                 raw_text = res_json["candidates"][0]["content"]["parts"][0]["text"]
                 clean_text = raw_text.replace("```json", "").replace("```", "").strip()
