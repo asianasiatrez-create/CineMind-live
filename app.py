@@ -7,9 +7,6 @@ import requests
 import hashlib
 from google import genai
 
-# ==========================================
-# 1. INITIALIZE FLASK & GEMINI CLIENT
-# ==========================================
 app = Flask(__name__)
 CORS(app)
 
@@ -69,7 +66,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Capstone Final Engine Live", "version": "20.0"})
+    return jsonify({"status": "CineMind Final Capstone Engine Live", "version": "21.0"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -160,9 +157,6 @@ def toggle_library():
     conn.close()
     return jsonify({"success": True, "action": action})
 
-# ==========================================
-# FEEDBACK PERSONALIZATION ENDPOINT
-# ==========================================
 @app.route("/api/user/feedback", methods=["POST"])
 def user_feedback():
     data = request.get_json() or {}
@@ -177,7 +171,6 @@ def user_feedback():
 
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-
     cursor.execute("""
         INSERT INTO interactions (username, movie_id, title, action, vote_average) 
         VALUES (?, ?, ?, ?, ?)
@@ -190,15 +183,8 @@ def user_feedback():
 
     conn.commit()
     conn.close()
+    return jsonify({"success": True, "message": f"Feedback '{feedback_type}' recorded."})
 
-    return jsonify({
-        "success": True, 
-        "message": f"Feedback '{feedback_type}' recorded successfully. Recommendation weights updated."
-    })
-
-# ==========================================
-# DATA SCIENCE INSIGHTS DASHBOARD ENDPOINT
-# ==========================================
 @app.route("/api/user/insights", methods=["GET"])
 def get_insights():
     username = request.args.get("username", "").strip().lower()
@@ -207,7 +193,6 @@ def get_insights():
 
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    
     cursor.execute("SELECT action, vote_average FROM interactions WHERE username = ?", (username,))
     interactions = cursor.fetchall()
 
@@ -216,7 +201,6 @@ def get_insights():
 
     cursor.execute("SELECT COUNT(*) FROM watchlist WHERE username = ?", (username,))
     total_watchlist = cursor.fetchone()[0]
-
     conn.close()
 
     total_interactions = len(interactions)
@@ -228,7 +212,7 @@ def get_insights():
         "total_liked": total_liked,
         "total_watchlist": total_watchlist,
         "average_rating_of_interest": round(avg_rating, 2),
-        "dominant_mood": "Uplifting & Immersive",
+        "dominant_mood": "Immersive & Narrative-Driven",
         "genre_distribution": {
             "Drama": 35,
             "Sci-Fi": 25,
@@ -236,12 +220,8 @@ def get_insights():
             "Action": 20
         }
     }
-
     return jsonify(insights)
 
-# ==========================================
-# AI CHAT & EXPLAINABLE RECOMMENDATIONS
-# ==========================================
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.get_json() or {}
