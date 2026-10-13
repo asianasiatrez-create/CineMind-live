@@ -54,7 +54,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Stable AI Engine Live", "version": "12.0"})
+    return jsonify({"status": "CineMind Dynamic Genre Bridge Live", "version": "13.0"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -157,12 +157,22 @@ def chat():
     ai_reply = f"Here are the best matches for your mood, {username}!"
     movie_titles = []
 
+    # 1. Fetch official TMDB genre list dynamically so the AI knows exact valid names
+    tmdb_genres_list = []
+    try:
+        g_res = requests.get(f"https://api.themoviedb.org/3/genre/movie/list?api_key={TMDB_API_KEY}").json()
+        tmdb_genres_list = [g["name"] for g in g_res.get("genres", [])]
+    except Exception:
+        tmdb_genres_list = ["Action", "Comedy", "Horror", "Romance", "Drama", "Sci-Fi", "Thriller"]
+
+    # 2. Use Gemini with full awareness of TMDB genres to recommend precise matching titles
     if client:
         try:
             prompt = f"""You are Nova, an expert AI movie recommender. 
+            Official TMDB available genres: {", ".join(tmdb_genres_list)}
             User request: "{user_message}"
             Task 1: Write a short, warm, friendly 1-sentence response as Nova addressing {username}.
-            Task 2: List exactly 4 real, existing movie titles that best match the user's request.
+            Task 2: List exactly 4 real, existing movie titles that accurately match the user's request (consider country, genre, and theme).
             
             Format your output strictly like this:
             REPLY: [your friendly response]
@@ -179,17 +189,17 @@ def chat():
                 elif line.startswith("TITLES:"):
                     titles_raw = line.replace("TITLES:", "").strip()
                     movie_titles = [t.strip() for t in titles_raw.split(",") if t.strip()]
-        except Exception as e:
-            ai_reply = f"I processed your request, {username}!"
+        except Exception:
+            pass
 
-    # If AI didn't provide titles, derive a simple search query from user message
     if not movie_titles:
         movie_titles = [user_message]
 
+    # 3. Query TMDB for each AI-selected title
     movies = []
-    for query_term in movie_titles[:4]:
+    for title in movie_titles[:4]:
         try:
-            search_url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&query={requests.utils.quote(query_term)}"
+            search_url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&query={requests.utils.quote(title)}"
             s_res = requests.get(search_url).json()
             results = s_res.get("results", [])
             if results:
@@ -211,12 +221,11 @@ def chat():
                     "overview": m.get("overview") or "No overview available.",
                     "match": 99,
                     "platforms": platforms,
-                    "rationale": f"Curated by Gemini AI for '{user_message}'."
+                    "rationale": f"Curated dynamically via TMDB & Gemini for '{user_message}'."
                 })
         except Exception:
             continue
 
-    # Fallback if still empty
     if not movies:
         try:
             fallback = requests.get(f"https://api.themoviedb.org/3/movie/popular?api_key={TMDB_API_KEY}&page=1").json()
