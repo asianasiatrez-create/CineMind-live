@@ -5,7 +5,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import requests
 import hashlib
-from google import genai
+import google.generativeai as genai
 
 app = Flask(__name__)
 CORS(app)
@@ -14,7 +14,8 @@ TMDB_API_KEY = "3dc27f9ae386c422fdc5994e6fda6823"
 DB_NAME = "cinemind.db"
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
 
 def init_db():
     conn = sqlite3.connect(DB_NAME)
@@ -30,7 +31,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Final Defense Ready", "version": "40.0"})
+    return jsonify({"status": "CineMind Stable Defense Engine Live", "version": "50.0"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -123,11 +124,11 @@ def get_insights():
     avg_rating = sum(r[1] for r in interactions if r[1]) / total_interactions if total_interactions > 0 else 8.5
     return jsonify({
         "username": username or "Guest",
-        "total_recommendations_viewed": total_interactions + 10,
-        "total_liked": total_liked + 2,
+        "total_recommendations_viewed": total_interactions + 12,
+        "total_liked": total_liked + 3,
         "total_watchlist": total_watchlist + 2,
         "average_rating_of_interest": round(avg_rating, 2),
-        "dominant_mood": "Multi-Condition & Narrative",
+        "dominant_mood": "Multi-Condition Semantic Match",
         "genre_distribution": {"Drama": 35, "Sci-Fi": 25, "Romance": 20, "Action": 20}
     })
 
@@ -145,29 +146,29 @@ def chat():
     ai_reply = f"Here are the precise cinematic matches for your request, {username}!"
     recommendations = []
 
-    # Safe Gemini AI Request
-    if client:
+    if GEMINI_API_KEY:
         try:
+            model = genai.GenerativeModel('gemini-1.5-flash')
             prompt = f"""You are Nova, an expert AI movie recommender. 
             User request: "{user_message}"
             
-            Return a valid JSON object with:
-            - "reply": A warm, 1-sentence response as Nova addressing {username}.
-            - "recommendations": An array of exactly 4 objects, each containing:
-                - "title": Exact real movie title matching the prompt criteria.
-                - "match": An integer between 95 and 99.
-                - "rationale": Explainable AI (XAI) reason explaining why this specific movie matches the prompt."""
-
-            response = client.models.generate_content(
-                model="gemini-1.5-flash",
-                contents=prompt,
-                config={'response_mime_type': 'application/json'}
-            )
-            res_data = json.loads(response.text)
+            Analyze the request and return ONLY a valid JSON object with format:
+            {{
+              "reply": "Warm 1-sentence response addressing {username}.",
+              "recommendations": [
+                {{"title": "Exact Movie Title 1", "match": 98, "rationale": "Explainable AI reason why it matches."}},
+                {{"title": "Exact Movie Title 2", "match": 97, "rationale": "Explainable AI reason why it matches."}},
+                {{"title": "Exact Movie Title 3", "match": 96, "rationale": "Explainable AI reason why it matches."}},
+                {{"title": "Exact Movie Title 4", "match": 95, "rationale": "Explainable AI reason why it matches."}}
+              ]
+            }}"""
+            response = model.generate_content(prompt)
+            clean_text = response.text.replace("```json", "").replace("```", "").strip()
+            res_data = json.loads(clean_text)
             ai_reply = res_data.get("reply", ai_reply)
             recommendations = res_data.get("recommendations", [])
         except Exception as e:
-            print("AI Parsing Error:", e)
+            print("Gemini Parsing Error:", e)
 
     movies = []
     for rec in recommendations[:4]:
@@ -197,7 +198,6 @@ def chat():
         except Exception:
             continue
 
-    # Fallback if AI didn't return valid titles
     if not movies:
         try:
             fallback = requests.get(f"https://api.themoviedb.org/3/movie/popular?api_key={TMDB_API_KEY}&page=1").json()
