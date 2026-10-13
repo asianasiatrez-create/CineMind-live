@@ -1,6 +1,7 @@
 import os
 import json
 import sqlite3
+import time
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import requests
@@ -30,7 +31,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Gemini 3 Engine Live", "version": "800.0"})
+    return jsonify({"status": "CineMind Final Defense Engine Live", "version": "900.0"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -164,18 +165,25 @@ def chat():
               ]
             }}"""
 
-            # Targeted API endpoint for Gemini 3.8 Flash
             gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key={GEMINI_API_KEY}"
             headers = {"Content-Type": "application/json"}
-            payload = {
-                "contents": [{"parts": [{"text": prompt}]}]
-            }
+            payload = {"contents": [{"parts": [{"text": prompt}]}]}
             
-            res = requests.post(gemini_url, headers=headers, json=payload, timeout=15)
+            # DEFENSE-SAFE SILENT RETRY LOOP
+            max_retries = 3
+            res = None
+            for attempt in range(max_retries):
+                res = requests.post(gemini_url, headers=headers, json=payload, timeout=15)
+                if res.status_code == 200:
+                    break
+                elif res.status_code == 503:
+                    time.sleep(2) # Wait 2 seconds and try again quietly if Google is busy
+                else:
+                    break # Break on other errors (like 404) to avoid pointless retries
             
-            if res.status_code != 200:
+            if res and res.status_code != 200:
                 ai_reply = f"Google API Error {res.status_code}: {res.text}"
-            else:
+            elif res:
                 res_json = res.json()
                 raw_text = res_json["candidates"][0]["content"]["parts"][0]["text"]
                 clean_text = raw_text.replace("```json", "").replace("```", "").strip()
