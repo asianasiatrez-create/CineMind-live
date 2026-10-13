@@ -54,7 +54,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Semantic AI Engine Live", "version": "11.0"})
+    return jsonify({"status": "CineMind Stable AI Engine Live", "version": "12.0"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -157,7 +157,6 @@ def chat():
     ai_reply = f"Here are the best matches for your mood, {username}!"
     movie_titles = []
 
-    # 1. Let Gemini use its semantic brain to recommend specific matching movie titles
     if client:
         try:
             prompt = f"""You are Nova, an expert AI movie recommender. 
@@ -170,7 +169,7 @@ def chat():
             TITLES: [Title 1], [Title 2], [Title 3], [Title 4]"""
 
             response = client.models.generate_content(
-                model="gemini-2.5-flash",
+                model="gemini-1.5-flash",
                 contents=prompt,
             )
             text = response.text
@@ -180,18 +179,21 @@ def chat():
                 elif line.startswith("TITLES:"):
                     titles_raw = line.replace("TITLES:", "").strip()
                     movie_titles = [t.strip() for t in titles_raw.split(",") if t.strip()]
-        except Exception:
-            pass
+        except Exception as e:
+            ai_reply = f"I processed your request, {username}!"
 
-    # 2. Fetch those AI-recommended titles from TMDB to get posters, ratings, and providers
+    # If AI didn't provide titles, derive a simple search query from user message
+    if not movie_titles:
+        movie_titles = [user_message]
+
     movies = []
-    for title in movie_titles[:4]:
+    for query_term in movie_titles[:4]:
         try:
-            search_url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&query={requests.utils.quote(title)}"
+            search_url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&query={requests.utils.quote(query_term)}"
             s_res = requests.get(search_url).json()
             results = s_res.get("results", [])
             if results:
-                m = results[0]  # Take the top matching result for that title
+                m = results[0]
                 movie_id = m.get("id")
                 
                 providers_url = f"https://api.themoviedb.org/3/movie/{movie_id}/watch/providers?api_key={TMDB_API_KEY}"
@@ -209,12 +211,12 @@ def chat():
                     "overview": m.get("overview") or "No overview available.",
                     "match": 99,
                     "platforms": platforms,
-                    "rationale": f"Curated by Gemini AI semantic engine for '{user_message}'."
+                    "rationale": f"Curated by Gemini AI for '{user_message}'."
                 })
         except Exception:
             continue
 
-    # Ultimate fallback if titles failed to resolve
+    # Fallback if still empty
     if not movies:
         try:
             fallback = requests.get(f"https://api.themoviedb.org/3/movie/popular?api_key={TMDB_API_KEY}&page=1").json()
