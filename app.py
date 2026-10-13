@@ -7,9 +7,6 @@ import requests
 import hashlib
 from google import genai
 
-# ==========================================
-# 1. INITIALIZE FLASK & DATABASE
-# ==========================================
 app = Flask(__name__)
 CORS(app)
 
@@ -67,12 +64,9 @@ def init_db():
 
 init_db()
 
-# ==========================================
-# 2. CORE SYSTEM & AUTH ROUTES
-# ==========================================
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Complete Production Engine Live", "version": "22.0"})
+    return jsonify({"status": "CineMind Final Defense Engine Live", "version": "25.0"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -110,9 +104,6 @@ def login():
         return jsonify({"success": True, "username": username, "message": "Login successful!"})
     return jsonify({"success": False, "message": "Invalid username or password."}), 401
 
-# ==========================================
-# 3. USER LIBRARY & FEEDBACK ROUTES
-# ==========================================
 @app.route("/api/user/library", methods=["GET"])
 def get_library():
     username = request.args.get("username", "").strip().lower()
@@ -184,19 +175,10 @@ def user_feedback():
         INSERT INTO interactions (username, movie_id, title, action, vote_average) 
         VALUES (?, ?, ?, ?, ?)
     """, (username, movie_id, title, feedback_type, vote_average))
-
-    if feedback_type == 'dislike':
-        cursor.execute("DELETE FROM favorites WHERE username = ? AND movie_id = ?", (username, movie_id))
-    elif feedback_type == 'watched':
-        cursor.execute("DELETE FROM watchlist WHERE username = ? AND movie_id = ?", (username, movie_id))
-
     conn.commit()
     conn.close()
-    return jsonify({"success": True, "message": f"Feedback '{feedback_type}' recorded successfully."})
+    return jsonify({"success": True, "message": "Feedback recorded."})
 
-# ==========================================
-# 4. DATA SCIENCE INSIGHTS DASHBOARD
-# ==========================================
 @app.route("/api/user/insights", methods=["GET"])
 def get_insights():
     username = request.args.get("username", "").strip().lower()
@@ -225,25 +207,17 @@ def get_insights():
         "total_watchlist": total_watchlist,
         "average_rating_of_interest": round(avg_rating, 2),
         "dominant_mood": "Immersive & Narrative-Driven",
-        "genre_distribution": {
-            "Drama": 35,
-            "Sci-Fi": 25,
-            "Romance": 20,
-            "Action": 20
-        }
+        "genre_distribution": {"Drama": 35, "Sci-Fi": 25, "Romance": 20, "Action": 20}
     }
     return jsonify(insights)
 
-# ==========================================
-# 5. GEMINI AI CHAT & XAI RECOMMENDATIONS
-# ==========================================
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.get_json() or {}
     user_message = data.get("message", "").strip()
-    profile = data.get("profile", {"name": "Movie Fan"})
+    profile = data.get("profile", {"name": "Guest"})
     region = data.get("region", "PH")
-    username = profile.get("name", "Movie Fan")
+    username = profile.get("name", "Guest")
 
     if not user_message:
         return jsonify({"reply": f"Hey {username}! Tell me what kind of movie you're looking for.", "movies": []})
@@ -295,6 +269,12 @@ def chat():
                 flatrate = reg_prov.get("flatrate", [])
                 platforms = [p.get("provider_name") for p in flatrate] if flatrate else ["TMDB VOD Catalog"]
 
+                match_val = 99
+                try:
+                    match_val = int(rec.get("match", 99))
+                except Exception:
+                    pass
+
                 movies.append({
                     "id": movie_id,
                     "title": m.get("title"),
@@ -302,7 +282,7 @@ def chat():
                     "vote_average": m.get("vote_average", 0.0),
                     "release_date": m.get("release_date", "2026"),
                     "overview": m.get("overview") or "No overview available.",
-                    "match": 99,
+                    "match": match_val,
                     "platforms": platforms,
                     "rationale": rationale
                 })
