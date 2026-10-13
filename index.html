@@ -242,7 +242,7 @@ z-index: -2; pointer-events: none;
 <i class="fa-solid fa-tv"></i> <span>Checking streaming availability...</span>
 </div>
 <div class="ai-rationale-box">
-<span class="ai-rationale-title"><i class="fa-solid fa-brain"></i> CineMind AI Explainable Rationale (XAI)</span>
+<span class="ai-rationale-title"><i class="fa-solid fa-brain"></i> CineMind Explainable AI Rationale (XAI)</span>
 <span class="ai-rationale-text" id="modalRationale">Analyzing vector confidence...</span>
 </div>
 <p class="modal-overview" id="modalOverview"></p>
@@ -593,7 +593,7 @@ mainContainer.appendChild(grid);
 });
 
 async function renderDataAnalyticsDashboard() {
-let insights = { total_recommendations_viewed: 0, total_liked: 0, total_watchlist: 0, average_rating_of_interest: 0.0, dominant_mood: "Immersive & Narrative" };
+let insights = { total_recommendations_viewed: 0, total_liked: 0, total_watchlist: 0, average_rating_of_interest: 0.0, dominant_mood: "Multi-Condition & Immersive" };
 if(currentUser) {
 try {
 const res = await fetch(`${BACKEND_URL}/api/user/insights?username=${encodeURIComponent(currentUser)}`);
