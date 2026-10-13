@@ -1,4 +1,5 @@
 import os
+import json
 import sqlite3
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -54,7 +55,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Dynamic Genre Bridge Live", "version": "13.0"})
+    return jsonify({"status": "CineMind JSON AI Engine Live", "version": "14.0"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -150,6 +151,7 @@ def chat():
     profile = data.get("profile", {"name": "Movie Fan"})
     region = data.get("region", "PH")
     username = profile.get("name", "Movie Fan")
+    lower_msg = user_message.lower()
 
     if not user_message:
         return jsonify({"reply": f"Hey {username}! Tell me what kind of movie you're looking for.", "movies": []})
@@ -157,45 +159,27 @@ def chat():
     ai_reply = f"Here are the best matches for your mood, {username}!"
     movie_titles = []
 
-    # 1. Fetch official TMDB genre list dynamically so the AI knows exact valid names
-    tmdb_genres_list = []
-    try:
-        g_res = requests.get(f"https://api.themoviedb.org/3/genre/movie/list?api_key={TMDB_API_KEY}").json()
-        tmdb_genres_list = [g["name"] for g in g_res.get("genres", [])]
-    except Exception:
-        tmdb_genres_list = ["Action", "Comedy", "Horror", "Romance", "Drama", "Sci-Fi", "Thriller"]
-
-    # 2. Use Gemini with full awareness of TMDB genres to recommend precise matching titles
+    # 1. Use Gemini with guaranteed JSON structured output
     if client:
         try:
             prompt = f"""You are Nova, an expert AI movie recommender. 
-            Official TMDB available genres: {", ".join(tmdb_genres_list)}
             User request: "{user_message}"
-            Task 1: Write a short, warm, friendly 1-sentence response as Nova addressing {username}.
-            Task 2: List exactly 4 real, existing movie titles that accurately match the user's request (consider country, genre, and theme).
-            
-            Format your output strictly like this:
-            REPLY: [your friendly response]
-            TITLES: [Title 1], [Title 2], [Title 3], [Title 4]"""
+            Provide a JSON response with:
+            - "reply": A warm, friendly 1-sentence response as Nova addressing {username}.
+            - "titles": An array of exactly 4 real, existing movie titles that accurately match the user's request (ensure they match any requested country or genre like Thai, Korean, Japanese, comedy, romance, etc.)."""
 
             response = client.models.generate_content(
                 model="gemini-1.5-flash",
                 contents=prompt,
+                config={'response_mime_type': 'application/json'}
             )
-            text = response.text
-            for line in text.split("\n"):
-                if line.startswith("REPLY:"):
-                    ai_reply = line.replace("REPLY:", "").strip()
-                elif line.startswith("TITLES:"):
-                    titles_raw = line.replace("TITLES:", "").strip()
-                    movie_titles = [t.strip() for t in titles_raw.split(",") if t.strip()]
-        except Exception:
+            res_data = json.loads(response.text)
+            ai_reply = res_data.get("reply", ai_reply)
+            movie_titles = res_data.get("titles", [])
+        except Exception as e:
             pass
 
-    if not movie_titles:
-        movie_titles = [user_message]
-
-    # 3. Query TMDB for each AI-selected title
+    # 2. Fetch each title from TMDB
     movies = []
     for title in movie_titles[:4]:
         try:
@@ -221,15 +205,26 @@ def chat():
                     "overview": m.get("overview") or "No overview available.",
                     "match": 99,
                     "platforms": platforms,
-                    "rationale": f"Curated dynamically via TMDB & Gemini for '{user_message}'."
+                    "rationale": f"Curated by Gemini AI JSON engine for '{user_message}'."
                 })
         except Exception:
             continue
 
+    # 3. Deterministic Fallback if AI titles didn't resolve (using TMDB Discover based on keywords)
     if not movies:
+        genre_map = {"action": 28, "comedy": 35, "horror": 27, "romance": 10749, "drama": 18, "thriller": 53, "animation": 16}
+        detected_genre = next((str(gid) for word, gid in genre_map.items() if word in lower_msg), "")
+        lang_code = "th" if "thai" in lower_msg else ("ko" if "korean" in lower_msg or "korea" in lower_msg else ("ja" if "japan" in lower_msg else ""))
+        
+        disc_url = f"https://api.themoviedb.org/3/discover/movie?api_key={TMDB_API_KEY}&sort_by=popularity.desc"
+        if detected_genre:
+            disc_url += f"&with_genres={detected_genre}"
+        if lang_code:
+            disc_url += f"&with_original_language={lang_code}"
+            
         try:
-            fallback = requests.get(f"https://api.themoviedb.org/3/movie/popular?api_key={TMDB_API_KEY}&page=1").json()
-            for m in fallback.get("results", [])[:4]:
+            d_res = requests.get(disc_url).json()
+            for m in d_res.get("results", [])[:4]:
                 movies.append({
                     "id": m.get("id"),
                     "title": m.get("title"),
@@ -237,9 +232,9 @@ def chat():
                     "vote_average": m.get("vote_average", 0.0),
                     "release_date": m.get("release_date", "2026"),
                     "overview": m.get("overview") or "No overview available.",
-                    "match": 95,
+                    "match": 98,
                     "platforms": ["TMDB VOD Catalog"],
-                    "rationale": "Popular recommendation."
+                    "rationale": "Curated via Discover filter."
                 })
         except Exception:
             pass
