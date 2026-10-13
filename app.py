@@ -11,7 +11,10 @@ CORS(app)
 
 TMDB_API_KEY = "3dc27f9ae386c422fdc5994e6fda6823"
 DB_NAME = "cinemind.db"
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+
+# Cleans your API Key instantly in case of accidental quotes/spaces from Render dashboard
+raw_gemini = os.environ.get("GEMINI_API_KEY", "")
+GEMINI_API_KEY = raw_gemini.strip().strip('"').strip("'")
 
 def init_db():
     conn = sqlite3.connect(DB_NAME)
@@ -27,7 +30,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Ultimate Defense Engine Live", "version": "100.0"})
+    return jsonify({"status": "CineMind Ultimate Defense Engine Live", "version": "101.0"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -145,7 +148,7 @@ def chat():
     recommendations = []
 
     if not GEMINI_API_KEY:
-        ai_reply = "System Alert: GEMINI_API_KEY is missing in Render Environment Variables."
+        ai_reply = "System Alert: GEMINI_API_KEY is completely missing in Render Environment Variables."
     else:
         try:
             prompt = f"""You are Nova, an expert AI movie recommender. 
@@ -166,23 +169,26 @@ def chat():
             gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
             headers = {"Content-Type": "application/json"}
             payload = {
-                "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {"responseMimeType": "application/json"}
+                "contents": [{"parts": [{"text": prompt}]}]
             }
             
             res = requests.post(gemini_url, headers=headers, json=payload, timeout=15)
-            res.raise_for_status()
-            res_json = res.json()
             
-            raw_text = res_json["candidates"][0]["content"]["parts"][0]["text"]
-            clean_text = raw_text.replace("```json", "").replace("```", "").strip()
-            res_data = json.loads(clean_text)
-            
-            ai_reply = res_data.get("reply", ai_reply)
-            recommendations = res_data.get("recommendations", [])
-            
+            # Print exact Google API Error to Nova's Chat Bubble
+            if res.status_code != 200:
+                ai_reply = f"Google API Error {res.status_code}: {res.text[:150]}"
+            else:
+                res_json = res.json()
+                raw_text = res_json["candidates"][0]["content"]["parts"][0]["text"]
+                clean_text = raw_text.replace("```json", "").replace("```", "").strip()
+                res_data = json.loads(clean_text)
+                
+                ai_reply = res_data.get("reply", ai_reply)
+                recommendations = res_data.get("recommendations", [])
+                
         except Exception as e:
-            print("REST API Error:", str(e))
+            # Print exact Python parsing Error to Nova's Chat Bubble
+            ai_reply = f"System Error parsing Gemini: {str(e)}"
 
     movies = []
     for rec in recommendations[:4]:
