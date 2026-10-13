@@ -7,6 +7,9 @@ import requests
 import hashlib
 from google import genai
 
+# ==========================================
+# 1. INITIALIZE FLASK & DATABASE
+# ==========================================
 app = Flask(__name__)
 CORS(app)
 
@@ -64,9 +67,12 @@ def init_db():
 
 init_db()
 
+# ==========================================
+# 2. CORE SYSTEM & AUTH ROUTES
+# ==========================================
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Final Capstone Engine Live", "version": "21.0"})
+    return jsonify({"status": "CineMind Complete Production Engine Live", "version": "22.0"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -104,6 +110,9 @@ def login():
         return jsonify({"success": True, "username": username, "message": "Login successful!"})
     return jsonify({"success": False, "message": "Invalid username or password."}), 401
 
+# ==========================================
+# 3. USER LIBRARY & FEEDBACK ROUTES
+# ==========================================
 @app.route("/api/user/library", methods=["GET"])
 def get_library():
     username = request.args.get("username", "").strip().lower()
@@ -163,7 +172,7 @@ def user_feedback():
     username = data.get("username", "").strip().lower()
     movie_id = data.get("movie_id")
     title = data.get("title", "")
-    feedback_type = data.get("feedback") # 'like', 'dislike', 'watched'
+    feedback_type = data.get("feedback")
     vote_average = data.get("vote_average", 0.0)
 
     if not username or not movie_id or not feedback_type:
@@ -183,8 +192,11 @@ def user_feedback():
 
     conn.commit()
     conn.close()
-    return jsonify({"success": True, "message": f"Feedback '{feedback_type}' recorded."})
+    return jsonify({"success": True, "message": f"Feedback '{feedback_type}' recorded successfully."})
 
+# ==========================================
+# 4. DATA SCIENCE INSIGHTS DASHBOARD
+# ==========================================
 @app.route("/api/user/insights", methods=["GET"])
 def get_insights():
     username = request.args.get("username", "").strip().lower()
@@ -222,6 +234,9 @@ def get_insights():
     }
     return jsonify(insights)
 
+# ==========================================
+# 5. GEMINI AI CHAT & XAI RECOMMENDATIONS
+# ==========================================
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.get_json() or {}
