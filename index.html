@@ -8,13 +8,13 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@1,600&display=swap');
 
 :root {
     --bg-deep: #0d0628;
-    --sidebar-bg: rgba(16, 9, 44, 0.82);
-    --panel-bg: rgba(22, 13, 56, 0.68);
-    --card-bg: rgba(24, 14, 60, 0.85);
+    --sidebar-bg: rgba(16, 9, 44, 0.86);
+    --panel-bg: rgba(22, 13, 56, 0.72);
+    --card-bg: rgba(24, 14, 60, 0.90);
     --primary-glow: #d946ef;
     --secondary-glow: #00f2fe;
     --tertiary-glow: #7c3aed;
@@ -31,12 +31,11 @@
     --ai-bubble-text: #ffffff;
 }
 
-/* Light Mode Galaxy Day Palette (No pure white - rich nebula lavender & sky glow) */
 html[data-theme="light"] {
     --bg-deep: #e6e0ff;
-    --sidebar-bg: rgba(235, 230, 255, 0.86);
-    --panel-bg: rgba(230, 224, 255, 0.78);
-    --card-bg: rgba(242, 238, 255, 0.92);
+    --sidebar-bg: rgba(235, 230, 255, 0.90);
+    --panel-bg: rgba(230, 224, 255, 0.82);
+    --card-bg: rgba(245, 242, 255, 0.96);
     --primary-glow: #9333ea;
     --secondary-glow: #0284c7;
     --tertiary-glow: #6366f1;
@@ -45,7 +44,7 @@ html[data-theme="light"] {
     --glass-border-hover: rgba(2, 132, 199, 0.65);
     --text-main: #1e1b4b;
     --text-muted: #4c1d95;
-    --input-bg: rgba(224, 231, 255, 0.9);
+    --input-bg: rgba(255, 255, 255, 0.92);
     --modal-bg: linear-gradient(135deg, #ede9fe, #e0f2fe);
     --shadow-heavy: 0 20px 50px rgba(99, 102, 241, 0.2);
     --chat-history-bg: linear-gradient(160deg, rgba(228, 222, 255, 0.95), rgba(218, 236, 255, 0.92));
@@ -60,7 +59,6 @@ html, body { width: 100%; min-height: 100vh; background-color: var(--bg-deep); o
 ::-webkit-scrollbar-track { background: rgba(13, 6, 40, 0.4); }
 ::-webkit-scrollbar-thumb { background: linear-gradient(var(--secondary-glow), var(--primary-glow)); border-radius: 4px; }
 
-/* ---- Rich Galaxy Logo-Palette Nebula & Animated Starfield Background ---- */
 .cosmic-bg {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background:
@@ -96,126 +94,118 @@ html[data-theme="light"] .cosmic-stars { opacity: 0.22; }
     to { transform: translateY(-320px); }
 }
 
-.app-layout { display: flex; width: 100%; max-width: 1780px; margin: 0 auto; min-height: 100vh; padding: 28px; gap: 28px; }
+.app-layout { display: flex; width: 100%; max-width: 1780px; margin: 0 auto; min-height: 100vh; padding: 24px; gap: 24px; }
 
-/* ---- Sidebar & Standalone Unboxed Logo + CineMind Header ---- */
-.sidebar { width: 290px; background: var(--sidebar-bg); border: 1px solid var(--glass-border); border-radius: 32px; padding: 26px 22px; display: flex; flex-direction: column; z-index: 20; gap: 20px; flex-shrink: 0; box-shadow: var(--shadow-heavy); backdrop-filter: blur(28px); position: sticky; top: 28px; height: fit-content; max-height: calc(100vh - 56px); overflow-y: auto; }
-.logo-free-wrapper { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; width: 100%; position: relative; background: transparent; border: none; box-shadow: none; }
+/* ---- Sidebar & CineMind Logo ---- */
+.sidebar { width: 280px; background: var(--sidebar-bg); border: 1px solid var(--glass-border); border-radius: 28px; padding: 24px 20px; display: flex; flex-direction: column; z-index: 20; gap: 18px; flex-shrink: 0; box-shadow: var(--shadow-heavy); backdrop-filter: blur(28px); position: sticky; top: 24px; height: fit-content; max-height: calc(100vh - 48px); overflow-y: auto; }
+.logo-free-wrapper { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px; width: 100%; cursor: pointer; }
 .logo-unboxed {
-    width: 120px;
-    height: auto;
-    max-height: 120px;
-    border-radius: 0;
+    width: 118px;
+    height: 118px;
+    border-radius: 24px;
     object-fit: contain;
-    border: none;
     background: transparent;
-    box-shadow: none;
-    filter: drop-shadow(0 0 18px rgba(0, 242, 254, 0.55)) drop-shadow(0 0 32px rgba(217, 70, 239, 0.35));
+    filter: drop-shadow(0 0 18px rgba(0, 242, 254, 0.55)) drop-shadow(0 0 30px rgba(217, 70, 239, 0.35));
     transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.35s ease;
-    cursor: pointer;
     display: block;
 }
-.logo-unboxed:hover, .logo-unboxed:active {
-    transform: scale(1.12) rotate(6deg);
+.logo-unboxed:hover {
+    transform: scale(1.08) rotate(4deg);
     filter: drop-shadow(0 0 25px rgba(217, 70, 239, 0.85)) drop-shadow(0 0 45px rgba(0, 242, 254, 0.75));
 }
 .logo-brand-title {
-    font-size: 1.45rem;
+    font-size: 1.4rem;
     font-weight: 800;
     letter-spacing: 0.5px;
     background: linear-gradient(90deg, var(--secondary-glow), var(--primary-glow));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 2px 12px rgba(0, 242, 254, 0.35));
     text-align: center;
-    line-height: 1.1;
 }
 
 .top-controls-row { display: flex; gap: 10px; align-items: center; width: 100%; }
-.account-top-btn { flex: 1; background: linear-gradient(135deg, rgba(217, 70, 239, 0.2), rgba(0, 242, 254, 0.2)); border: 1px solid var(--secondary-glow); padding: 12px 14px; border-radius: 18px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.3s; min-width: 0; }
+.account-top-btn { flex: 1; background: linear-gradient(135deg, rgba(217, 70, 239, 0.2), rgba(0, 242, 254, 0.2)); border: 1px solid var(--secondary-glow); padding: 11px 14px; border-radius: 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.25s; min-width: 0; }
 .account-top-btn:hover { border-color: var(--primary-glow); transform: translateY(-2px); }
 .account-info { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
-.account-name { font-weight: 700; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.account-sub { font-size: 0.72rem; color: var(--secondary-glow); font-weight: 600; }
+.account-name { font-weight: 700; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.account-sub { font-size: 0.7rem; color: var(--secondary-glow); font-weight: 600; }
 
-.theme-toggle-btn { width: 46px; height: 46px; border-radius: 16px; background: var(--panel-bg); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.15rem; transition: 0.3s; flex-shrink: 0; }
-.theme-toggle-btn:hover { border-color: var(--primary-glow); transform: rotate(15deg) scale(1.06); }
+.theme-toggle-btn { width: 44px; height: 44px; border-radius: 14px; background: var(--panel-bg); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.1rem; transition: 0.25s; flex-shrink: 0; }
+.theme-toggle-btn:hover { border-color: var(--primary-glow); transform: scale(1.06); }
 
-.nav-links { list-style: none; display: flex; flex-direction: column; gap: 8px; }
-.nav-item { padding: 14px 18px; border-radius: 18px; cursor: pointer; color: var(--text-muted); font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 14px; transition: 0.25s; border: 1px solid transparent; }
-.nav-item:hover { color: var(--text-main); background: rgba(124, 58, 237, 0.12); border-color: var(--glass-border); transform: translateX(5px); }
+.nav-links { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.nav-item { padding: 13px 16px; border-radius: 16px; cursor: pointer; color: var(--text-muted); font-weight: 600; font-size: 0.92rem; display: flex; align-items: center; gap: 12px; transition: 0.22s; border: 1px solid transparent; }
+.nav-item:hover { color: var(--text-main); background: rgba(124, 58, 237, 0.12); border-color: var(--glass-border); transform: translateX(4px); }
 .nav-item.active { background: linear-gradient(90deg, rgba(217, 70, 239, 0.28), rgba(0, 242, 254, 0.18)); border-left: 4px solid var(--secondary-glow); color: var(--text-main); font-weight: 700; }
 
-/* ---- Main Content & Hero (With Mixed Boxed Poster Wall + Random Movie Backdrop Slideshow) ---- */
-.main-content { flex: 1; display: flex; flex-direction: column; gap: 28px; padding-bottom: 90px; min-width: 0; }
+/* ---- Main Content & Hero ---- */
+.main-content { flex: 1; display: flex; flex-direction: column; gap: 24px; padding-bottom: 100px; min-width: 0; }
 .hero-banner {
     position: relative;
     overflow: hidden;
-    min-height: 310px;
+    min-height: 280px;
     justify-content: center;
     background: #070314;
     border: 1.5px solid var(--glass-border);
-    border-radius: 32px;
-    padding: 50px 46px;
+    border-radius: 28px;
+    padding: 40px 42px;
     display: flex;
     flex-direction: column;
-    gap: 22px;
-    box-shadow: var(--shadow-heavy), 0 0 40px rgba(0, 242, 254, 0.16);
-    backdrop-filter: blur(28px);
+    gap: 20px;
+    box-shadow: var(--shadow-heavy);
 }
 .hero-slideshow { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; border-radius: inherit; }
 .hero-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1.1s ease-in-out, transform 6.5s ease-out; }
-.hero-slide.backdrop-slide { background-size: cover; background-position: center 22%; transform: scale(1.09); filter: brightness(1.08) contrast(1.12) saturate(1.3); }
-.hero-slide.backdrop-slide.active { opacity: 0.92; transform: scale(1); }
-.hero-slide.poster-wall-slide { display: grid; grid-template-columns: repeat(9, 1fr); grid-template-rows: repeat(2, 1fr); gap: 8px; padding: 8px; background: #05020e; transform: scale(1.03); }
-.hero-slide.poster-wall-slide.active { opacity: 0.96; transform: scale(1); }
-.poster-wall-tile { width: 100%; height: 100%; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.18); box-shadow: 0 6px 16px rgba(0,0,0,0.75); background: #120c30; }
-.poster-wall-tile img { width: 100%; height: 100%; object-fit: cover; display: block; filter: brightness(1.05) contrast(1.08) saturate(1.2); }
+.hero-slide.backdrop-slide { background-size: cover; background-position: center 22%; transform: scale(1.08); filter: brightness(1.05) contrast(1.1) saturate(1.25); }
+.hero-slide.backdrop-slide.active { opacity: 0.90; transform: scale(1); }
+.hero-slide.poster-wall-slide { display: grid; grid-template-columns: repeat(9, 1fr); grid-template-rows: repeat(2, 1fr); gap: 8px; padding: 8px; background: #05020e; }
+.hero-slide.poster-wall-slide.active { opacity: 0.94; }
+.poster-wall-tile { width: 100%; height: 100%; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.15); background: #120c30; }
+.poster-wall-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .hero-slideshow-overlay {
     position: absolute; inset: 0; z-index: 1; pointer-events: none;
     background:
-        linear-gradient(90deg, rgba(4, 2, 14, 0.96) 0%, rgba(7, 4, 22, 0.82) 38%, rgba(10, 6, 28, 0.22) 72%, rgba(6, 3, 18, 0.12) 100%),
-        linear-gradient(to top, rgba(4, 2, 14, 0.88) 0%, transparent 45%);
+        linear-gradient(90deg, rgba(4, 2, 14, 0.96) 0%, rgba(7, 4, 22, 0.84) 42%, rgba(10, 6, 28, 0.35) 75%, rgba(6, 3, 18, 0.20) 100%),
+        linear-gradient(to top, rgba(4, 2, 14, 0.90) 0%, transparent 50%);
 }
 html[data-theme="light"] .hero-slideshow-overlay {
     background:
-        linear-gradient(90deg, rgba(230, 224, 255, 0.95) 0%, rgba(221, 214, 254, 0.84) 40%, rgba(221, 214, 254, 0.22) 74%, rgba(230, 224, 255, 0.10) 100%),
-        linear-gradient(to top, rgba(230, 224, 255, 0.88) 0%, transparent 45%);
+        linear-gradient(90deg, rgba(230, 224, 255, 0.96) 0%, rgba(221, 214, 254, 0.86) 42%, rgba(221, 214, 254, 0.30) 76%, rgba(230, 224, 255, 0.15) 100%),
+        linear-gradient(to top, rgba(230, 224, 255, 0.90) 0%, transparent 50%);
 }
 .hero-banner > *:not(.hero-slideshow):not(.hero-slideshow-overlay) { position: relative; z-index: 2; }
-.welcome-title { font-size: clamp(1.85rem, 3.2vw, 2.65rem); font-weight: 800; line-height: 1.35; text-shadow: 0 4px 24px rgba(0, 0, 0, 0.65); }
-html[data-theme="light"] .welcome-title { text-shadow: 0 2px 14px rgba(255, 255, 255, 0.9); }
+.welcome-title { font-size: clamp(1.6rem, 3vw, 2.5rem); font-weight: 800; line-height: 1.3; }
 .text-gradient { font-family: 'Playfair Display', serif; background: linear-gradient(to right, #f43f5e, var(--primary-glow), var(--secondary-glow)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-style: italic; font-weight: 600; }
 
-.hero-search-box { position: relative; width: 100%; max-width: 780px; display: flex; gap: 12px; }
+.hero-search-box { position: relative; width: 100%; max-width: 780px; display: flex; gap: 10px; }
 .search-input-wrap { position: relative; flex: 1; min-width: 0; display: flex; }
-.search-input-wrap input { width: 100%; background: var(--input-bg); border: 1.5px solid var(--glass-border); border-radius: 40px; padding: 18px 26px 18px 60px; outline: none; color: var(--text-main); font-size: 1.02rem; }
-.search-input-wrap input:focus { border-color: var(--secondary-glow); box-shadow: 0 0 30px rgba(0, 242, 254, 0.45); }
-.search-input-wrap i.fa-brain { position: absolute; left: 24px; top: 50%; transform: translateY(-50%); color: var(--secondary-glow); font-size: 1.2rem; pointer-events: none; }
-.search-btn-submit { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); border: none; padding: 0 28px; border-radius: 30px; color: #fff; font-weight: 700; cursor: pointer; transition: 0.3s; }
-.search-btn-submit:hover { transform: translateY(-2px); box-shadow: 0 5px 22px rgba(0, 242, 254, 0.6); }
+.search-input-wrap input { width: 100%; background: var(--input-bg); border: 1.5px solid var(--glass-border); border-radius: 40px; padding: 16px 22px 16px 54px; outline: none; color: var(--text-main); font-size: 0.98rem; }
+.search-input-wrap input:focus { border-color: var(--secondary-glow); box-shadow: 0 0 25px rgba(0, 242, 254, 0.45); }
+.search-input-wrap i.fa-brain { position: absolute; left: 22px; top: 50%; transform: translateY(-50%); color: var(--secondary-glow); font-size: 1.15rem; pointer-events: none; }
+.search-btn-submit { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); border: none; padding: 0 26px; border-radius: 30px; color: #fff; font-weight: 700; cursor: pointer; transition: 0.25s; white-space: nowrap; }
+.search-btn-submit:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0, 242, 254, 0.55); }
 
-/* ---- Filter Panel (Media Type, Streaming Apps, Genres, Country, Region) ---- */
-.filter-panel { display: flex; flex-direction: column; gap: 14px; background: var(--panel-bg); padding: 22px 28px; border-radius: 26px; border: 1px solid var(--glass-border); backdrop-filter: blur(22px); box-shadow: var(--shadow-heavy); }
-.filter-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
-.filter-label { font-size: 0.88rem; font-weight: 700; color: var(--secondary-glow); min-width: 148px; display: flex; align-items: center; gap: 7px; }
-.filter-pill { background: rgba(124, 58, 237, 0.08); border: 1px solid var(--glass-border); padding: 8px 18px; border-radius: 22px; font-size: 0.84rem; font-weight: 600; cursor: pointer; color: var(--text-muted); transition: 0.22s; display: inline-flex; align-items: center; gap: 6px; }
-.filter-pill:hover, .filter-pill.active { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); color: #fff; border-color: transparent; box-shadow: 0 0 20px rgba(0, 242, 254, 0.55); }
+/* ---- Filter Panel ---- */
+.filter-panel { display: flex; flex-direction: column; gap: 12px; background: var(--panel-bg); padding: 20px 24px; border-radius: 24px; border: 1px solid var(--glass-border); backdrop-filter: blur(22px); box-shadow: var(--shadow-heavy); }
+.filter-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.filter-label { font-size: 0.85rem; font-weight: 700; color: var(--secondary-glow); min-width: 142px; display: flex; align-items: center; gap: 6px; }
+.filter-pill { background: rgba(124, 58, 237, 0.08); border: 1px solid var(--glass-border); padding: 7px 16px; border-radius: 20px; font-size: 0.82rem; font-weight: 600; cursor: pointer; color: var(--text-muted); transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; user-select: none; }
+.filter-pill:hover, .filter-pill.active { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); color: #fff; border-color: transparent; box-shadow: 0 0 18px rgba(0, 242, 254, 0.5); }
 .filter-pill.active i, .filter-pill:hover i { color: #fff !important; }
 
-/* ---- iOS & Desktop Horizontal Scroll Rows ---- */
-.row-title { font-size: 1.4rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
-.catalog-container { display: flex; flex-direction: column; gap: 38px; min-width: 0; }
-.row-section { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+/* ---- Rows & Equal-Sized Cards ---- */
+.row-title { font-size: 1.35rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+.catalog-container { display: flex; flex-direction: column; gap: 34px; min-width: 0; }
+.row-section { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .movie-row {
     display: flex;
     flex-wrap: nowrap;
-    gap: 22px;
+    gap: 20px;
     width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
-    padding: 14px 10px 26px 10px;
+    padding: 12px 8px 24px 8px;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x pan-y;
     scroll-snap-type: x proximity;
@@ -224,217 +214,262 @@ html[data-theme="light"] .welcome-title { text-shadow: 0 2px 14px rgba(255, 255,
 }
 
 .movie-card {
-    min-width: 220px; width: 220px; background: var(--card-bg); border-radius: 22px; overflow: hidden;
-    border: 1px solid var(--glass-border); transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
-    cursor: pointer; display: flex; flex-direction: column; flex-shrink: 0;
-    box-shadow: 0 14px 32px rgba(0,0,0,0.45); position: relative;
-    scroll-snap-align: start; user-select: none; -webkit-user-drag: none;
+    min-width: 210px;
+    width: 210px;
+    height: 410px;
+    background: var(--card-bg);
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+    transition: transform 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.45);
+    position: relative;
+    scroll-snap-align: start;
+    user-select: none;
 }
 @media (hover: hover) and (pointer: fine) {
-    .movie-card:hover { border-color: var(--secondary-glow); transform: translateY(-9px) scale(1.03); box-shadow: 0 24px 50px rgba(0, 242, 254, 0.42); }
+    .movie-card:hover { border-color: var(--secondary-glow); transform: translateY(-8px); box-shadow: 0 22px 45px rgba(0, 242, 254, 0.38); }
 }
-.movie-card img { width: 100%; height: 310px; object-fit: cover; background: #160f38; pointer-events: none; -webkit-user-drag: none; }
-.media-badge { position: absolute; top: 12px; right: 12px; background: rgba(6, 3, 20, 0.85); border: 1px solid var(--secondary-glow); color: #fff; font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 12px; backdrop-filter: blur(8px); z-index: 3; }
+.card-poster-wrap {
+    width: 100%;
+    height: 295px;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+    background: #160f38;
+}
+.card-poster-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    pointer-events: none;
+}
+.media-badge { position: absolute; top: 10px; right: 10px; background: rgba(6, 3, 20, 0.88); border: 1px solid var(--secondary-glow); color: #fff; font-size: 0.68rem; font-weight: 800; padding: 3px 9px; border-radius: 10px; backdrop-filter: blur(8px); z-index: 3; }
+.r18-badge { position: absolute; top: 10px; left: 10px; background: linear-gradient(135deg, #dc2626, #991b1b); border: 1px solid #fca5a5; color: #fff; font-size: 0.7rem; font-weight: 900; padding: 3px 9px; border-radius: 8px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.65); z-index: 3; letter-spacing: 0.5px; }
 
-/* ---- Top 10 Ranked Card Styling ---- */
-.top10-card { min-width: 255px; width: 255px; padding-left: 52px; background: transparent; border: none; box-shadow: none; overflow: visible; }
+/* ---- Netflix-Style Top 10 Ranked Cards (Giant Number Partially Behind Poster) ---- */
+.top10-card {
+    min-width: 270px;
+    width: 270px;
+    height: 410px;
+    padding-left: 68px;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    position: relative;
+}
 .top10-rank-num {
-    position: absolute; left: -4px; bottom: 28px; font-size: 6.8rem; font-weight: 900; line-height: 0.8;
+    position: absolute;
+    left: 0px;
+    bottom: 24px;
+    font-size: 9.5rem;
+    font-weight: 900;
+    line-height: 0.78;
+    letter-spacing: -8px;
     font-family: 'Plus Jakarta Sans', sans-serif;
-    background: linear-gradient(180deg, var(--secondary-glow), var(--primary-glow));
-    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 6px 18px rgba(0, 242, 254, 0.55));
-    z-index: 4; pointer-events: none;
+    color: rgba(15, 8, 40, 0.92);
+    -webkit-text-stroke: 4px var(--secondary-glow);
+    text-shadow: 0 0 28px rgba(217, 70, 239, 0.65), 4px 8px 20px rgba(0, 0, 0, 0.9);
+    z-index: 1;
+    pointer-events: none;
+    user-select: none;
 }
-.top10-inner { width: 100%; background: var(--card-bg); border-radius: 22px; overflow: hidden; border: 1px solid var(--glass-border); box-shadow: 0 14px 32px rgba(0,0,0,0.55); display: flex; flex-direction: column; position: relative; }
+html[data-theme="light"] .top10-rank-num {
+    color: rgba(230, 224, 255, 0.92);
+    -webkit-text-stroke: 4px var(--primary-glow);
+}
+.top10-inner {
+    width: 100%;
+    height: 100%;
+    background: var(--card-bg);
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+    box-shadow: -10px 14px 32px rgba(0,0,0,0.75);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 2;
+}
 
-.movie-info { padding: 14px; display: flex; flex-direction: column; gap: 5px; flex: 1; justify-content: space-between; }
-.movie-title { font-weight: 700; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.card-meta-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; }
+.movie-info { padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; flex: 1; justify-content: space-between; overflow: hidden; }
+.movie-title { font-weight: 700; font-size: 0.93rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-meta-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 700; }
 .match-score { color: var(--secondary-glow); display: flex; align-items: center; gap: 4px; }
 .rating-badge { color: #fbbf24; display: flex; align-items: center; gap: 4px; }
-.card-rationale-preview { font-size: 0.74rem; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.35; margin-top: 2px; }
+.card-rationale-preview { font-size: 0.72rem; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.32; }
 
-.movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 24px; }
-.movie-grid .movie-card { width: 100%; min-width: 0; }
+/* ---- Equal-Size Search Results & Library Grid ---- */
+.movie-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(205px, 1fr));
+    gap: 22px;
+    align-items: stretch;
+    width: 100%;
+}
+.movie-grid .movie-card {
+    width: 100%;
+    min-width: 0;
+    height: 400px;
+}
+.movie-grid .card-poster-wrap {
+    height: 285px;
+}
 .infinite-loader { text-align: center; padding: 30px; color: var(--secondary-glow); font-weight: 600; font-size: 0.95rem; display: flex; justify-content: center; align-items: center; gap: 10px; }
 
-/* ---- Nova Holographic, Tilting Animations & Moving Tooltip ---- */
+/* ---- Nova Holographic Animations & Tooltip ---- */
 @keyframes novaFloat {
     0%, 100% { transform: translateY(0px) rotate(0deg); }
-    50% { transform: translateY(-9px) rotate(3deg); }
+    50% { transform: translateY(-8px) rotate(3deg); }
 }
 @keyframes novaRingPulse {
     0% { transform: scale(0.92); opacity: 0.85; }
     70% { transform: scale(1.28); opacity: 0; }
     100% { transform: scale(1.3); opacity: 0; }
 }
-@keyframes novaTiltTap {
-    0% { transform: scale(1) rotate(0deg); }
-    45% { transform: scale(1.16) rotate(8deg); }
-    75% { transform: scale(1.08) rotate(-5deg); }
-    100% { transform: scale(1) rotate(0deg); }
-}
 @keyframes tooltipFloat {
-    0%, 100% {
-        transform: translateY(0px) scale(1);
-        box-shadow: 0 6px 25px rgba(0, 242, 254, 0.35), 0 0 15px rgba(217, 70, 239, 0.25);
-        border-color: var(--secondary-glow);
-    }
-    50% {
-        transform: translateY(-8px) scale(1.05);
-        box-shadow: 0 14px 32px rgba(217, 70, 239, 0.65), 0 0 22px rgba(0, 242, 254, 0.55);
-        border-color: var(--primary-glow);
-    }
+    0%, 100% { transform: translateY(0px); box-shadow: 0 6px 25px rgba(0, 242, 254, 0.35); border-color: var(--secondary-glow); }
+    50% { transform: translateY(-6px); box-shadow: 0 12px 28px rgba(217, 70, 239, 0.6); border-color: var(--primary-glow); }
 }
 
-.nova-avatar-animated {
-    animation: novaFloat 3.4s ease-in-out infinite;
-    filter: drop-shadow(0 0 18px rgba(0, 242, 254, 0.75));
-    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.35s ease;
-    cursor: pointer;
-}
-.nova-avatar-animated:hover, .nova-avatar-animated:active, .nova-tilt-active {
-    animation: novaTiltTap 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-    transform: scale(1.12) rotate(6deg);
-    filter: drop-shadow(0 0 26px rgba(217, 70, 239, 0.95));
-}
+.nova-avatar-animated { animation: novaFloat 3.4s ease-in-out infinite; filter: drop-shadow(0 0 16px rgba(0, 242, 254, 0.75)); cursor: pointer; }
 .nova-chathead {
-    width: 76px; height: 76px; background: radial-gradient(circle, #1a0b4b, #070318);
-    border: 2.5px solid var(--secondary-glow); border-radius: 50%; cursor: grab;
+    width: 72px; height: 72px; background: radial-gradient(circle, #1a0b4b, #070318);
+    border: 2.5px solid var(--secondary-glow); border-radius: 50%; cursor: pointer;
     display: flex; justify-content: center; align-items: center; position: relative;
-    box-shadow: 0 0 35px rgba(0, 242, 254, 0.7), 0 0 60px rgba(217, 70, 239, 0.45);
-    animation: novaFloat 3.6s ease-in-out infinite; padding: 5px;
-    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease, border-color 0.35s ease;
-    user-select: none; touch-action: none;
-}
-.nova-chathead:active { cursor: grabbing; }
-.nova-chathead:hover, .nova-chathead.tilted {
-    transform: scale(1.12) rotate(6deg);
-    border-color: var(--primary-glow);
-    box-shadow: 0 0 55px rgba(217, 70, 239, 0.95), 0 0 80px rgba(0, 242, 254, 0.75);
+    box-shadow: 0 0 32px rgba(0, 242, 254, 0.7), 0 0 55px rgba(217, 70, 239, 0.45);
+    animation: novaFloat 3.6s ease-in-out infinite; padding: 5px; user-select: none; touch-action: none;
 }
 .nova-chathead::before {
     content: ""; position: absolute; inset: -6px; border-radius: 50%;
     border: 2px solid var(--primary-glow); animation: novaRingPulse 2.4s infinite; pointer-events: none;
 }
-.nova-chathead img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; pointer-events: none; transition: transform 0.35s ease; }
-.nova-chathead:hover img, .nova-chathead.tilted img { transform: rotate(6deg) scale(1.05); }
+.nova-chathead img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; pointer-events: none; }
 
 .chat-tooltip {
     background: linear-gradient(135deg, rgba(25, 12, 64, 0.95), rgba(8, 4, 24, 0.95));
-    padding: 11px 20px;
-    border-radius: 22px;
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: #ffffff;
-    border: 1.5px solid var(--secondary-glow);
-    cursor: pointer;
-    position: relative;
-    animation: tooltipFloat 2.8s ease-in-out infinite;
-    backdrop-filter: blur(12px);
-    user-select: none;
-    white-space: nowrap;
+    padding: 10px 18px; border-radius: 20px; font-size: 0.86rem; font-weight: 700; color: #ffffff;
+    border: 1.5px solid var(--secondary-glow); cursor: pointer; position: relative;
+    animation: tooltipFloat 2.8s ease-in-out infinite; backdrop-filter: blur(12px); user-select: none; white-space: nowrap;
 }
-html[data-theme="light"] .chat-tooltip {
-    background: linear-gradient(135deg, #ffffff, #f3e8ff);
-    color: #0f172a;
-}
+html[data-theme="light"] .chat-tooltip { background: linear-gradient(135deg, #ffffff, #f3e8ff); color: #0f172a; }
 .chat-tooltip::after {
-    content: "";
-    position: absolute;
-    bottom: -7px;
-    right: 28px;
-    width: 12px;
-    height: 12px;
-    background: inherit;
-    border-right: 1.5px solid var(--secondary-glow);
-    border-bottom: 1.5px solid var(--secondary-glow);
-    transform: rotate(45deg);
+    content: ""; position: absolute; bottom: -7px; right: 26px; width: 11px; height: 11px;
+    background: inherit; border-right: 1.5px solid var(--secondary-glow); border-bottom: 1.5px solid var(--secondary-glow); transform: rotate(45deg);
 }
 
 /* ---- Analytics & Accordions ---- */
 .cascade-accordion { display: flex; flex-direction: column; gap: 16px; }
 .cascade-item { background: var(--panel-bg); border: 1px solid var(--glass-border); border-radius: 20px; overflow: hidden; backdrop-filter: blur(20px); }
-.cascade-header { padding: 22px 28px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: 700; font-size: 1.1rem; color: var(--secondary-glow); }
-.cascade-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; padding: 0 28px; }
-.cascade-item.active .cascade-body { max-height: 1500px; padding: 25px 28px; border-top: 1px solid var(--glass-border); }
-.analytics-grid-packed { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
-.analytics-stat-card { background: rgba(124, 58, 237, 0.08); border: 1px solid var(--glass-border); padding: 20px; border-radius: 16px; display: flex; flex-direction: column; gap: 8px; }
-.analytics-stat-card h4 { font-size: 0.9rem; color: var(--primary-glow); display: flex; align-items: center; gap: 8px; }
-.analytics-stat-card p { font-size: 1.3rem; font-weight: 800; }
-.chart-box-wrapper { position: relative; width: 100%; height: 280px; background: rgba(124, 58, 237, 0.04); border: 1px solid var(--glass-border); border-radius: 16px; padding: 18px; }
+.cascade-header { padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: 700; font-size: 1.05rem; color: var(--secondary-glow); }
+.cascade-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; padding: 0 24px; }
+.cascade-item.active .cascade-body { max-height: 1500px; padding: 22px 24px; border-top: 1px solid var(--glass-border); }
+.analytics-grid-packed { display: grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: 14px; margin-bottom: 22px; }
+.analytics-stat-card { background: rgba(124, 58, 237, 0.08); border: 1px solid var(--glass-border); padding: 18px; border-radius: 16px; display: flex; flex-direction: column; gap: 6px; }
+.analytics-stat-card h4 { font-size: 0.86rem; color: var(--primary-glow); display: flex; align-items: center; gap: 8px; }
+.analytics-stat-card p { font-size: 1.25rem; font-weight: 800; }
+.chart-box-wrapper { position: relative; width: 100%; height: 270px; background: rgba(124, 58, 237, 0.04); border: 1px solid var(--glass-border); border-radius: 16px; padding: 16px; }
 
-.nova-banner-clean { background: linear-gradient(135deg, rgba(217, 70, 239, 0.22), rgba(0, 242, 254, 0.22)); border: 1px solid var(--secondary-glow); border-radius: 28px; padding: 28px 34px; display: flex; align-items: center; justify-content: space-between; gap: 22px; backdrop-filter: blur(20px); flex-wrap: wrap; }
-.nova-banner-clean img { width: 72px; height: 72px; object-fit: contain; }
+.nova-banner-clean { background: linear-gradient(135deg, rgba(217, 70, 239, 0.22), rgba(0, 242, 254, 0.22)); border: 1px solid var(--secondary-glow); border-radius: 24px; padding: 24px 28px; display: flex; align-items: center; justify-content: space-between; gap: 18px; backdrop-filter: blur(20px); flex-wrap: wrap; }
+.nova-banner-clean img { width: 66px; height: 66px; object-fit: contain; }
 
 /* ---- Modals ---- */
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(8, 3, 24, 0.88); z-index: 200; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; backdrop-filter: blur(22px); padding: 20px; }
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(8, 3, 24, 0.88); z-index: 200; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; backdrop-filter: blur(22px); padding: 16px; }
 .modal-overlay.active { opacity: 1; pointer-events: auto; }
-.modal-content { display: flex; gap: 28px; width: 920px; max-width: 100%; max-height: 90vh; background: var(--modal-bg); padding: 32px; border-radius: 28px; position: relative; border: 1px solid var(--glass-border-hover); box-shadow: var(--shadow-heavy); overflow-y: auto; }
-.modal-content > img { width: 240px; height: 360px; object-fit: cover; border-radius: 18px; flex-shrink: 0; box-shadow: 0 10px 30px rgba(0,0,0,0.6); background: #160f38; }
-.modal-info { display: flex; flex-direction: column; gap: 13px; flex: 1; min-width: 0; overflow-y: auto; padding-right: 5px; }
-.close-modal { position: absolute; top: 20px; right: 24px; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); z-index: 10; }
-.modal-meta { display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.9rem; color: var(--text-muted); font-weight: 600; align-items: center; }
-.modal-overview { font-size: 0.94rem; line-height: 1.6; }
+.modal-content { display: flex; gap: 24px; width: 900px; max-width: 100%; max-height: 90vh; background: var(--modal-bg); padding: 28px; border-radius: 26px; position: relative; border: 1px solid var(--glass-border-hover); box-shadow: var(--shadow-heavy); overflow-y: auto; }
+.modal-content > img { width: 230px; height: 345px; object-fit: cover; border-radius: 16px; flex-shrink: 0; box-shadow: 0 10px 30px rgba(0,0,0,0.6); background: #160f38; }
+.modal-info { display: flex; flex-direction: column; gap: 12px; flex: 1; min-width: 0; overflow-y: auto; padding-right: 4px; }
+.close-modal { position: absolute; top: 18px; right: 22px; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); z-index: 10; }
+.modal-meta { display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.88rem; color: var(--text-muted); font-weight: 600; align-items: center; }
+.modal-overview { font-size: 0.92rem; line-height: 1.6; }
 
-.ai-rationale-box { background: rgba(0, 242, 254, 0.08); border: 1px solid rgba(0, 242, 254, 0.4); padding: 13px 16px; border-radius: 16px; display: flex; flex-direction: column; gap: 4px; }
-.ai-rationale-title { font-size: 0.84rem; font-weight: 700; color: var(--secondary-glow); display: flex; align-items: center; gap: 8px; }
+.ai-rationale-box { background: rgba(0, 242, 254, 0.08); border: 1px solid rgba(0, 242, 254, 0.4); padding: 12px 16px; border-radius: 14px; display: flex; flex-direction: column; gap: 4px; }
+.ai-rationale-title { font-size: 0.82rem; font-weight: 700; color: var(--secondary-glow); display: flex; align-items: center; gap: 8px; }
 .ai-rationale-text { font-size: 0.86rem; color: var(--text-muted); line-height: 1.45; }
-.streaming-providers { font-size: 0.84rem; color: var(--secondary-glow); font-weight: 600; display: flex; align-items: center; gap: 8px; background: rgba(0, 242, 254, 0.1); padding: 8px 14px; border-radius: 12px; border: 1px solid rgba(0, 242, 254, 0.3); }
+.streaming-providers { font-size: 0.82rem; color: var(--secondary-glow); font-weight: 600; display: flex; align-items: center; gap: 8px; background: rgba(0, 242, 254, 0.1); padding: 8px 14px; border-radius: 12px; border: 1px solid rgba(0, 242, 254, 0.3); }
 
 .modal-actions { display: flex; gap: 10px; flex-wrap: wrap; padding-top: 6px; }
-.btn-action { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); border: none; padding: 10px 18px; border-radius: 24px; color: #fff; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; transition: 0.25s; font-size: 0.86rem; text-decoration: none; }
-.btn-action:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(0, 242, 254, 0.65); }
+.btn-action { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); border: none; padding: 10px 18px; border-radius: 22px; color: #fff; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; transition: 0.22s; font-size: 0.85rem; text-decoration: none; }
+.btn-action:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 242, 254, 0.6); }
 .btn-trailer { background: linear-gradient(135deg, #f43f5e, #e11d48); }
 .btn-fav { background: rgba(124, 58, 237, 0.14); border: 1px solid var(--glass-border); color: var(--text-main); }
 
 .modal-similar-strip { display: flex; gap: 12px; overflow-x: auto; padding: 8px 2px; -webkit-overflow-scrolling: touch; }
-.modal-sim-card { min-width: 110px; width: 110px; cursor: pointer; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
-.modal-sim-card img { width: 100%; height: 155px; object-fit: cover; border-radius: 12px; border: 1px solid var(--glass-border); }
-.modal-sim-card span { font-size: 0.74rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.modal-sim-card { min-width: 105px; width: 105px; cursor: pointer; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+.modal-sim-card img { width: 100%; height: 150px; object-fit: cover; border-radius: 10px; border: 1px solid var(--glass-border); }
+.modal-sim-card span { font-size: 0.72rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* ---- Floating Messenger-Style Draggable Chat & Theme-Adaptive Conversation Background ---- */
-.chat-wrapper { position: fixed; bottom: 26px; right: 26px; z-index: 100; display: flex; align-items: flex-end; flex-direction: column; gap: 14px; touch-action: none; }
-.chat-modal { width: 420px; max-width: calc(100vw - 28px); background: var(--modal-bg); border-radius: 28px; border: 1px solid var(--glass-border-hover); box-shadow: var(--shadow-heavy); display: flex; flex-direction: column; position: absolute; bottom: 92px; right: 0; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
+/* ---- Floating Chat ---- */
+.chat-wrapper { position: fixed; bottom: 20px; right: 20px; z-index: 150; display: flex; align-items: flex-end; flex-direction: column; gap: 12px; touch-action: none; }
+.chat-modal { width: 400px; max-width: calc(100vw - 24px); background: var(--modal-bg); border-radius: 26px; border: 1px solid var(--glass-border-hover); box-shadow: var(--shadow-heavy); display: flex; flex-direction: column; position: absolute; bottom: 86px; right: 0; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
 .chat-modal.active { opacity: 1; pointer-events: auto; }
-.chat-header { padding: 16px 20px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
-.chat-body, .nova-history-large { padding: 18px; height: 290px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: var(--chat-history-bg); transition: background 0.35s ease; }
-.chat-bubble { padding: 11px 15px; border-radius: 16px; font-size: 0.92rem; line-height: 1.5; max-width: 88%; word-break: break-word; }
-.ai-bubble { background: var(--ai-bubble-bg); border: 1px solid rgba(0, 242, 254, 0.45); color: var(--ai-bubble-text); align-self: flex-start; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12); }
+.chat-header { padding: 14px 18px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
+.chat-body, .nova-history-large { padding: 16px; height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: var(--chat-history-bg); }
+.chat-bubble { padding: 11px 15px; border-radius: 16px; font-size: 0.9rem; line-height: 1.5; max-width: 88%; word-break: break-word; }
+.ai-bubble { background: var(--ai-bubble-bg); border: 1px solid rgba(0, 242, 254, 0.45); color: var(--ai-bubble-text); align-self: flex-start; }
 .user-bubble { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); color: #fff; align-self: flex-end; }
-.quick-chips { display: flex; gap: 8px; padding: 10px 16px; overflow-x: auto; border-top: 1px solid var(--glass-border); scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-.chip { background: rgba(124, 58, 237, 0.15); border: 1px solid var(--glass-border); padding: 6px 13px; border-radius: 14px; font-size: 0.78rem; font-weight: 600; cursor: pointer; color: var(--text-muted); white-space: nowrap; }
+.quick-chips { display: flex; gap: 8px; padding: 10px 14px; overflow-x: auto; border-top: 1px solid var(--glass-border); scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.chip { background: rgba(124, 58, 237, 0.15); border: 1px solid var(--glass-border); padding: 6px 12px; border-radius: 14px; font-size: 0.76rem; font-weight: 600; cursor: pointer; color: var(--text-muted); white-space: nowrap; }
 .chip:hover { background: var(--primary-glow); color: #fff; }
-.chat-footer { padding: 12px 16px; border-top: 1px solid var(--glass-border); display: flex; gap: 10px; }
-.chat-footer input { flex: 1; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 11px 16px; outline: none; font-size: 0.92rem; color: var(--text-main); }
-.send-btn { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.chat-footer { padding: 12px 14px; border-top: 1px solid var(--glass-border); display: flex; gap: 8px; align-items: center; }
+.chat-footer input { flex: 1; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 11px 16px; outline: none; font-size: 0.9rem; color: var(--text-main); min-width: 0; }
+.send-btn { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
+/* ---- Mobile & Tablet Responsive Layout Fixes ---- */
 @media (max-width: 1100px) {
     .app-layout { flex-direction: column; padding: 12px; gap: 16px; }
-    .sidebar { width: 100%; height: auto; position: static; flex-direction: row; align-items: center; padding: 12px 16px; border-radius: 22px; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-    .logo-free-wrapper { width: auto; flex-direction: column; gap: 3px; }
-    .logo-unboxed { width: 50px; max-height: 50px; }
-    .logo-brand-title { font-size: 0.95rem; }
-    .top-controls-row { width: auto; }
-    .account-info { display: none; }
-    .nav-links { flex-direction: row; gap: 6px; overflow-x: auto; width: 100%; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
-    .nav-item { padding: 9px 13px; font-size: 0.82rem; gap: 6px; white-space: nowrap; }
-    .hero-banner { padding: 26px 18px; border-radius: 24px; }
+    .sidebar {
+        width: 100%; height: auto; max-height: none; position: static;
+        flex-direction: column; padding: 14px 16px; border-radius: 22px; gap: 12px;
+    }
+    .sidebar-top-bar { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 12px; }
+    .logo-free-wrapper { width: auto; flex-direction: row; gap: 10px; }
+    .logo-unboxed { width: 46px; height: 46px; }
+    .logo-brand-title { font-size: 1.15rem; }
+    .top-controls-row { width: auto; flex: 1; justify-content: flex-end; }
+    .account-top-btn { flex: 0 1 auto; padding: 8px 12px; }
+    .nav-links {
+        flex-direction: row; gap: 8px; overflow-x: auto; width: 100%;
+        padding: 4px 2px 6px 2px; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .nav-item { padding: 9px 14px; font-size: 0.82rem; gap: 7px; white-space: nowrap; flex-shrink: 0; }
+    .hero-banner { padding: 24px 18px; min-height: 220px; border-radius: 22px; gap: 16px; }
     .hero-slide.poster-wall-slide { grid-template-columns: repeat(5, 1fr); }
-    .hero-search-box { flex-direction: column; }
-    .search-btn-submit { padding: 14px; border-radius: 24px; }
-    .filter-panel { padding: 18px; }
-    .filter-row { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
-    .filter-pill { flex-shrink: 0; }
-    .modal-content { flex-direction: column; padding: 22px; max-height: 92vh; }
-    .modal-content > img { width: 100%; height: 250px; }
-    .movie-row { gap: 14px; padding: 10px 6px 20px 6px; }
-    .movie-card { min-width: 155px; width: 155px; }
-    .movie-card img { height: 220px; }
-    .top10-card { min-width: 190px; width: 190px; padding-left: 38px; }
-    .top10-rank-num { font-size: 4.8rem; }
-    .movie-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+    .filter-panel { padding: 14px 16px; border-radius: 20px; gap: 10px; }
+    .filter-row { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .filter-label { min-width: auto; font-size: 0.8rem; margin-right: 4px; flex-shrink: 0; }
+    .filter-pill { flex-shrink: 0; padding: 6px 13px; font-size: 0.78rem; }
+}
+
+@media (max-width: 640px) {
+    .app-layout { padding: 8px; gap: 12px; }
+    .account-info { display: none; }
+    .hero-search-box { flex-direction: column; gap: 8px; }
+    .search-input-wrap input { padding: 14px 18px 14px 46px; font-size: 0.9rem; }
+    .search-btn-submit { padding: 13px; border-radius: 24px; width: 100%; }
+    .row-title { font-size: 1.12rem; }
+    .movie-row { gap: 12px; padding: 8px 4px 18px 4px; }
+    .movie-card { min-width: 152px; width: 152px; height: 320px; border-radius: 16px; }
+    .card-poster-wrap { height: 215px; }
+    .top10-card { min-width: 195px; width: 195px; height: 320px; padding-left: 46px; }
+    .top10-rank-num { font-size: 6.4rem; letter-spacing: -5px; bottom: 18px; }
+    .movie-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+    .movie-grid .movie-card { height: 330px; }
+    .movie-grid .card-poster-wrap { height: 225px; }
+    .modal-content { flex-direction: column; padding: 18px; max-height: 92vh; gap: 14px; }
+    .modal-content > img { width: 140px; height: 210px; margin: 0 auto; }
+    .chat-wrapper { bottom: 14px; right: 14px; }
+    .nova-chathead { width: 62px; height: 62px; }
+    .chat-modal { width: calc(100vw - 24px); bottom: 76px; }
 }
 </style>
 </head>
@@ -444,22 +479,24 @@ html[data-theme="light"] .chat-tooltip {
 
 <div class="app-layout">
 <aside class="sidebar">
-    <div class="logo-free-wrapper">
-        <img src="logo.png" alt="CineMind Logo" class="logo-unboxed" onerror="this.src='nova.png'">
-        <h2 class="logo-brand-title">CineMind</h2>
-    </div>
-
-    <div class="top-controls-row">
-        <div class="account-top-btn" id="openProfile" title="Click to log in or switch account">
-            <i class="fa-solid fa-user-astronaut" style="color: var(--secondary-glow); font-size: 1.2rem;"></i>
-            <div class="account-info">
-                <span class="account-name" id="profileDisplayName">Guest User</span>
-                <span class="account-sub" id="profileSubText">Tap to Login</span>
-            </div>
+    <div class="sidebar-top-bar" style="display:flex; flex-direction:column; gap:16px; width:100%;">
+        <div class="logo-free-wrapper" id="homeLogoBtn" title="Return to Galaxy Home">
+            <img src="CineMind-Logo.jpg" alt="CineMind Logo" class="logo-unboxed" id="mainBrandLogo">
+            <h2 class="logo-brand-title">CineMind</h2>
         </div>
-        <button class="theme-toggle-btn" id="themeToggleBtn" title="Switch Light / Dark Galaxy Mode">
-            <i class="fa-solid fa-sun" id="themeIcon" style="color: #fbbf24;"></i>
-        </button>
+
+        <div class="top-controls-row">
+            <div class="account-top-btn" id="openProfile" title="Click to log in or switch account">
+                <i class="fa-solid fa-user-astronaut" style="color: var(--secondary-glow); font-size: 1.15rem;"></i>
+                <div class="account-info">
+                    <span class="account-name" id="profileDisplayName">Guest User</span>
+                    <span class="account-sub" id="profileSubText">Tap to Login</span>
+                </div>
+            </div>
+            <button class="theme-toggle-btn" id="themeToggleBtn" type="button" title="Switch Light / Dark Galaxy Mode">
+                <i class="fa-solid fa-sun" id="themeIcon" style="color: #fbbf24;"></i>
+            </button>
+        </div>
     </div>
 
     <ul class="nav-links">
@@ -483,80 +520,80 @@ html[data-theme="light"] .chat-tooltip {
         <div class="hero-search-box">
             <div class="search-input-wrap">
                 <i class="fa-solid fa-brain"></i>
-                <input type="text" id="searchInput" placeholder="Search movies, K-dramas, series, or describe a plot to Nova AI...">
+                <input type="text" id="searchInput" placeholder="Search movies, series, or ask 'Why is there boxing in Toy Story?'...">
             </div>
-            <button class="search-btn-submit" id="searchSubmitBtn"><i class="fa-solid fa-search"></i> Search</button>
+            <button class="search-btn-submit" id="searchSubmitBtn" type="button"><i class="fa-solid fa-search"></i> Search</button>
         </div>
     </div>
 
     <div class="filter-panel" id="filterPanel">
         <!-- 1. MEDIA TYPE FILTER -->
-        <div class="filter-row">
+        <div class="filter-row" id="mediaFilterRow">
             <span class="filter-label"><i class="fa-solid fa-layer-group"></i> Format:</span>
-            <button class="filter-pill active" data-media="all">🌌 All Formats</button>
-            <button class="filter-pill" data-media="movie">🎬 Movies Only</button>
-            <button class="filter-pill" data-media="tv">📺 TV Series, Shows & K-Dramas</button>
+            <button type="button" class="filter-pill active" data-media="all">🌌 All Formats</button>
+            <button type="button" class="filter-pill" data-media="movie">🎬 Movies Only</button>
+            <button type="button" class="filter-pill" data-media="tv">📺 TV Series, Shows & K-Dramas</button>
         </div>
 
-        <!-- 2. STREAMING APPS FILTER (NETFLIX, DISNEY+, PRIME, MAX, APPLE TV+, VIU) -->
-        <div class="filter-row">
+        <!-- 2. STREAMING APPS FILTER -->
+        <div class="filter-row" id="providerFilterRow">
             <span class="filter-label"><i class="fa-solid fa-circle-play"></i> Streaming App:</span>
-            <button class="filter-pill active" data-provider="">All Apps</button>
-            <button class="filter-pill" data-provider="8"><i class="fa-solid fa-n" style="color:#e50914;"></i> Netflix</button>
-            <button class="filter-pill" data-provider="337"><i class="fa-solid fa-wand-sparkles" style="color:#38bdf8;"></i> Disney+</button>
-            <button class="filter-pill" data-provider="119"><i class="fa-brands fa-amazon" style="color:#00a8e1;"></i> Prime Video</button>
-            <button class="filter-pill" data-provider="1899"><i class="fa-solid fa-crown" style="color:#a855f7;"></i> Max / HBO</button>
-            <button class="filter-pill" data-provider="350"><i class="fa-brands fa-apple"></i> Apple TV+</button>
-            <button class="filter-pill" data-provider="158"><i class="fa-solid fa-play" style="color:#fbbf24;"></i> Viu</button>
+            <button type="button" class="filter-pill active" data-provider="">All Apps</button>
+            <button type="button" class="filter-pill" data-provider="8"><i class="fa-solid fa-n" style="color:#e50914;"></i> Netflix</button>
+            <button type="button" class="filter-pill" data-provider="337"><i class="fa-solid fa-wand-sparkles" style="color:#38bdf8;"></i> Disney+</button>
+            <button type="button" class="filter-pill" data-provider="119"><i class="fa-brands fa-amazon" style="color:#00a8e1;"></i> Prime Video</button>
+            <button type="button" class="filter-pill" data-provider="1899"><i class="fa-solid fa-crown" style="color:#a855f7;"></i> Max / HBO</button>
+            <button type="button" class="filter-pill" data-provider="350"><i class="fa-brands fa-apple"></i> Apple TV+</button>
+            <button type="button" class="filter-pill" data-provider="158"><i class="fa-solid fa-play" style="color:#fbbf24;"></i> Viu</button>
         </div>
 
-        <!-- 3. GENRE FILTER ROW -->
-        <div class="filter-row">
-            <span class="filter-label"><i class="fa-solid fa-film"></i> Genres:</span>
-            <button class="filter-pill active" data-genre="">All</button>
-            <button class="filter-pill" data-genre="28">Action</button>
-            <button class="filter-pill" data-genre="12">Adventure</button>
-            <button class="filter-pill" data-genre="16">Animation</button>
-            <button class="filter-pill" data-genre="35">Comedy</button>
-            <button class="filter-pill" data-genre="80">Crime</button>
-            <button class="filter-pill" data-genre="18">Drama</button>
-            <button class="filter-pill" data-genre="14">Fantasy</button>
-            <button class="filter-pill" data-genre="27">Horror</button>
-            <button class="filter-pill" data-genre="9648">Mystery</button>
-            <button class="filter-pill" data-genre="10749">Romance</button>
-            <button class="filter-pill" data-genre="878">Sci-Fi</button>
-            <button class="filter-pill" data-genre="53">Thriller</button>
+        <!-- 3. MULTI-GENRE FILTER ROW (Supports selecting multiple genres at once) -->
+        <div class="filter-row" id="genreFilterRow">
+            <span class="filter-label"><i class="fa-solid fa-film"></i> Genres (Multi):</span>
+            <button type="button" class="filter-pill active" data-genre="">All</button>
+            <button type="button" class="filter-pill" data-genre="28">Action</button>
+            <button type="button" class="filter-pill" data-genre="12">Adventure</button>
+            <button type="button" class="filter-pill" data-genre="16">Animation</button>
+            <button type="button" class="filter-pill" data-genre="35">Comedy</button>
+            <button type="button" class="filter-pill" data-genre="80">Crime</button>
+            <button type="button" class="filter-pill" data-genre="18">Drama</button>
+            <button type="button" class="filter-pill" data-genre="14">Fantasy</button>
+            <button type="button" class="filter-pill" data-genre="27">Horror</button>
+            <button type="button" class="filter-pill" data-genre="9648">Mystery</button>
+            <button type="button" class="filter-pill" data-genre="10749">Romance</button>
+            <button type="button" class="filter-pill" data-genre="878">Sci-Fi</button>
+            <button type="button" class="filter-pill" data-genre="53">Thriller</button>
         </div>
 
         <!-- 4. ORIGIN COUNTRY FILTER ROW -->
-        <div class="filter-row">
+        <div class="filter-row" id="countryFilterRow">
             <span class="filter-label"><i class="fa-solid fa-earth-asia"></i> Origin Country:</span>
-            <button class="filter-pill active" data-country="">🌍 All Countries</button>
-            <button class="filter-pill" data-country="KR">🇰🇷 South Korea</button>
-            <button class="filter-pill" data-country="PH">🇵🇭 Philippines</button>
-            <button class="filter-pill" data-country="US">🇺🇸 USA</button>
-            <button class="filter-pill" data-country="JP">🇯🇵 Japan</button>
-            <button class="filter-pill" data-country="GB">🇬🇧 UK</button>
-            <button class="filter-pill" data-country="TH">🇹🇭 Thailand</button>
-            <button class="filter-pill" data-country="ES">🇪🇸 Spain</button>
-            <button class="filter-pill" data-country="FR">🇫🇷 France</button>
-            <button class="filter-pill" data-country="IN">🇮🇳 India</button>
+            <button type="button" class="filter-pill active" data-country="">🌍 All Countries</button>
+            <button type="button" class="filter-pill" data-country="KR">🇰🇷 South Korea</button>
+            <button type="button" class="filter-pill" data-country="PH">🇵🇭 Philippines</button>
+            <button type="button" class="filter-pill" data-country="US">🇺🇸 USA</button>
+            <button type="button" class="filter-pill" data-country="JP">🇯🇵 Japan</button>
+            <button type="button" class="filter-pill" data-country="GB">🇬🇧 UK</button>
+            <button type="button" class="filter-pill" data-country="TH">🇹🇭 Thailand</button>
+            <button type="button" class="filter-pill" data-country="ES">🇪🇸 Spain</button>
+            <button type="button" class="filter-pill" data-country="FR">🇫🇷 France</button>
+            <button type="button" class="filter-pill" data-country="IN">🇮🇳 India</button>
         </div>
 
         <!-- 5. STREAMING REGION FILTER ROW -->
-        <div class="filter-row">
+        <div class="filter-row" id="regionFilterRow">
             <span class="filter-label"><i class="fa-solid fa-location-dot"></i> Catalog Region:</span>
-            <button class="filter-pill active" data-region="PH">🇵🇭 Philippines</button>
-            <button class="filter-pill" data-region="US">🇺🇸 USA</button>
-            <button class="filter-pill" data-region="KR">🇰🇷 South Korea</button>
-            <button class="filter-pill" data-region="JP">🇯🇵 Japan</button>
-            <button class="filter-pill" data-region="GB">🇬🇧 UK</button>
+            <button type="button" class="filter-pill active" data-region="PH">🇵🇭 Philippines</button>
+            <button type="button" class="filter-pill" data-region="US">🇺🇸 USA</button>
+            <button type="button" class="filter-pill" data-region="KR">🇰🇷 South Korea</button>
+            <button type="button" class="filter-pill" data-region="JP">🇯🇵 Japan</button>
+            <button type="button" class="filter-pill" data-region="GB">🇬🇧 UK</button>
         </div>
     </div>
 
     <div id="mainContainer" class="catalog-container"></div>
     <div id="infiniteSentinel" class="infinite-loader" style="display:none;">
-        <i class="fa-solid fa-spinner fa-spin"></i> Warping more galaxy streams...
+        <i class="fa-solid fa-spinner fa-spin"></i> Warping more unique galaxy streams...
     </div>
 </main>
 </div>
@@ -578,10 +615,10 @@ html[data-theme="light"] .chat-tooltip {
         </div>
         <p class="modal-overview" id="modalOverview"></p>
         <div class="modal-actions">
-            <button class="btn-action btn-trailer" id="trailerBtn"><i class="fa-solid fa-play"></i> Watch Trailer</button>
-            <button class="btn-action" id="watchlistBtn"><i class="fa-solid fa-plus"></i> Watchlist</button>
-            <button class="btn-action btn-fav" id="favoriteBtn"><i class="fa-solid fa-heart"></i> Favorite</button>
-            <button class="btn-action btn-fav" id="watchedBtn"><i class="fa-solid fa-eye"></i> Mark Watched</button>
+            <button type="button" class="btn-action btn-trailer" id="trailerBtn"><i class="fa-solid fa-play"></i> Watch Trailer</button>
+            <button type="button" class="btn-action" id="watchlistBtn"><i class="fa-solid fa-plus"></i> Watchlist</button>
+            <button type="button" class="btn-action btn-fav" id="favoriteBtn"><i class="fa-solid fa-heart"></i> Favorite</button>
+            <button type="button" class="btn-action btn-fav" id="watchedBtn"><i class="fa-solid fa-eye"></i> Mark Watched</button>
         </div>
         <div id="modalSimilarBox" style="display:none; flex-direction:column; gap:8px; margin-top:8px; padding-top:10px; border-top:1px solid var(--glass-border);">
             <span style="font-size:0.84rem; font-weight:700; color:var(--secondary-glow);"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Recommended Similar Titles:</span>
@@ -611,32 +648,32 @@ html[data-theme="light"] .chat-tooltip {
 
 <!-- ONBOARDING / AUTH / 3+ GENRE CALIBRATION MODAL -->
 <div class="modal-overlay" id="profileModal">
-<div class="profile-box" style="width: 480px; max-width: 100%; max-height: 92vh; overflow-y: auto; background: var(--modal-bg); padding: 34px; border-radius: 28px; border: 1px solid var(--glass-border-hover); box-shadow: var(--shadow-heavy); display: flex; flex-direction: column; gap: 16px; position: relative;">
-    <i class="fa-solid fa-xmark close-modal" id="closeProfileModal" style="top:22px; right:24px;"></i>
+<div class="profile-box" style="width: 480px; max-width: 100%; max-height: 92vh; overflow-y: auto; background: var(--modal-bg); padding: 30px; border-radius: 26px; border: 1px solid var(--glass-border-hover); box-shadow: var(--shadow-heavy); display: flex; flex-direction: column; gap: 16px; position: relative;">
+    <i class="fa-solid fa-xmark close-modal" id="closeProfileModal" style="top:20px; right:22px;"></i>
     <div style="display:flex; align-items:center; gap:12px;">
-        <i class="fa-solid fa-shuttle-space" style="color: var(--secondary-glow); font-size: 1.6rem;"></i>
+        <i class="fa-solid fa-shuttle-space" style="color: var(--secondary-glow); font-size: 1.5rem;"></i>
         <div>
-            <h2 style="font-size: 1.35rem;">Welcome to CineMind Galaxy</h2>
-            <p style="font-size: 0.82rem; color: var(--text-muted);" id="authMsg">Sign up or log in to sync your library, or calibrate your tastes below:</p>
+            <h2 style="font-size: 1.3rem;">Welcome to CineMind Galaxy</h2>
+            <p style="font-size: 0.8rem; color: var(--text-muted);" id="authMsg">Sign up or log in to sync your library, or calibrate your tastes below:</p>
         </div>
     </div>
 
     <div class="pref-group" style="display:flex; flex-direction:column; gap:10px;">
-        <input type="text" id="authUsername" placeholder="Username..." style="width: 100%; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 14px; padding: 13px 18px; color: var(--text-main); outline: none; font-size: 0.95rem;">
-        <input type="password" id="authPassword" placeholder="Password (6+ chars)..." style="width: 100%; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 14px; padding: 13px 18px; color: var(--text-main); outline: none; font-size: 0.95rem;">
+        <input type="text" id="authUsername" placeholder="Username..." style="width: 100%; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 14px; padding: 12px 16px; color: var(--text-main); outline: none; font-size: 0.92rem;">
+        <input type="password" id="authPassword" placeholder="Password (6+ chars)..." style="width: 100%; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 14px; padding: 12px 16px; color: var(--text-main); outline: none; font-size: 0.92rem;">
     </div>
 
-    <div id="signupGenres" style="display:flex; flex-direction:column; gap:10px; background: rgba(124,58,237,0.08); padding: 16px; border-radius: 18px; border: 1px solid var(--glass-border);">
+    <div id="signupGenres" style="display:flex; flex-direction:column; gap:10px; background: rgba(124,58,237,0.08); padding: 14px; border-radius: 16px; border: 1px solid var(--glass-border);">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:0.86rem; font-weight:700; color:var(--secondary-glow);"><i class="fa-solid fa-sparkles"></i> Pick at least 3 Genres You Love:</span>
-            <span id="genreCountBadge" style="font-size:0.78rem; font-weight:700; color:var(--primary-glow);">0 / 3+ selected</span>
+            <span style="font-size:0.84rem; font-weight:700; color:var(--secondary-glow);"><i class="fa-solid fa-sparkles"></i> Pick at least 3 Genres You Love:</span>
+            <span id="genreCountBadge" style="font-size:0.76rem; font-weight:700; color:var(--primary-glow);">0 / 3+ selected</span>
         </div>
         <div id="genrePicker" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
     </div>
 
     <div style="display: flex; gap: 10px;">
-        <button class="btn-action" id="loginBtn" style="flex:1; justify-content:center;"><i class="fa-solid fa-right-to-bracket"></i> Log In</button>
-        <button class="btn-action btn-fav" id="signupBtn" style="flex:1; justify-content:center; border-color: var(--primary-glow);"><i class="fa-solid fa-user-plus"></i> Sign Up</button>
+        <button type="button" class="btn-action" id="loginBtn" style="flex:1; justify-content:center;"><i class="fa-solid fa-right-to-bracket"></i> Log In</button>
+        <button type="button" class="btn-action btn-fav" id="signupBtn" style="flex:1; justify-content:center; border-color: var(--primary-glow);"><i class="fa-solid fa-user-plus"></i> Sign Up</button>
     </div>
 
     <div style="display:flex; align-items:center; gap:10px; margin: 2px 0;">
@@ -645,23 +682,23 @@ html[data-theme="light"] .chat-tooltip {
         <div style="flex:1; height:1px; background:var(--glass-border);"></div>
     </div>
 
-    <button class="btn-action btn-fav" id="continueGuestBtn" style="width:100%; justify-content:center; background: rgba(0, 242, 254, 0.12); border-color: rgba(0, 242, 254, 0.4);">
+    <button type="button" class="btn-action btn-fav" id="continueGuestBtn" style="width:100%; justify-content:center; background: rgba(0, 242, 254, 0.12); border-color: rgba(0, 242, 254, 0.4);">
         <i class="fa-solid fa-user-astronaut"></i> Continue as Guest (Apply Selected Genres)
     </button>
 
-    <button id="logoutBtn" style="background:transparent; border:none; color:var(--accent-pink); font-size:0.85rem; cursor:pointer; display:none; margin-top:4px;"><i class="fa-solid fa-right-from-bracket"></i> Log out of current account</button>
+    <button type="button" id="logoutBtn" style="background:transparent; border:none; color:var(--accent-pink); font-size:0.85rem; cursor:pointer; display:none; margin-top:4px;"><i class="fa-solid fa-right-from-bracket"></i> Log out of current account</button>
 </div>
 </div>
 
-<!-- FLOATING ANIMATED & DRAGGABLE NOVA CHAT -->
+<!-- FLOATING NOVA AI ASSISTANT -->
 <div class="chat-wrapper" id="chatWrapper">
     <div class="chat-tooltip" id="chatTooltip">Ask Nova AI ✨</div>
     <div class="chat-modal" id="chatModal">
         <div class="chat-header">
             <div style="display:flex; align-items:center; gap:8px;">
-                <img src="nova.png" alt="Nova" class="nova-avatar-animated" onclick="this.classList.remove('nova-tilt-active'); void this.offsetWidth; this.classList.add('nova-tilt-active');" style="width:28px; height:28px; object-fit:contain;" onerror="this.src='logo.png'">
+                <img src="nova.png" alt="Nova" class="nova-avatar-animated" style="width:28px; height:28px; object-fit:contain;" onerror="this.src='CineMind-Logo.jpg'">
                 <span>Nova AI</span>
-                <span style="font-size:0.7rem; background:rgba(16,185,129,0.2); color:#10b981; padding:2px 8px; border-radius:10px; border:1px solid rgba(16,185,129,0.4);">Memory Active</span>
+                <span style="font-size:0.68rem; background:rgba(16,185,129,0.2); color:#10b981; padding:2px 8px; border-radius:10px; border:1px solid rgba(16,185,129,0.4);">Online</span>
             </div>
             <div style="display:flex; align-items:center; gap:12px;">
                 <i class="fa-solid fa-broom" title="Clear Nova Memory" onclick="clearNovaMemory()" style="cursor:pointer; color:var(--text-muted); font-size:0.9rem;"></i>
@@ -670,18 +707,18 @@ html[data-theme="light"] .chat-tooltip {
         </div>
         <div class="chat-body" id="chatHistory"></div>
         <div class="quick-chips">
+            <span class="chip" onclick="sendQuickPrompt('Why is there boxing in Toy Story?')">🥊 Boxing in Toy Story?</span>
             <span class="chip" onclick="sendQuickPrompt('Two girls stuck on a really high pole')">🗼 Two Girls High Pole</span>
             <span class="chip" onclick="sendQuickPrompt('Poor family infiltrates a rich household')">🕵️ Poor Family / Rich House</span>
             <span class="chip" onclick="sendQuickPrompt('Korean romcom that is super funny and sweet')">🇰🇷 Korean Romcom</span>
-            <span class="chip" onclick="sendQuickPrompt('That movie where a guy wakes up and relives the same day')">⏳ Time Loop</span>
         </div>
         <div class="chat-footer">
-            <input type="text" id="chatInput" placeholder="Describe any movie, series, or plot..." autocomplete="off">
-            <button class="send-btn" id="sendBtn"><i class="fa-solid fa-paper-plane" style="color: white; font-size: 0.85rem;"></i></button>
+            <input type="text" id="chatInput" placeholder="Ask a movie question, plot, or mood..." autocomplete="off">
+            <button type="button" class="send-btn" id="sendBtn" title="Send to Nova"><i class="fa-solid fa-paper-plane" style="color: white; font-size: 0.85rem;"></i></button>
         </div>
     </div>
-    <div class="nova-chathead" id="chatToggle" title="Drag me anywhere or tap to chat!">
-        <img src="nova.png" alt="Nova" onerror="this.src='logo.png'">
+    <div class="nova-chathead" id="chatToggle" title="Tap to open Nova AI!">
+        <img src="nova.png" alt="Nova" onerror="this.src='CineMind-Logo.jpg'">
     </div>
 </div>
 
@@ -690,6 +727,22 @@ const TMDB_API_KEY = "7c7e21b0fe58e5868e262c9bd6b8e7e9";
 const BACKEND_URL = "https://cinemind-live.onrender.com";
 
 const NO_POSTER = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='500' height='750'><rect width='100%' height='100%' fill='%23160f38'/><text x='50%' y='50%' fill='%2394a3b8' font-size='28' text-anchor='middle' font-family='sans-serif'>CineMind Poster</text></svg>`;
+
+// Smart multi-path logo loader so CineMind-Logo.jpg / CineMind-Logo.png / logo.png works and NEVER falls back to Nova
+const LOGO_CANDIDATES = ['CineMind-Logo.jpg', 'CineMind-Logo.png', 'logo.jpg', 'logo.png', 'CineMind-Logo.jpeg'];
+let logoTryIdx = 0;
+const mainBrandLogo = document.getElementById('mainBrandLogo');
+mainBrandLogo.onerror = function() {
+    logoTryIdx++;
+    if (logoTryIdx < LOGO_CANDIDATES.length) {
+        this.src = LOGO_CANDIDATES[logoTryIdx];
+    } else {
+        this.onerror = null;
+    }
+};
+
+// Sound effects disabled per user requirement #10
+function playSciFiChime() {}
 
 let currentMovieData = null;
 let currentUser = localStorage.getItem('cinemind_auth_user') || null;
@@ -705,10 +758,13 @@ let lastNovaQuery = sessionStorage.getItem('cinemind_nova_query') || '';
 let currentView = "discover";
 let selectedMedia = "all";
 let selectedProvider = "";
-let selectedGenre = "";
+let selectedGenres = new Set(); // Requirement #8: Multi-genre selection
 let selectedCountry = "";
 let activeSearchQuery = "";
 let analyticsChartInstance = null;
+
+// Requirement #7: Global deduplication set so movies don't repeat across rows or search pages
+let displayedMovieIds = new Set();
 
 let infiniteMode = "rows";
 let nextRowIndex = 0;
@@ -733,6 +789,51 @@ const MOVIE_TO_TV_GENRE = {
     "878": "10765", "53": "9648"
 };
 
+// Requirement #4: Exclude pornographic / softcore erotic content while identifying genuine R-18 mainstream movies
+const PORN_BLOCK_WORDS = [
+    "porn", "porno", "xxx", "erotic", "erotica", "hentai", "jav", "av idol",
+    "sex tape", "playboy", "penthouse", "nude", "stripper", "prostitute",
+    "kama sutra", "bdsm", "fetish", "orgasm", "milf", "stepmom", "stepsister",
+    "softcore", "pink film", "vivamax", "brazzers", "onlyfans", "emmanuelle"
+];
+
+const KNOWN_R18_TITLES = new Set([
+    "deadpool", "deadpool 2", "deadpool & wolverine", "logan", "joker", "parasite",
+    "oldboy", "oppenheimer", "john wick", "saw", "hereditary", "midsommar",
+    "the wolf of wall street", "pulp fiction", "fight club", "gone girl",
+    "shutter island", "se7en", "american psycho", "saltburn", "the handmaiden",
+    "squid game", "the boys", "euphoria", "game of thrones", "breaking bad",
+    "it", "the conjuring", "evil dead rise", "terrifier", "smile", "don't breathe"
+]);
+
+function isSafeNonPorn(item) {
+    if (!item) return false;
+    if (item.adult === true) return false;
+    const text = `${item.title || ''} ${item.name || ''} ${item.original_title || ''} ${item.overview || ''}`.toLowerCase();
+    for (const bad of PORN_BLOCK_WORDS) {
+        if (text.includes(bad)) return false;
+    }
+    // Block unrated obscure Romance/Drama titles with high sexual keywords
+    if ((item.vote_count || 0) < 15 && /\b(sex|seduc|affair|lust|desire|naked|intimate)\b/i.test(text)) {
+        return false;
+    }
+    return true;
+}
+
+function isGenuineR18(item) {
+    if (!item) return false;
+    if (item.r18 === true || item.certification === "R" || item.certification === "R-18" || item.certification === "TV-MA") return true;
+    const titleLower = (item.title || item.name || "").toLowerCase().trim();
+    if (KNOWN_R18_TITLES.has(titleLower)) return true;
+    const gids = (item.genre_ids || []).map(Number);
+    const overview = (item.overview || "").toLowerCase();
+    // Genuine Horror/Crime/Thriller with mature themes
+    if ((gids.includes(27) || gids.includes(80)) && /\b(murder|serial killer|brutal|blood|gore|cartel|massacre|psychopath|torture|violent|slasher)\b/.test(overview)) {
+        return true;
+    }
+    return false;
+}
+
 // ---------- Light / Dark Theme Toggle ----------
 const savedTheme = localStorage.getItem('cinemind_theme') || 'dark';
 document.documentElement.setAttribute('data-theme', savedTheme);
@@ -744,7 +845,6 @@ function updateThemeIcon() {
 }
 updateThemeIcon();
 document.getElementById('themeToggleBtn').onclick = () => {
-    playSciFiChime();
     const cur = document.documentElement.getAttribute('data-theme');
     const next = cur === 'light' ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', next);
@@ -799,25 +899,6 @@ function renderGenrePills() {
 }
 renderGenrePills();
 
-let audioCtx = null;
-function playSciFiChime() {
-    try {
-        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.14);
-        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.22);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.22);
-    } catch(e) {}
-}
-
 const mainContainer = document.getElementById('mainContainer');
 const infiniteSentinel = document.getElementById('infiniteSentinel');
 const searchInput = document.getElementById('searchInput');
@@ -826,98 +907,64 @@ const filterPanel = document.getElementById('filterPanel');
 const heroBanner = document.getElementById('heroBanner');
 const navItems = document.querySelectorAll('.nav-item');
 
-// ---------------- CONTINUOUS MIXED BANNER SLIDESHOW (BOXED POSTER WALLS + RANDOM MOVIE BACKDROPS) ----------------
 async function initHeroBannerSlideshow() {
     const slideshowContainer = document.getElementById('heroSlideshow');
     if (!slideshowContainer) return;
     try {
-        const randPage1 = Math.floor(Math.random() * 5) + 1;
-        const randPage2 = Math.floor(Math.random() * 5) + 6;
-        const [trendingRes, discoverRes1, discoverRes2] = await Promise.all([
+        const [trendingRes, discoverRes1] = await Promise.all([
             fetch(`https://api.themoviedb.org/3/trending/all/week?api_key=${TMDB_API_KEY}&page=1`).then(r => r.json()).catch(() => ({ results: [] })),
-            fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=popularity.desc&page=${randPage1}`).then(r => r.json()).catch(() => ({ results: [] })),
-            fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=vote_average.desc&vote_count.gte=400&page=${randPage2}`).then(r => r.json()).catch(() => ({ results: [] }))
+            fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&sort_by=popularity.desc&page=2`).then(r => r.json()).catch(() => ({ results: [] }))
         ]);
 
-        const combined = [...(trendingRes.results || []), ...(discoverRes1.results || []), ...(discoverRes2.results || [])];
-        const seenBackdrops = new Set();
-        const seenPosters = new Set();
+        const combined = [...(trendingRes.results || []), ...(discoverRes1.results || [])].filter(isSafeNonPorn);
         const backdrops = [];
         const posters = [];
+        const seenB = new Set(), seenP = new Set();
 
         combined.forEach(m => {
-            if (m && m.backdrop_path && !seenBackdrops.has(m.backdrop_path)) {
-                seenBackdrops.add(m.backdrop_path);
+            if (m.backdrop_path && !seenB.has(m.backdrop_path)) {
+                seenB.add(m.backdrop_path);
                 backdrops.push(`https://image.tmdb.org/t/p/w1280${m.backdrop_path}`);
             }
-            if (m && m.poster_path && !seenPosters.has(m.poster_path)) {
-                seenPosters.add(m.poster_path);
+            if (m.poster_path && !seenP.has(m.poster_path)) {
+                seenP.add(m.poster_path);
                 posters.push(`https://image.tmdb.org/t/p/w342${m.poster_path}`);
             }
         });
 
-        const shuffle = (arr) => {
-            for (let i = arr.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [arr[i], arr[j]] = [arr[j], arr[i]];
-            }
-            return arr;
-        };
-        shuffle(backdrops);
-        shuffle(posters);
-
         slideshowContainer.innerHTML = '';
         const slideEls = [];
 
-        const buildPosterWallSlide = (posterSlice) => {
-            const wall = document.createElement('div');
-            wall.className = 'hero-slide poster-wall-slide';
-            for (let i = 0; i < 18; i++) {
-                const tile = document.createElement('div');
-                tile.className = 'poster-wall-tile';
-                const img = document.createElement('img');
-                img.src = posterSlice[i % posterSlice.length];
-                img.alt = '';
-                img.loading = 'eager';
-                tile.appendChild(img);
-                wall.appendChild(tile);
-            }
-            return wall;
-        };
-
-        const buildBackdropSlide = (url) => {
-            const slide = document.createElement('div');
-            slide.className = 'hero-slide backdrop-slide';
-            slide.style.backgroundImage = `url('${url}')`;
-            return slide;
-        };
-
         let bIdx = 0;
-        for (let step = 0; step < 10; step++) {
-            if (step % 3 === 0 && posters.length >= 10) {
-                const start = (step * 6) % Math.max(1, posters.length - 18);
-                const slice = posters.slice(start, start + 18);
-                if (slice.length < 18) slice.push(...posters.slice(0, 18 - slice.length));
-                const wallEl = buildPosterWallSlide(slice);
-                slideshowContainer.appendChild(wallEl);
-                slideEls.push(wallEl);
+        for (let step = 0; step < 8; step++) {
+            if (step % 3 === 0 && posters.length >= 18) {
+                const wall = document.createElement('div');
+                wall.className = 'hero-slide poster-wall-slide';
+                for (let i = 0; i < 18; i++) {
+                    const tile = document.createElement('div');
+                    tile.className = 'poster-wall-tile';
+                    tile.innerHTML = `<img src="${posters[(step * 4 + i) % posters.length]}" alt="">`;
+                    wall.appendChild(tile);
+                }
+                slideshowContainer.appendChild(wall);
+                slideEls.push(wall);
             } else if (bIdx < backdrops.length) {
-                const backEl = buildBackdropSlide(backdrops[bIdx++]);
-                slideshowContainer.appendChild(backEl);
-                slideEls.push(backEl);
+                const slide = document.createElement('div');
+                slide.className = 'hero-slide backdrop-slide';
+                slide.style.backgroundImage = `url('${backdrops[bIdx++]}')`;
+                slideshowContainer.appendChild(slide);
+                slideEls.push(slide);
             }
         }
 
         if (!slideEls.length) return;
         slideEls[0].classList.add('active');
-
         let currentSlide = 0;
         setInterval(() => {
-            if (!slideEls.length) return;
             slideEls[currentSlide].classList.remove('active');
             currentSlide = (currentSlide + 1) % slideEls.length;
             slideEls[currentSlide].classList.add('active');
-        }, 4200);
+        }, 4500);
     } catch (e) {}
 }
 initHeroBannerSlideshow();
@@ -941,7 +988,7 @@ function saveNovaMemory() {
 
 function renderChatHistoryInto(container) {
     if (!container) return;
-    container.innerHTML = `<div class="chat-bubble ai-bubble">Hi ${escapeHTML(currentUser || 'Guest')}! 👽 I'm Nova. Ask me for any movie, K-drama, series, or vague plot (like <em>"two girls stuck on a really high pole"</em>) and I'll find it!</div>`;
+    container.innerHTML = `<div class="chat-bubble ai-bubble">Hi ${escapeHTML(currentUser || 'Guest')}! 👽 I'm Nova. Ask me any movie question (like <em>"Why is there boxing in Toy Story?"</em>), describe a vague plot, or tell me your mood!</div>`;
     conversationHistory.forEach(turn => {
         if (!turn || !turn.content) return;
         const div = document.createElement('div');
@@ -953,7 +1000,6 @@ function renderChatHistoryInto(container) {
 }
 
 window.clearNovaMemory = () => {
-    playSciFiChime();
     conversationHistory = [];
     lastNovaMovies = [];
     lastNovaQuery = '';
@@ -1033,8 +1079,17 @@ window.addEventListener('DOMContentLoaded', () => {
     if (!currentUser && userGenres.length < 3) profileModal.classList.add('active');
 });
 
+document.getElementById('homeLogoBtn').onclick = () => {
+    searchInput.value = '';
+    navItems.forEach(n => n.classList.remove('active'));
+    navItems[0].classList.add('active');
+    currentView = 'discover';
+    heroBanner.style.display = "flex";
+    filterPanel.style.display = "flex";
+    initEndlessNetflixHome();
+};
+
 document.getElementById('openProfile').onclick = () => {
-    playSciFiChime();
     signupGenres = new Set(userGenres.map(String));
     renderGenrePills();
     profileModal.classList.add('active');
@@ -1042,7 +1097,6 @@ document.getElementById('openProfile').onclick = () => {
 document.getElementById('closeProfileModal').onclick = () => { profileModal.classList.remove('active'); };
 
 document.getElementById('continueGuestBtn').onclick = () => {
-    playSciFiChime();
     if (signupGenres.size > 0 && signupGenres.size < 3) {
         return alert("Please select at least 3 genres you like, or deselect them to continue uncalibrated.");
     }
@@ -1116,6 +1170,7 @@ logoutBtn.onclick = () => {
     initEndlessNetflixHome();
 };
 
+// Card Builder with Genuine R-18 Badge, Equal Sizing, and Netflix-Style Top 10 Number Behind Poster
 function createMovieCard(movie, isAI = false, searchContext = "", rankNum = null) {
     const poster = (movie.poster && movie.poster.startsWith('http'))
         ? movie.poster
@@ -1124,6 +1179,8 @@ function createMovieCard(movie, isAI = false, searchContext = "", rankNum = null
     const mType = movie.media_type || (movie.first_air_date && !movie.release_date ? 'tv' : 'movie');
     const matchPct = calculateSimilarityMatch(movie, searchContext);
     const rating = movie.vote_average ? Number(movie.vote_average).toFixed(1) : '8.2';
+    const showR18 = isGenuineR18(movie);
+    const r18HTML = showR18 ? `<span class="r18-badge">R-18</span>` : '';
     const rationale = movie.rationale || (searchContext
         ? `High neural similarity to "${searchContext}".`
         : (mType === 'tv' ? "Trending Series / Drama matched to your galaxy stream." : "Curated via CineMind neural collaborative filtering."));
@@ -1131,18 +1188,22 @@ function createMovieCard(movie, isAI = false, searchContext = "", rankNum = null
     const card = document.createElement('div');
     if (rankNum !== null) {
         card.className = 'movie-card top10-card';
-        card.onclick = () => { playSciFiChime(); fetchAndOpenModal(title, poster, rationale, movie.id, matchPct, mType); };
+        card.onclick = () => { fetchAndOpenModal(title, poster, rationale, movie.id, matchPct, mType); };
         card.innerHTML = `
             <span class="top10-rank-num">${rankNum}</span>
             <div class="top10-inner">
-                <span class="media-badge">${mType === 'tv' ? '📺 SERIES' : '🎬 MOVIE'}</span>
-                <img src="${poster}" alt="${escapeHTML(title)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=NO_POSTER">
+                <div class="card-poster-wrap">
+                    ${r18HTML}
+                    <span class="media-badge">${mType === 'tv' ? '📺 SERIES' : '🎬 MOVIE'}</span>
+                    <img src="${poster}" alt="${escapeHTML(title)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=NO_POSTER">
+                </div>
                 <div class="movie-info">
                     <div class="movie-title">${escapeHTML(title)}</div>
                     <div class="card-meta-row">
                         <span class="match-score"><i class="fa-solid fa-bolt"></i> ${matchPct}%</span>
                         <span class="rating-badge"><i class="fa-solid fa-star"></i> ${rating}</span>
                     </div>
+                    <div class="card-rationale-preview">${escapeHTML(rationale)}</div>
                 </div>
             </div>
         `;
@@ -1150,10 +1211,13 @@ function createMovieCard(movie, isAI = false, searchContext = "", rankNum = null
     }
 
     card.className = 'movie-card';
-    card.onclick = () => { playSciFiChime(); fetchAndOpenModal(title, poster, rationale, movie.id, matchPct, mType); };
+    card.onclick = () => { fetchAndOpenModal(title, poster, rationale, movie.id, matchPct, mType); };
     card.innerHTML = `
-        <span class="media-badge">${mType === 'tv' ? '📺 SERIES' : '🎬 MOVIE'}</span>
-        <img src="${poster}" alt="${escapeHTML(title)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=NO_POSTER">
+        <div class="card-poster-wrap">
+            ${r18HTML}
+            <span class="media-badge">${mType === 'tv' ? '📺 SERIES' : '🎬 MOVIE'}</span>
+            <img src="${poster}" alt="${escapeHTML(title)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=NO_POSTER">
+        </div>
         <div class="movie-info">
             <div class="movie-title">${escapeHTML(title)}</div>
             <div class="card-meta-row">
@@ -1166,9 +1230,19 @@ function createMovieCard(movie, isAI = false, searchContext = "", rankNum = null
     return card;
 }
 
+// Deduplicating Row Builder (Requirement #4 & #7)
 function buildRowElement(titleHTML, movies, isAI = false, isTop10 = false) {
-    const valid = (movies || []).filter(m => m.poster_path || (m.poster && m.poster.startsWith('http')));
+    const valid = [];
+    for (const m of (movies || [])) {
+        if (!isSafeNonPorn(m)) continue;
+        if (!m.poster_path && !(m.poster && m.poster.startsWith('http'))) continue;
+        const uniqueKey = `${m.media_type || 'movie'}_${m.id}`;
+        if (displayedMovieIds.has(uniqueKey)) continue;
+        displayedMovieIds.add(uniqueKey);
+        valid.push(m);
+    }
     if (!valid.length) return null;
+
     const sec = document.createElement('div');
     sec.className = 'row-section';
     const h3 = document.createElement('h3');
@@ -1187,10 +1261,10 @@ function buildRowElement(titleHTML, movies, isAI = false, isTop10 = false) {
 }
 
 function getActiveFilterQueryParams(mediaType = "movie") {
-    let q = "";
-    if (selectedGenre) {
-        const gid = mediaType === "tv" ? (MOVIE_TO_TV_GENRE[selectedGenre] || selectedGenre) : selectedGenre;
-        q += `&with_genres=${gid}`;
+    let q = "&include_adult=false";
+    if (selectedGenres.size > 0) {
+        const gArr = [...selectedGenres].map(gid => mediaType === "tv" ? (MOVIE_TO_TV_GENRE[gid] || gid) : gid);
+        q += `&with_genres=${[...new Set(gArr)].join(',')}`;
     }
     if (selectedCountry) q += `&with_origin_country=${selectedCountry}`;
     if (selectedProvider) {
@@ -1223,7 +1297,9 @@ async function appendNextNetflixRowBatch(count = 3) {
 
         const appLabel = selectedProvider ? ` on ${PROVIDER_NAMES[selectedProvider]}` : "";
         const countryLabel = selectedCountry ? ` • ${COUNTRY_NAMES[selectedCountry]}` : "";
-        const rowLabel = `${template.title}${appLabel}${countryLabel}${pageOffset > 1 ? ` (Vol. ${pageOffset})` : ''}`;
+        const genreNames = [...selectedGenres].map(g => GENRE_OPTIONS[g]).filter(Boolean).join(' + ');
+        const genreLabel = genreNames ? ` [${genreNames}]` : "";
+        const rowLabel = `${template.title}${genreLabel}${appLabel}${countryLabel}${pageOffset > 1 ? ` (Vol. ${pageOffset})` : ''}`;
 
         batchConfigs.push({ title: rowLabel, url, mType });
         nextRowIndex++;
@@ -1249,12 +1325,16 @@ async function initEndlessNetflixHome() {
     if (currentView !== 'discover' && currentView !== 'series') return;
     infiniteMode = "rows";
     nextRowIndex = 0;
-    mainContainer.innerHTML = `<p style="color: var(--text-muted); text-align:center; padding: 35px;"><i class="fa-solid fa-spinner fa-spin"></i> Synchronizing Galaxy Cinema & Series Streams...</p>`;
+    displayedMovieIds.clear();
+    mainContainer.innerHTML = `<p style="color: var(--text-muted); text-align:center; padding: 35px;"><i class="fa-solid fa-spinner fa-spin"></i> Synchronizing Unique Galaxy Cinema & Series Streams...</p>`;
 
     const isSeriesTab = currentView === 'series' || selectedMedia === 'tv';
     const isMovieOnly = selectedMedia === 'movie' && currentView !== 'series';
     const appBadge = selectedProvider ? ` on ${PROVIDER_NAMES[selectedProvider]}` : "";
     const countryBadge = selectedCountry ? ` (${COUNTRY_NAMES[selectedCountry]})` : "";
+    const activeGenreLabel = selectedGenres.size > 0
+        ? ` • ${[...selectedGenres].map(g => GENRE_OPTIONS[g]).filter(Boolean).join(' + ')}`
+        : "";
 
     const specialRows = [];
 
@@ -1270,52 +1350,52 @@ async function initEndlessNetflixHome() {
         });
     }
 
-    if (selectedProvider) {
-        const pName = PROVIDER_NAMES[selectedProvider];
+    if (selectedProvider || selectedGenres.size > 0 || selectedCountry) {
+        const pName = selectedProvider ? PROVIDER_NAMES[selectedProvider] : "Filtered Stream";
         if (!isSeriesTab) {
             specialRows.push({
-                title: `<i class="fa-solid fa-circle-play" style="color: var(--secondary-glow);"></i> 🔥 Popular Movies Streaming on ${pName}${countryBadge}`,
+                title: `<i class="fa-solid fa-sliders" style="color: var(--secondary-glow);"></i> 🎯 Custom Filtered Movies (${pName}${activeGenreLabel}${countryBadge})`,
                 url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams('movie')}&page=1`,
                 mType: 'movie',
                 isAI: true,
-                customRationale: `Streaming now on ${pName} (${selectedRegion}).`
+                customRationale: `Matched to your active multi-filter selection.`
             });
         }
         if (!isMovieOnly) {
             specialRows.push({
-                title: `<i class="fa-solid fa-tv" style="color: var(--primary-glow);"></i> 📺 Hit TV Series & Dramas on ${pName}${countryBadge}`,
+                title: `<i class="fa-solid fa-tv" style="color: var(--primary-glow);"></i> 📺 Custom Filtered Series & Dramas (${pName}${activeGenreLabel}${countryBadge})`,
                 url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams('tv')}&page=1`,
                 mType: 'tv',
                 isAI: true,
-                customRationale: `Series streaming on ${pName} (${selectedRegion}).`
+                customRationale: `Series matched to your active multi-filter selection.`
             });
         }
     }
 
     if (!isSeriesTab) {
-        const top10MovieUrl = (selectedProvider || selectedCountry || selectedGenre)
-            ? `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams('movie')}&page=1`
+        const top10MovieUrl = (selectedProvider || selectedCountry || selectedGenres.size > 0)
+            ? `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams('movie')}&page=2`
             : `https://api.themoviedb.org/3/trending/movie/day?api_key=${TMDB_API_KEY}`;
         specialRows.push({
-            title: `<i class="fa-solid fa-trophy" style="color: #fbbf24;"></i> 🏆 Top 10 Movies Today${appBadge}${countryBadge}`,
+            title: `<i class="fa-solid fa-trophy" style="color: #fbbf24;"></i> 🏆 Top 10 Movies Today${appBadge}${activeGenreLabel}${countryBadge}`,
             url: top10MovieUrl,
             mType: 'movie',
             isTop10: true
         });
     }
     if (!isMovieOnly) {
-        const top10TVUrl = (selectedProvider || selectedCountry || selectedGenre)
-            ? `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams('tv')}&page=1`
+        const top10TVUrl = (selectedProvider || selectedCountry || selectedGenres.size > 0)
+            ? `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams('tv')}&page=2`
             : `https://api.themoviedb.org/3/trending/tv/day?api_key=${TMDB_API_KEY}`;
         specialRows.push({
-            title: `<i class="fa-solid fa-crown" style="color: var(--primary-glow);"></i> 🏆 Top 10 Series & Dramas Today${appBadge}${countryBadge}`,
+            title: `<i class="fa-solid fa-crown" style="color: var(--primary-glow);"></i> 🏆 Top 10 Series & Dramas Today${appBadge}${activeGenreLabel}${countryBadge}`,
             url: top10TVUrl,
             mType: 'tv',
             isTop10: true
         });
     }
 
-    if (!isSeriesTab && !selectedProvider && !selectedCountry) {
+    if (!isSeriesTab && !selectedProvider && !selectedCountry && selectedGenres.size === 0) {
         specialRows.push(
             {
                 title: `<i class="fa-solid fa-ticket" style="color: #f43f5e;"></i> 🍿 Now Showing in Theaters`,
@@ -1325,7 +1405,7 @@ async function initEndlessNetflixHome() {
             },
             {
                 title: `<i class="fa-solid fa-bolt" style="color: var(--secondary-glow);"></i> 🆕 Brand New Releases`,
-                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=primary_release_date.desc&primary_release_date.lte=2026-10-14&vote_count.gte=25&page=1`,
+                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&sort_by=primary_release_date.desc&primary_release_date.lte=2026-10-14&vote_count.gte=30&page=1`,
                 mType: 'movie',
                 customRationale: "Freshly released title."
             },
@@ -1336,28 +1416,13 @@ async function initEndlessNetflixHome() {
                 customRationale: "Upcoming theatrical & streaming release."
             }
         );
-    } else if (isSeriesTab && !selectedProvider && !selectedCountry) {
-        specialRows.push(
-            {
-                title: `<i class="fa-solid fa-satellite-dish" style="color: #10b981;"></i> 📡 New & Currently Airing Series`,
-                url: `https://api.themoviedb.org/3/tv/on_the_air?api_key=${TMDB_API_KEY}&page=1`,
-                mType: 'tv',
-                customRationale: "New episodes currently airing."
-            },
-            {
-                title: `<i class="fa-solid fa-heart" style="color: #f43f5e;"></i> 🇰🇷 Top K-Dramas & Asian Series`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&with_origin_country=KR&sort_by=popularity.desc&page=1`,
-                mType: 'tv',
-                customRationale: "Trending South Korean drama series."
-            }
-        );
     }
 
-    if (userGenres.length && !selectedGenre) {
+    if (userGenres.length && selectedGenres.size === 0) {
         const gNames = userGenres.map(id => GENRE_OPTIONS[id]).filter(Boolean);
         specialRows.push({
             title: `<i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary-glow);"></i> 💜 Picked For Your Genre Taste (${gNames.join(' + ')})${appBadge}`,
-            url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&with_genres=${userGenres.join('|')}${getActiveFilterQueryParams('movie')}&sort_by=popularity.desc&page=1`,
+            url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=${userGenres.join('|')}&sort_by=popularity.desc&page=1`,
             mType: 'movie',
             isAI: true,
             customRationale: `Matched to your calibrated genres (${gNames.join(', ')}).`
@@ -1383,17 +1448,44 @@ async function initEndlessNetflixHome() {
     await appendNextNetflixRowBatch(4);
 }
 
+// Requirement #6 & #8: Functional Top Filter Buttons with Multi-Select Genre Support
 document.querySelectorAll('.filter-row').forEach(row => {
     row.querySelectorAll('.filter-pill').forEach(pill => {
         pill.onclick = (e) => {
-            playSciFiChime();
             const btn = e.currentTarget;
+
+            // Multi-select behavior specifically for Genres row
+            if (btn.hasAttribute('data-genre')) {
+                const gVal = btn.getAttribute('data-genre');
+                const allBtn = row.querySelector('.filter-pill[data-genre=""]');
+                if (!gVal) {
+                    selectedGenres.clear();
+                    row.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+                    allBtn.classList.add('active');
+                } else {
+                    if (selectedGenres.has(gVal)) {
+                        selectedGenres.delete(gVal);
+                        btn.classList.remove('active');
+                    } else {
+                        selectedGenres.add(gVal);
+                        btn.classList.add('active');
+                    }
+                    if (selectedGenres.size === 0) {
+                        allBtn.classList.add('active');
+                    } else {
+                        allBtn.classList.remove('active');
+                    }
+                }
+                initEndlessNetflixHome();
+                return;
+            }
+
+            // Single-select behavior for Format, Streaming App, Origin Country, Catalog Region
             row.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
             btn.classList.add('active');
 
             if (btn.hasAttribute('data-media')) selectedMedia = btn.getAttribute('data-media');
             if (btn.hasAttribute('data-provider')) selectedProvider = btn.getAttribute('data-provider');
-            if (btn.hasAttribute('data-genre')) selectedGenre = btn.getAttribute('data-genre');
             if (btn.hasAttribute('data-country')) selectedCountry = btn.getAttribute('data-country');
             if (btn.hasAttribute('data-region')) {
                 selectedRegion = btn.getAttribute('data-region');
@@ -1404,9 +1496,8 @@ document.querySelectorAll('.filter-row').forEach(row => {
     });
 });
 
-// ---------------- ENDLESS MULTI-SEARCH ENGINE ----------------
+// ---------------- ENDLESS MULTI-SEARCH & SPECIFIC QUESTION ENGINE (Requirement #3, #4, #5, #7) ----------------
 async function performSearch() {
-    playSciFiChime();
     const query = searchInput.value.trim();
     if (currentView !== 'discover' && currentView !== 'series') {
         currentView = 'discover';
@@ -1425,70 +1516,86 @@ async function performSearch() {
     infiniteMode = "search";
     searchPage = 1;
     searchTotalPages = 10;
+    displayedMovieIds.clear();
 
     heroBanner.style.display = "flex";
     filterPanel.style.display = "none";
-    mainContainer.innerHTML = `<p style="color: var(--text-muted); text-align:center; padding: 40px;"><i class="fa-solid fa-spinner fa-spin"></i> Scanning Movies, Series & Nova Plot Vectors for "${escapeHTML(query)}"...</p>`;
+    mainContainer.innerHTML = `<p style="color: var(--text-muted); text-align:center; padding: 40px;"><i class="fa-solid fa-spinner fa-spin"></i> Nova is analyzing "${escapeHTML(query)}"...</p>`;
 
-    const looksLikePlot = query.split(/\s+/).length >= 5 || /\b(where|about a|who|movie that|forgot|relives|infiltrates|poor family|stuck|pole|tower|trapped)\b/i.test(query);
+    // Detect specific questions (e.g., "Why is there boxing in Toy Story?"), plots, or natural language queries
+    const isQuestionOrPlot = query.split(/\s+/).length >= 4
+        || /\?$/.test(query)
+        || /\b(why|how|what|who|where|when|explain|boxing|about a|movie that|forgot|relives|infiltrates|stuck|pole|tower|trapped)\b/i.test(query);
 
     try {
         let initialMovies = [];
         let aiNote = "";
         let isAISearch = false;
 
-        if (!looksLikePlot) {
+        if (isQuestionOrPlot) {
+            try {
+                const res = await fetch(`${BACKEND_URL}/chat`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: query,
+                        profile: { name: currentUser || 'Guest', favorite_genres: userGenres.map(id => GENRE_OPTIONS[id]).filter(Boolean), origin_country: selectedCountry },
+                        region: selectedRegion,
+                        history: conversationHistory
+                    })
+                });
+                const data = await res.json();
+                initialMovies = (data.movies || []).filter(isSafeNonPorn);
+                aiNote = data.reply || "";
+                isAISearch = true;
+            } catch (e) {}
+        }
+
+        // Also run direct title search if not a plot/question OR if AI returned no movies
+        if (!isQuestionOrPlot || initialMovies.length === 0) {
             const [r1, r2] = await Promise.all([
-                fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&page=1`).then(r => r.json()),
-                fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&page=2`).then(r => r.json())
+                fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&include_adult=false&query=${encodeURIComponent(query)}&page=1`).then(r => r.json()).catch(() => ({})),
+                fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&include_adult=false&query=${encodeURIComponent(query)}&page=2`).then(r => r.json()).catch(() => ({}))
             ]);
             searchTotalPages = r1.total_pages || 1;
             searchPage = 2;
-            initialMovies = [...(r1.results || []), ...(r2.results || [])].filter(m => (m.media_type === 'movie' || m.media_type === 'tv') && m.poster_path);
+            const rawResults = [...(r1.results || []), ...(r2.results || [])].filter(m => (m.media_type === 'movie' || m.media_type === 'tv') && m.poster_path && isSafeNonPorn(m));
+            initialMovies = [...initialMovies, ...rawResults];
 
             if (initialMovies.length > 0 && initialMovies[0].id) {
                 const topHit = initialMovies[0];
                 const mType = topHit.media_type === 'tv' ? 'tv' : 'movie';
                 const recRes = await fetch(`https://api.themoviedb.org/3/${mType}/${topHit.id}/recommendations?api_key=${TMDB_API_KEY}&page=1`).then(r => r.json()).catch(() => ({}));
-                const seenIds = new Set(initialMovies.map(m => m.id));
                 (recRes.results || []).forEach(rm => {
-                    if (rm.poster_path && !seenIds.has(rm.id)) {
+                    if (rm.poster_path && isSafeNonPorn(rm)) {
                         rm.media_type = mType;
-                        rm.rationale = `AI Recommended because you searched for "${topHit.title || topHit.name}".`;
+                        rm.rationale = `Recommended because you searched for "${topHit.title || topHit.name}".`;
                         initialMovies.push(rm);
-                        seenIds.add(rm.id);
                     }
                 });
             }
         }
 
-        if (initialMovies.length === 0) {
-            const res = await fetch(`${BACKEND_URL}/chat`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    message: query,
-                    profile: { name: currentUser || 'Guest', favorite_genres: userGenres.map(id => GENRE_OPTIONS[id]).filter(Boolean), origin_country: selectedCountry },
-                    region: selectedRegion,
-                    history: conversationHistory
-                })
-            });
-            const data = await res.json();
-            initialMovies = data.movies || [];
-            aiNote = data.reply || "";
-            isAISearch = true;
+        // Deduplicate search results
+        const uniqueMovies = [];
+        for (const m of initialMovies) {
+            const key = `${m.media_type || 'movie'}_${m.id}`;
+            if (!displayedMovieIds.has(key)) {
+                displayedMovieIds.add(key);
+                uniqueMovies.push(m);
+            }
         }
 
         mainContainer.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-                <h3 class="row-title"><i class="fa-solid fa-magnifying-glass-chart" style="color: var(--secondary-glow);"></i> Movies, Series & AI Matches for "${escapeHTML(query)}"</h3>
-                <button class="filter-pill" onclick="searchInput.value='';performSearch();"><i class="fa-solid fa-arrow-left"></i> Back to Galaxy Stream</button>
+                <h3 class="row-title"><i class="fa-solid fa-magnifying-glass-chart" style="color: var(--secondary-glow);"></i> Search & AI Answer for "${escapeHTML(query)}"</h3>
+                <button type="button" class="filter-pill" onclick="searchInput.value='';performSearch();"><i class="fa-solid fa-arrow-left"></i> Back to Galaxy Stream</button>
             </div>
         `;
         if (aiNote) {
             const p = document.createElement('div');
             p.className = 'ai-rationale-box';
-            p.style.marginTop = '-18px';
-            p.innerHTML = `<span class="ai-rationale-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Nova AI Plot & Intent Analysis</span><span class="ai-rationale-text" style="font-size:0.95rem;">${escapeHTML(aiNote)}</span>`;
+            p.style.marginTop = '-14px';
+            p.innerHTML = `<span class="ai-rationale-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Nova AI Answer & Scene Analysis</span><span class="ai-rationale-text" style="font-size:0.95rem; color: var(--text-main);">${escapeHTML(aiNote)}</span>`;
             mainContainer.appendChild(p);
         }
 
@@ -1496,10 +1603,10 @@ async function performSearch() {
         grid.className = 'movie-grid';
         grid.id = 'searchResultsGrid';
 
-        if (initialMovies.length > 0) {
-            initialMovies.forEach(m => grid.appendChild(createMovieCard(m, isAISearch, query)));
+        if (uniqueMovies.length > 0) {
+            uniqueMovies.forEach(m => grid.appendChild(createMovieCard(m, isAISearch, query)));
         } else {
-            grid.innerHTML = `<p style="color: var(--text-muted);">No matching titles found. Try describing the plot or vibe to Nova!</p>`;
+            grid.innerHTML = `<p style="color: var(--text-muted);">No matching titles found. Try asking Nova AI on the right!</p>`;
         }
         mainContainer.appendChild(grid);
     } catch (err) {
@@ -1517,15 +1624,21 @@ async function appendMoreSearchResults() {
     try {
         let more = [];
         if (searchPage <= searchTotalPages) {
-            const r = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(activeSearchQuery)}&page=${searchPage}`).then(res => res.json());
-            more = (r.results || []).filter(m => (m.media_type === 'movie' || m.media_type === 'tv') && m.poster_path);
+            const r = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&include_adult=false&query=${encodeURIComponent(activeSearchQuery)}&page=${searchPage}`).then(res => res.json());
+            more = (r.results || []).filter(m => (m.media_type === 'movie' || m.media_type === 'tv') && m.poster_path && isSafeNonPorn(m));
         }
         if (more.length === 0) {
             const fallbackPage = (searchPage % 15) + 1;
-            const r = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=popularity.desc&page=${fallbackPage}`).then(res => res.json());
-            more = (r.results || []).filter(m => m.poster_path);
+            const r = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&sort_by=popularity.desc&page=${fallbackPage}`).then(res => res.json());
+            more = (r.results || []).filter(m => m.poster_path && isSafeNonPorn(m));
         }
-        more.forEach(m => grid.appendChild(createMovieCard(m, false, activeSearchQuery)));
+        more.forEach(m => {
+            const key = `${m.media_type || 'movie'}_${m.id}`;
+            if (!displayedMovieIds.has(key)) {
+                displayedMovieIds.add(key);
+                grid.appendChild(createMovieCard(m, false, activeSearchQuery));
+            }
+        });
     } catch (e) {}
     isFetchingMore = false;
 }
@@ -1539,12 +1652,11 @@ const scrollObserver = new IntersectionObserver((entries) => {
 scrollObserver.observe(infiniteSentinel);
 
 searchSubmitBtn.onclick = performSearch;
-searchInput.onkeypress = (e) => { if (e.key === 'Enter') performSearch(); };
+searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') performSearch(); });
 
 // ---------------- NAVIGATION ----------------
 navItems.forEach(item => {
     item.addEventListener('click', async () => {
-        playSciFiChime();
         navItems.forEach(nav => nav.classList.remove('active'));
         item.classList.add('active');
         currentView = item.getAttribute('data-view');
@@ -1571,6 +1683,7 @@ navItems.forEach(item => {
             infiniteSentinel.style.display = "none";
             heroBanner.style.display = "none";
             filterPanel.style.display = "none";
+            displayedMovieIds.clear();
 
             if (currentUser) await syncCloudLibrary();
             else watchedMovies = await repairSavedPosters(watchedMovies);
@@ -1712,25 +1825,25 @@ function renderEnlargedNovaView() {
         <div class="nova-view-container" style="display:flex; flex-direction:column; gap:22px;">
             <div class="nova-banner-clean">
                 <div style="display:flex; align-items:center; gap:20px;">
-                    <img src="nova.png" alt="Nova" class="nova-avatar-animated" onclick="this.classList.remove('nova-tilt-active'); void this.offsetWidth; this.classList.add('nova-tilt-active');" onerror="this.src='logo.png'">
+                    <img src="nova.png" alt="Nova" class="nova-avatar-animated" onerror="this.src='CineMind-Logo.jpg'">
                     <div>
                         <h2>Nova AI Intelligence Hub <span style="font-size:0.8rem; background:rgba(16,185,129,0.2); color:#10b981; padding:4px 10px; border-radius:12px; vertical-align:middle; margin-left:8px;">Contextual Memory Active</span></h2>
-                        <p>Describe any plot, scene, twist, movie, or K-drama and Nova will identify & rank the best matches!</p>
+                        <p>Ask specific movie questions (e.g. "Why is there boxing in Toy Story?"), describe any plot, or request recommendations!</p>
                     </div>
                 </div>
-                <button class="filter-pill" onclick="clearNovaMemory()"><i class="fa-solid fa-broom"></i> Clear Memory</button>
+                <button type="button" class="filter-pill" onclick="clearNovaMemory()"><i class="fa-solid fa-broom"></i> Clear Memory</button>
             </div>
-            <div class="nova-chat-box-large glass-panel" style="border-radius: 28px; padding: 30px; display: flex; flex-direction: column; gap: 20px; background: var(--panel-bg); border: 1px solid var(--glass-border);">
-                <div class="nova-history-large" id="novaEnlargedHistory" style="height: 290px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; background: var(--chat-history-bg); padding: 22px; border-radius: 20px; border: 1px solid var(--glass-border);"></div>
+            <div class="nova-chat-box-large glass-panel" style="border-radius: 28px; padding: 26px; display: flex; flex-direction: column; gap: 18px; background: var(--panel-bg); border: 1px solid var(--glass-border);">
+                <div class="nova-history-large" id="novaEnlargedHistory" style="height: 290px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; background: var(--chat-history-bg); padding: 20px; border-radius: 20px; border: 1px solid var(--glass-border);"></div>
                 <div class="quick-chips">
+                    <span class="chip" onclick="sendEnlargedPrompt('Why is there boxing in Toy Story?')">🥊 "Why is there boxing in Toy Story?"</span>
                     <span class="chip" onclick="sendEnlargedPrompt('i am looking for a movie where two girls were stuck from a really high pole')">🗼 "Two girls stuck on a high pole"</span>
                     <span class="chip" onclick="sendEnlargedPrompt('The movie about a poor family who infiltrates a rich household')">🕵️ "Poor family infiltrates rich house"</span>
                     <span class="chip" onclick="sendEnlargedPrompt('Korean romcom that is super funny and sweet')">🇰🇷 "Korean romcom funny & sweet"</span>
-                    <span class="chip" onclick="sendEnlargedPrompt('That movie where a guy wakes up and relives the same day over and over')">⏳ "Guy relives the same day"</span>
                 </div>
-                <div class="nova-input-row" style="display: flex; gap: 12px;">
-                    <input type="text" id="novaEnlargedInput" placeholder="Describe a plot, scene, or ask a follow-up..." autocomplete="off" style="flex: 1; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 26px; padding: 14px 22px; outline: none; font-size: 0.98rem; color: var(--text-main);">
-                    <button class="btn-action" id="novaEnlargedSendBtn"><i class="fa-solid fa-paper-plane"></i> Send</button>
+                <div class="nova-input-row" style="display: flex; gap: 10px;">
+                    <input type="text" id="novaEnlargedInput" placeholder="Ask a movie question, describe a plot, or ask a follow-up..." autocomplete="off" style="flex: 1; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 26px; padding: 14px 20px; outline: none; font-size: 0.95rem; color: var(--text-main);">
+                    <button type="button" class="btn-action" id="novaEnlargedSendBtn"><i class="fa-solid fa-paper-plane"></i> Send</button>
                 </div>
             </div>
             <h3 class="row-title" id="novaResultsTitle" style="margin-top: 10px;"><i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> ${lastNovaQuery ? `Neural Matches for "${escapeHTML(lastNovaQuery)}"` : 'Neural Recommendations'}</h3>
@@ -1741,26 +1854,25 @@ function renderEnlargedNovaView() {
     renderChatHistoryInto(document.getElementById('novaEnlargedHistory'));
     const vGrid = document.getElementById('novaVerticalGrid');
     if (lastNovaMovies && lastNovaMovies.length > 0) {
-        lastNovaMovies.forEach(m => vGrid.appendChild(createMovieCard(m, true, lastNovaQuery)));
+        lastNovaMovies.filter(isSafeNonPorn).forEach(m => vGrid.appendChild(createMovieCard(m, true, lastNovaQuery)));
     } else {
-        vGrid.innerHTML = `<p style="color: var(--text-muted); font-weight:500;">Try clicking one of the plot prompts above or ask Nova anything!</p>`;
+        vGrid.innerHTML = `<p style="color: var(--text-muted); font-weight:500;">Try clicking one of the prompts above or ask Nova anything!</p>`;
     }
 
     const inputField = document.getElementById('novaEnlargedInput');
     const sendButton = document.getElementById('novaEnlargedSendBtn');
     const executeEnlargedChat = async (promptText) => {
-        playSciFiChime();
         const msg = promptText || inputField.value.trim();
         if (!msg) return;
         if (!promptText) inputField.value = '';
         await sendToNovaEngine(msg);
     };
     sendButton.onclick = () => executeEnlargedChat();
-    inputField.onkeypress = (e) => { if (e.key === 'Enter') executeEnlargedChat(); };
+    inputField.addEventListener('keydown', (e) => { if (e.key === 'Enter') executeEnlargedChat(); });
     window.sendEnlargedPrompt = (p) => executeEnlargedChat(p);
 }
 
-// ---------------- MODAL DETAILS, TRAILER, RATIONALE & SIMILAR AI PICKS ----------------
+// ---------------- MODAL DETAILS, R18 CHECK, TRAILER, RATIONALE & SIMILAR AI PICKS ----------------
 async function loadModalSimilarRecommendations(id, mType, title) {
     const box = document.getElementById('modalSimilarBox');
     const strip = document.getElementById('modalSimilarStrip');
@@ -1769,7 +1881,7 @@ async function loadModalSimilarRecommendations(id, mType, title) {
     try {
         const r = await fetch(`https://api.themoviedb.org/3/${mType}/${id}/recommendations?api_key=${TMDB_API_KEY}&page=1`);
         const d = await r.json();
-        const recs = (d.results || []).filter(x => x.poster_path).slice(0, 8);
+        const recs = (d.results || []).filter(x => x.poster_path && isSafeNonPorn(x)).slice(0, 8);
         if (!recs.length) return;
         box.style.display = 'flex';
         recs.forEach(sim => {
@@ -1778,7 +1890,6 @@ async function loadModalSimilarRecommendations(id, mType, title) {
             const item = document.createElement('div');
             item.className = 'modal-sim-card';
             item.onclick = () => {
-                playSciFiChime();
                 fetchAndOpenModal(sTitle, sPoster, `AI Recommended because you viewed "${title}".`, sim.id, 94, mType);
             };
             item.innerHTML = `<img src="${sPoster}" alt="${escapeHTML(sTitle)}"><span>${escapeHTML(sTitle)}</span>`;
@@ -1792,16 +1903,38 @@ async function fetchAndOpenModal(title, fallbackPoster, customRationale, movieId
         let item = null;
         const mType = mediaType === 'tv' ? 'tv' : 'movie';
         if (movieId) {
-            const r = await fetch(`https://api.themoviedb.org/3/${mType}/${movieId}?api_key=${TMDB_API_KEY}`);
+            const r = await fetch(`https://api.themoviedb.org/3/${mType}/${movieId}?api_key=${TMDB_API_KEY}&append_to_response=release_dates,content_ratings`);
             const d = await r.json();
             if (d && d.id) item = d;
         }
         if (!item) {
-            const r = await fetch(`https://api.themoviedb.org/3/search/${mType}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(title)}`);
+            const r = await fetch(`https://api.themoviedb.org/3/search/${mType}?api_key=${TMDB_API_KEY}&include_adult=false&query=${encodeURIComponent(title)}`);
             const d = await r.json();
             item = d.results && d.results[0];
         }
         if (!item) return;
+
+        // Check official US/PH TMDB certification for R / R-18 / TV-MA / NC-17
+        let certR18 = isGenuineR18(item);
+        try {
+            if (mType === 'movie' && item.release_dates && item.release_dates.results) {
+                for (const countryEntry of item.release_dates.results) {
+                    if (['US', 'PH', 'GB'].includes(countryEntry.iso_3166_1)) {
+                        for (const rd of (countryEntry.release_dates || [])) {
+                            if (['R', 'NC-17', 'R-18', '18'].includes((rd.certification || '').toUpperCase())) {
+                                certR18 = true;
+                            }
+                        }
+                    }
+                }
+            } else if (mType === 'tv' && item.content_ratings && item.content_ratings.results) {
+                for (const cr of item.content_ratings.results) {
+                    if (['TV-MA', '18', 'R-18'].includes((cr.rating || '').toUpperCase())) {
+                        certR18 = true;
+                    }
+                }
+            }
+        } catch (e) {}
 
         currentMovieData = item;
         currentMovieData.media_type = mType;
@@ -1821,6 +1954,7 @@ async function fetchAndOpenModal(title, fallbackPoster, customRationale, movieId
 
         document.getElementById('modalTitle').innerText = currentMovieData.title;
         document.getElementById('modalMeta').innerHTML = `
+            ${certR18 ? `<span style="background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff;padding:2px 10px;border-radius:8px;font-weight:900;font-size:0.78rem;">R-18</span>` : ''}
             <span style="color:var(--secondary-glow); font-weight:800;"><i class="fa-solid fa-bolt"></i> ${matchPct}% Neural Match</span>
             <span><i class="fa-solid fa-calendar"></i> ${year}</span>
             <span><i class="fa-solid fa-star" style="color: #fbbf24;"></i> ${rating} TMDB</span>
@@ -1851,7 +1985,7 @@ async function fetchAndOpenModal(title, fallbackPoster, customRationale, movieId
                 document.getElementById('modalProviders').innerHTML = `<i class="fa-solid fa-tv"></i> <span>Streaming on: <strong>Global VOD Catalog</strong></span>`;
             });
 
-        document.getElementById('trailerBtn').onclick = () => { playSciFiChime(); fetchAndPlayTrailer(currentMovieData.id, currentMovieData.title, mType); };
+        document.getElementById('trailerBtn').onclick = () => { fetchAndPlayTrailer(currentMovieData.id, currentMovieData.title, mType); };
 
         updateButtonStates();
         loadModalSimilarRecommendations(currentMovieData.id, mType, currentMovieData.title);
@@ -1918,7 +2052,6 @@ function libraryPayload(m) {
 }
 
 document.getElementById('watchlistBtn').onclick = async () => {
-    playSciFiChime();
     if(!currentUser) { alert("Please log in to save items to your cloud watchlist."); profileModal.classList.add('active'); return; }
     try {
         const res = await fetch(`${BACKEND_URL}/api/user/library/toggle`, {
@@ -1935,7 +2068,6 @@ document.getElementById('watchlistBtn').onclick = async () => {
 };
 
 document.getElementById('favoriteBtn').onclick = async () => {
-    playSciFiChime();
     if(!currentUser) { alert("Please log in to save items to your cloud favorites."); profileModal.classList.add('active'); return; }
     try {
         const res = await fetch(`${BACKEND_URL}/api/user/library/toggle`, {
@@ -1952,7 +2084,6 @@ document.getElementById('favoriteBtn').onclick = async () => {
 };
 
 document.getElementById('watchedBtn').onclick = () => {
-    playSciFiChime();
     if (!currentMovieData) return;
     const idx = watchedMovies.findIndex(m => Number(m.id) === Number(currentMovieData.id));
     if (idx >= 0) {
@@ -1966,7 +2097,7 @@ document.getElementById('watchedBtn').onclick = () => {
     else if (currentView === 'discover' || currentView === 'series') initEndlessNetflixHome();
 };
 
-// ---------------- UNIFIED SUPER-NOVA CHAT ENGINE + MESSENGER DRAGGABLE CHATHEAD ----------------
+// ---------------- UNIFIED SUPER-NOVA CHAT ENGINE (Requirement #2 & #3) ----------------
 const chatWrapper = document.getElementById('chatWrapper');
 const chatToggle = document.getElementById('chatToggle');
 const chatModal = document.getElementById('chatModal');
@@ -1993,17 +2124,14 @@ function adjustChatModalPlacement() {
     }
     if (rect.top < 420) {
         chatModal.style.bottom = 'auto';
-        chatModal.style.top = '90px';
+        chatModal.style.top = '82px';
     } else {
         chatModal.style.top = 'auto';
-        chatModal.style.bottom = '92px';
+        chatModal.style.bottom = '86px';
     }
 }
 
 function toggleNovaChatModal() {
-    playSciFiChime();
-    chatToggle.classList.add('tilted');
-    setTimeout(() => chatToggle.classList.remove('tilted'), 450);
     adjustChatModalPlacement();
     chatModal.classList.toggle('active');
     chatTooltip.style.display = chatModal.classList.contains('active') ? 'none' : 'block';
@@ -2025,7 +2153,7 @@ chatToggle.addEventListener('pointermove', (e) => {
     if (!isDraggingChat) return;
     const dx = e.clientX - dragStartX;
     const dy = e.clientY - dragStartY;
-    if (Math.hypot(dx, dy) > 6) {
+    if (Math.hypot(dx, dy) > 8) {
         chatDragMoved = true;
         const maxLeft = window.innerWidth - chatWrapper.offsetWidth - 10;
         const maxTop = window.innerHeight - chatWrapper.offsetHeight - 10;
@@ -2043,13 +2171,7 @@ chatToggle.addEventListener('pointerup', (e) => {
     if (!isDraggingChat) return;
     isDraggingChat = false;
     chatToggle.releasePointerCapture(e.pointerId);
-
-    if (!chatDragMoved) {
-        toggleNovaChatModal();
-    } else {
-        chatToggle.classList.add('tilted');
-        setTimeout(() => chatToggle.classList.remove('tilted'), 450);
-    }
+    if (!chatDragMoved) toggleNovaChatModal();
 });
 
 chatTooltip.onclick = () => toggleNovaChatModal();
@@ -2069,7 +2191,7 @@ function appendBubbleToBothChats(text, sender, isHTML = false) {
 
 async function sendToNovaEngine(message) {
     appendBubbleToBothChats(message, 'user', false);
-    appendBubbleToBothChats(`<i class="fa-solid fa-spinner fa-spin"></i> Nova is scanning plots, movies & series...`, 'ai', true);
+    appendBubbleToBothChats(`<i class="fa-solid fa-spinner fa-spin"></i> Nova is analyzing your question & scanning cinema vectors...`, 'ai', true);
 
     try {
         const response = await fetch(`${BACKEND_URL}/chat`, {
@@ -2096,14 +2218,15 @@ async function sendToNovaEngine(message) {
         const replyText = data.reply || "Here are the best matches I found!";
         appendBubbleToBothChats(replyText, 'ai', false);
 
-        const movieContextNote = (data.movies && data.movies.length)
-            ? ` [Movies shown to user: ${data.movies.slice(0, 5).map(m => `${m.title} (${(m.release_date || '').slice(0,4)})`).join(', ')}]`
+        const safeMovies = (data.movies || []).filter(isSafeNonPorn);
+        const movieContextNote = safeMovies.length
+            ? ` [Movies shown to user: ${safeMovies.slice(0, 5).map(m => `${m.title} (${(m.release_date || '').slice(0,4)})`).join(', ')}]`
             : '';
         conversationHistory.push({ role: "user", content: message });
         conversationHistory.push({ role: "assistant", content: replyText + movieContextNote });
 
-        if (data.movies && data.movies.length > 0) {
-            lastNovaMovies = data.movies;
+        if (safeMovies.length > 0) {
+            lastNovaMovies = safeMovies;
             lastNovaQuery = message;
             saveNovaMemory();
 
@@ -2113,7 +2236,7 @@ async function sendToNovaEngine(message) {
                 if (titleEl) titleEl.innerHTML = `<i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> Neural Matches for "${escapeHTML(message)}"`;
                 if (vGrid) {
                     vGrid.innerHTML = '';
-                    data.movies.forEach(movie => vGrid.appendChild(createMovieCard(movie, true, message)));
+                    safeMovies.forEach(movie => vGrid.appendChild(createMovieCard(movie, true, message)));
                 }
             } else {
                 infiniteMode = "none";
@@ -2122,13 +2245,17 @@ async function sendToNovaEngine(message) {
                 filterPanel.style.display = "none";
                 mainContainer.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-                        <h3 class="row-title"><i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> Nova AI Matches for "${escapeHTML(message)}"</h3>
-                        <button class="filter-pill" onclick="heroBanner.style.display='flex';filterPanel.style.display='flex';initEndlessNetflixHome();"><i class="fa-solid fa-arrow-left"></i> Back to Galaxy Stream</button>
+                        <h3 class="row-title"><i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> Nova AI Answer & Matches for "${escapeHTML(message)}"</h3>
+                        <button type="button" class="filter-pill" onclick="heroBanner.style.display='flex';filterPanel.style.display='flex';initEndlessNetflixHome();"><i class="fa-solid fa-arrow-left"></i> Back to Galaxy Stream</button>
+                    </div>
+                    <div class="ai-rationale-box" style="margin-top:-14px;">
+                        <span class="ai-rationale-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Nova AI Response</span>
+                        <span class="ai-rationale-text" style="font-size:0.95rem; color:var(--text-main);">${escapeHTML(replyText)}</span>
                     </div>
                 `;
                 const grid = document.createElement('div');
                 grid.className = 'movie-grid';
-                data.movies.forEach(movie => grid.appendChild(createMovieCard(movie, true, message)));
+                safeMovies.forEach(movie => grid.appendChild(createMovieCard(movie, true, message)));
                 mainContainer.appendChild(grid);
             }
         } else {
@@ -2143,7 +2270,6 @@ async function sendToNovaEngine(message) {
 }
 
 async function handleChat(queryText) {
-    playSciFiChime();ss
     const message = queryText || chatInput.value.trim();
     if (!message) return;
     if (!queryText) chatInput.value = '';
@@ -2151,8 +2277,13 @@ async function handleChat(queryText) {
 }
 
 window.sendQuickPrompt = (prompt) => handleChat(prompt);
-sendBtn.onclick = () => handleChat();
-chatInput.onkeypress = (e) => { if (e.key === 'Enter') handleChat(); };
+sendBtn.addEventListener('click', () => handleChat());
+chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        handleChat();
+    }
+});
 
 initEndlessNetflixHome();
 </script>
