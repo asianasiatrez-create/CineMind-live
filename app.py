@@ -13,9 +13,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 CORS(app)
 
-# Environment variables with fallback keys
+# Environment variables (Put a fresh GROQ_API_KEY in Render -> Environment!)
 TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "7c7e21b0fe58e5868e262c9bd6b8e7e9").strip().strip('"').strip("'")
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "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").strip().strip('"').strip("'")
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "").strip().strip('"').strip("'")
 OMDB_API_KEY = os.environ.get("OMDB_API_KEY", "554ae239").strip().strip('"').strip("'")
 
 DB_NAME = "cinemind.db"
@@ -29,25 +29,39 @@ GENRES = {
 }
 GENRE_LIST = ", ".join(GENRES.keys())
 
-# Built-in Plot & Vibe Knowledge Base (Guarantees 100% accuracy even if Groq API is offline/revoked)
+# Expanded Plot Detective Database (Covers viral TikTok/Reels movie plots & iconic premises)
 KNOWN_PLOT_PATTERNS = [
     {
-        "patterns": ["poor family", "rich household", "rich family", "infiltrate", "infiltrates", "basement", "tutor"],
-        "intent": "plot_search",
-        "reply": "You're thinking of the Oscar-winning masterpiece 'Parasite' (2019)! I've also pulled up other brilliant thrillers about class divide and infiltration.",
+        "patterns": ["high pole", "tv tower", "radio tower", "two girls", "2 girls", "stuck on top", "climbs a tower", "2000 feet", "ladder breaks", "stuck on a tower", "tall tower", "tall pole"],
+        "must_have_any": ["pole", "tower", "stuck", "climb", "high", "top"],
+        "reply": "You're looking for 'Fall' (2022)! Best friends Becky and Hunter climb a 2,000-foot abandoned radio tower and get stranded at the very top when the ladder breaks. I've also included similar claustrophobic survival thrillers!",
+        "guesses": [
+            {"title": "Fall", "year": 2022, "why": "Exact plot match: two girls climb a 2,000-foot tall radio tower/pole and get trapped at the top with no way down."},
+            {"title": "47 Meters Down", "year": 2017, "why": "Two sisters get trapped in a shark cage at the bottom of the ocean with less than an hour of oxygen left."},
+            {"title": "The Shallows", "year": 2016, "why": "A surfer gets stranded on a tiny rock 200 yards from shore while a great white shark circles her."},
+            {"title": "127 Hours", "year": 2010, "why": "A mountain climber becomes trapped under a boulder in an isolated slot canyon and must fight to survive."},
+            {"title": "Frozen", "year": 2010, "why": "Three friends get stranded high up on a ski chairlift when the resort closes for the weekend."},
+            {"title": "Buried", "year": 2010, "why": "A man wakes up buried alive inside a wooden coffin with only a lighter and a cell phone."},
+            {"title": "Nowhere", "year": 2023, "why": "A pregnant woman gets trapped alone inside a drifting shipping container in the middle of the sea."}
+        ]
+    },
+    {
+        "patterns": ["poor family", "rich household", "rich family", "infiltrate", "infiltrates", "wealthy family", "pose as tutor"],
+        "must_have_any": ["poor", "rich", "infiltrate", "infiltrates", "wealthy", "household"],
+        "reply": "You're thinking of the Oscar-winning masterpiece 'Parasite' (2019)! Here is 'Parasite' along with sharp thrillers about class divide and infiltration:",
         "guesses": [
             {"title": "Parasite", "year": 2019, "why": "Exact plot match: the Kim family infiltrates the wealthy Park household by posing as unrelated, highly qualified workers."},
             {"title": "Saltburn", "year": 2023, "why": "A scheming student infiltrates an aristocratic British family's sprawling estate."},
             {"title": "The Handmaiden", "year": 2016, "why": "A Korean con-artist plot involving a pickpocket hired as a maid to defraud a wealthy heiress."},
-            {"title": "Us", "year": 2019, "why": "A sharp, suspenseful thriller centered on duality, privilege, and home invasion."},
             {"title": "Knives Out", "year": 2019, "why": "A clever mystery revolving around a wealthy, dysfunctional family and an outsider."},
-            {"title": "Burning", "year": 2018, "why": "Acclaimed Korean psychological drama exploring unspoken class tension between a struggling writer and a wealthy acquaintance."}
+            {"title": "Us", "year": 2019, "why": "A sharp, suspenseful thriller centered on duality, privilege, and home invasion."},
+            {"title": "Burning", "year": 2018, "why": "Acclaimed Korean psychological drama exploring unspoken class tension."}
         ]
     },
     {
-        "patterns": ["relives the same day", "same day over", "wakes up and relives", "time loop", "repeating the same day"],
-        "intent": "plot_search",
-        "reply": "That classic time-loop premise matches 'Groundhog Day' (1993), 'Palm Springs' (2020), and 'Edge of Tomorrow' (2014)! Here are the best time-loop films:",
+        "patterns": ["relives the same day", "same day over", "wakes up and relives", "time loop", "repeating the same day", "every time he dies"],
+        "must_have_any": ["relives", "loop", "same day", "repeating"],
+        "reply": "That classic time-loop premise matches 'Groundhog Day' (1993), 'Palm Springs' (2020), and 'Edge of Tomorrow' (2014)!",
         "guesses": [
             {"title": "Groundhog Day", "year": 1993, "why": "The definitive time-loop movie where a cynical weatherman relives February 2nd over and over."},
             {"title": "Palm Springs", "year": 2020, "why": "A hilarious and heartfelt modern twist where wedding guests get stuck reliving the same day."},
@@ -59,26 +73,70 @@ KNOWN_PLOT_PATTERNS = [
     },
     {
         "patterns": ["memory loss", "short-term memory", "tattoos", "amnesia", "wife's killer", "polaroid"],
-        "intent": "plot_search",
-        "reply": "That's Christopher Nolan's 'Memento' (2000)! Leonard Shelby uses Polaroids and tattoos to track down his wife's killer despite anterograde amnesia.",
+        "must_have_any": ["memory", "tattoos", "amnesia", "polaroid"],
+        "reply": "That's Christopher Nolan's 'Memento' (2000)! Leonard Shelby uses Polaroids and tattoos to track down his wife's killer despite short-term memory loss.",
         "guesses": [
             {"title": "Memento", "year": 2000, "why": "Exact match: a man with short-term memory loss uses tattoos and notes to hunt his wife's murderer."},
             {"title": "Shutter Island", "year": 2010, "why": "A psychological mystery where a U.S. Marshal investigates a psychiatric facility and confronts fractured memories."},
             {"title": "The Bourne Identity", "year": 2002, "why": "A man is pulled from the sea with amnesia and must piece together his lethal past."},
             {"title": "Eternal Sunshine of the Spotless Mind", "year": 2004, "why": "A couple undergoes a medical procedure to erase each other from their memories."},
-            {"title": "Before I Go to Sleep", "year": 2014, "why": "A woman wakes up every day with no memory as a result of a traumatic accident."}
+            {"title": "Remember", "year": 2015, "why": "An elderly man with dementia sets out with a handwritten letter to track down a Nazi war criminal."}
         ]
     },
     {
-        "patterns": ["dreams within dreams", "steals secrets from dreams", "enter people's dreams", "spinning top", "dream sharing"],
-        "intent": "plot_search",
-        "reply": "That's 'Inception' (2010)! Dom Cobb leads a team of extractors into layered dreamscapes to plant an idea.",
+        "patterns": ["cannot make a sound", "can't make a noise", "blind monsters", "monsters hunt by sound", "silent", "sign language"],
+        "must_have_any": ["sound", "noise", "silent", "blind", "monsters"],
+        "reply": "You're thinking of 'A Quiet Place' (2018)! A family must live in complete silence to hide from blind extraterrestrial creatures with ultra-sensitive hearing.",
         "guesses": [
-            {"title": "Inception", "year": 2010, "why": "Exact plot match: a thief who steals corporate secrets through dream-sharing technology."},
-            {"title": "Paprika", "year": 2006, "why": "The visionary anime thriller about a device that permits therapists to enter patients' dreams."},
-            {"title": "The Matrix", "year": 1999, "why": "A computer hacker learns that reality is actually a simulated dream world."},
-            {"title": "Doctor Strange", "year": 2016, "why": "Mind-bending reality folding and astral dimension battles."},
-            {"title": "Tenet", "year": 2020, "why": "Time-inversion espionage thriller from the director of Inception."}
+            {"title": "A Quiet Place", "year": 2018, "why": "Exact plot match: a family must live in silence while hiding from monsters that hunt by sound."},
+            {"title": "A Quiet Place Part II", "year": 2020, "why": "The Abbott family ventures into the outside world while continuing their silent fight for survival."},
+            {"title": "Bird Box", "year": 2018, "why": "Survivors must wear blindfolds outdoors so they don't look at supernatural entities that drive people mad."},
+            {"title": "Don't Breathe", "year": 2016, "why": "Three thieves break into the house of a blind man who turns out to be a lethal adversary in the dark."},
+            {"title": "Hush", "year": 2016, "why": "A deaf and mute writer must fight for her life in silence when a masked killer appears at her window."}
+        ]
+    },
+    {
+        "patterns": ["zombies on a train", "zombie train", "father and daughter train", "bullet train zombie"],
+        "must_have_any": ["train", "zombie", "zombies"],
+        "reply": "That's the acclaimed South Korean thriller 'Train to Busan' (2016)!",
+        "guesses": [
+            {"title": "Train to Busan", "year": 2016, "why": "Exact match: passengers on a high-speed KTX train from Seoul to Busan fight to survive a sudden zombie outbreak."},
+            {"title": "World War Z", "year": 2013, "why": "A former UN investigator races across the globe to stop a fast-moving zombie pandemic."},
+            {"title": "28 Days Later", "year": 2002, "why": "A bicycle courier wakes up from a coma to find London deserted after a rage virus outbreak."},
+            {"title": "#Alive", "year": 2020, "why": "A young man gets trapped alone inside his apartment in Seoul during a sudden zombie apocalypse."}
+        ]
+    },
+    {
+        "patterns": ["swap bodies", "body swap", "boy and girl swap bodies", "comet", "red string"],
+        "must_have_any": ["swap", "bodies", "comet"],
+        "reply": "You're thinking of Makoto Shinkai's anime masterpiece 'Your Name.' (Kimi no Na wa, 2016)!",
+        "guesses": [
+            {"title": "Your Name.", "year": 2016, "why": "Exact plot match: a high school boy in Tokyo and a girl in the countryside mysteriously begin swapping bodies."},
+            {"title": "Weathering with You", "year": 2019, "why": "A runaway boy meets a girl in Tokyo who has the supernatural ability to clear the rain."},
+            {"title": "Suzume", "year": 2022, "why": "A 17-year-old girl teams up with a young man to close mysterious doors causing disasters across Japan."},
+            {"title": "Freaky Friday", "year": 2003, "why": "A mother and daughter wake up on Friday to discover they have switched bodies."}
+        ]
+    },
+    {
+        "patterns": ["locked in a room", "15 years", "20 years", "kidnapped and locked", "hotel room", "dumplings"],
+        "must_have_any": ["locked", "15 years", "kidnapped", "room"],
+        "reply": "That's Park Chan-wook's legendary Korean thriller 'Oldboy' (2003)!",
+        "guesses": [
+            {"title": "Oldboy", "year": 2003, "why": "Exact plot match: a man is inexplicably kidnapped and locked in a shabby room for 15 years, then suddenly released."},
+            {"title": "Room", "year": 2015, "why": "A young woman and her 5-year-old son finally gain their freedom after being held captive in an enclosed space."},
+            {"title": "I Saw the Devil", "year": 2010, "why": "An intelligence agent tracks down a ruthless serial killer in a relentless game of cat-and-mouse."},
+            {"title": "The Chaser", "year": 2008, "why": "A gritty, pulse-pounding Korean thriller about a former detective racing to find a missing woman."}
+        ]
+    },
+    {
+        "patterns": ["shipping container", "pregnant woman", "drifting at sea", "trapped in a container"],
+        "must_have_any": ["container", "pregnant", "sea", "drifting"],
+        "reply": "That's the intense survival thriller 'Nowhere' (2023)!",
+        "guesses": [
+            {"title": "Nowhere", "year": 2023, "why": "Exact match: a young pregnant woman flees a totalitarian country and gets trapped in a shipping container at sea."},
+            {"title": "Life of Pi", "year": 2012, "why": "A young man survives a disaster at sea and is hurtled into an epic journey of adventure on a lifeboat."},
+            {"title": "Cast Away", "year": 2000, "why": "A FedEx executive survives a plane crash and must learn to survive on a deserted island."},
+            {"title": "Fall", "year": 2022, "why": "Two friends get stranded at the top of a 2,000-foot radio tower."}
         ]
     }
 ]
@@ -115,7 +173,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Super-Nova Engine Live", "version": "13.0"})
+    return jsonify({"status": "CineMind Super-Nova Engine Live", "version": "14.0", "groq_configured": bool(GROQ_API_KEY)})
 
 
 # ------------------------- AUTH -------------------------
@@ -271,7 +329,7 @@ Analyze the user's latest message along with the conversation history and user p
 Return ONLY a valid JSON object with these exact keys:
 {{
   "intent": "recommend" | "similar_to" | "plot_search" | "chitchat" | "question",
-  "plot_guesses": [{{"title": "Exact Movie Title", "year": 2019, "why": "1-sentence explanation of how this matches the plot/vibe"}}],
+  "plot_guesses": [{{"title": "Exact Movie Title", "year": 2022, "why": "1-sentence explanation of how this matches the plot/vibe"}}],
   "genres": [list of matching genres from: {GENRE_LIST}],
   "exclude_genres": [genres the user explicitly does NOT want],
   "year_from": integer or null,
@@ -280,17 +338,17 @@ Return ONLY a valid JSON object with these exact keys:
   "language": ISO 639-1 code like "ko", "ja", "tl", "es", "fr", "hi" or null,
   "origin_country": ISO 3166-1 code like "KR", "PH", "JP", "US", "GB", "IN", "FR", "ES", "TH" or null,
   "sort": "popularity" | "rating" | "newest",
-  "mood_keywords": [2-4 specific plot/theme keywords, e.g. "time loop", "class divide", "amnesia", "heist"],
+  "mood_keywords": [2-4 specific plot/theme keywords, e.g. "time loop", "radio tower", "amnesia", "heist"],
   "similar_to": [movie titles the user says they liked or wants similar to],
   "exclude_titles": [movie titles the user has already seen, rejected, or wants to avoid],
   "direct_reply": "Your natural, witty, intelligent conversational response. If intent is plot_search, name your #1 guess enthusiastically and explain why!"
 }}
 
 If the user describes a plot, scene, twist, character, or says things like 'what's that movie where...',
-'I forgot the name', 'movie about a guy who...', use intent plot_search. Put your best 3-6 guesses of
+'I forgot the name', 'i am looking for a movie where...', 'movie about a guy who...', use intent plot_search. Put your best 3-6 guesses of
 the actual movie in plot_guesses (most likely first, with release year if you know it), and fill
 mood_keywords with 2-4 plot keywords (e.g. 'time loop', 'amnesia', 'heist').
-Even for general recommendation requests (e.g. 'Korean romcom that is super funny and sweet'), ALWAYS put 5-6 specific, accurate movie titles in plot_guesses too!
+Even for general recommendation requests, ALWAYS put 5-6 specific, accurate movie titles in plot_guesses too!
 """
 
 
@@ -303,7 +361,7 @@ def tmdb(path, **params):
         return {}
 
 
-def groq_json(system, user, temperature=0.25, timeout=10):
+def groq_json(system, user, temperature=0.2, timeout=10):
     if not GROQ_API_KEY:
         return None
     try:
@@ -325,8 +383,69 @@ def groq_json(system, user, temperature=0.25, timeout=10):
     return None
 
 
+def deep_plot_detective(message):
+    """
+    When Groq is unavailable and a user types an arbitrary plot description,
+    this extracts meaningful plot nouns/concepts and searches Wikipedia/IMDb/TMDB plot keywords
+    so Nova can still identify specific movies!
+    """
+    lower = message.lower()
+
+    # 1. Check our high-precision plot pattern database first
+    for rule in KNOWN_PLOT_PATTERNS:
+        if any(w in lower for w in rule.get("must_have_any", [])):
+            score = sum(2 if pat in lower else 0 for pat in rule["patterns"])
+            word_hits = sum(1 for w in rule["must_have_any"] if w in lower)
+            if score >= 2 or word_hits >= 2:
+                return rule["guesses"], rule["reply"]
+
+    # 2. Live Wikipedia Film Plot Search (Finds ANY movie plot on Earth without needing an LLM key!)
+    guesses = []
+    try:
+        clean_q = re.sub(r"\b(i am|i'm|looking for a|looking for|what is the|what's that|whats that|movie where|movie about|film where|film about|a|an|the|were|was|from|really)\b", " ", lower)
+        clean_q = re.sub(r"\s+", " ", clean_q).strip()
+        if len(clean_q) >= 4:
+            wiki_res = requests.get(
+                "https://en.wikipedia.org/w/api.php",
+                params={
+                    "action": "query",
+                    "list": "search",
+                    "srsearch": f'{clean_q} film plot',
+                    "srlimit": 8,
+                    "format": "json"
+                },
+                headers={"User-Agent": "CineMindCapstone/1.0"},
+                timeout=4
+            ).json()
+            for item in wiki_res.get("query", {}).get("search", []):
+                w_title = item.get("title", "")
+                if any(skip in w_title.lower() for skip in ["list of", "category:", "disambiguation", "awards", "filmography"]):
+                    continue
+                # Extract clean movie title & optional year from Wikipedia article title e.g. "Fall (2022 film)"
+                m_year = re.search(r"\((\d{4})\s*[^\)]*film\)", w_title, re.I)
+                year = int(m_year.group(1)) if m_year else None
+                clean_title = re.sub(r"\s*\([^\)]*\)\s*", "", w_title).strip()
+                if clean_title and len(clean_title) < 60:
+                    guesses.append({
+                        "title": clean_title,
+                        "year": year,
+                        "why": f"Identified via plot match for '{clean_q}'."
+                    })
+                if len(guesses) >= 5:
+                    break
+    except Exception:
+        pass
+
+    if guesses:
+        top_name = guesses[0]["title"]
+        top_yr = f" ({guesses[0]['year']})" if guesses[0].get("year") else ""
+        reply = f"Based on your plot description, the movie you're looking for is likely '{top_name}'{top_yr}! Here are the closest plot matches I found:"
+        return guesses, reply
+
+    return [], None
+
+
 def smart_local_nlp_parse(message, history, username="Guest"):
-    """Deep local NLP parser that guarantees accurate country, genre, romcom, and plot detection even without Groq."""
     lower = message.lower()
     genres = []
     origin_country = None
@@ -337,19 +456,28 @@ def smart_local_nlp_parse(message, history, username="Guest"):
     intent = "recommend"
     direct_reply = None
 
-    # 1. Check built-in plot patterns first (Parasite, Groundhog Day, Memento, Inception, etc.)
-    for rule in KNOWN_PLOT_PATTERNS:
-        matches = sum(1 for pat in rule["patterns"] if pat in lower)
-        if matches >= 1 and (len(lower.split()) >= 4 or matches >= 2):
+    looks_like_plot = (
+        len(lower.split()) >= 5
+        or any(p in lower for p in [
+            "movie where", "movie about", "looking for a movie", "forgot the name",
+            "what's that movie", "whats that movie", "film where", "stuck", "trapped",
+            "infiltrate", "relives", "kidnapped", "survive"
+        ])
+    )
+
+    # 1. If it looks like a specific plot description, run Deep Plot Detective!
+    if looks_like_plot:
+        det_guesses, det_reply = deep_plot_detective(message)
+        if det_guesses:
             return {
                 "intent": "plot_search",
-                "plot_guesses": rule["guesses"],
+                "plot_guesses": det_guesses,
                 "genres": [],
-                "mood_keywords": rule["patterns"][:3],
-                "direct_reply": rule["reply"]
+                "mood_keywords": [],
+                "direct_reply": det_reply
             }
 
-    # 2. Detect Country & Language keywords in natural text
+    # 2. Detect Country & Language keywords
     country_map = {
         "korean": ("KR", "ko", "South Korean"),
         "korea": ("KR", "ko", "South Korean"),
@@ -377,7 +505,7 @@ def smart_local_nlp_parse(message, history, username="Guest"):
             country_label = label
             break
 
-    # 3. Detect Slang & Compound Genres ("romcom", "sci-fi", "sad romance", "funny", etc.)
+    # 3. Detect Slang & Compound Genres
     if any(w in lower for w in ["romcom", "rom-com", "romantic comedy"]):
         genres.extend(["romance", "comedy"])
     if any(w in lower for w in ["romance", "romantic", "love", "sweet", "heartbreaking", "couple", "dating"]):
@@ -392,10 +520,10 @@ def smart_local_nlp_parse(message, history, username="Guest"):
     if any(w in lower for w in ["sci-fi", "scifi", "science fiction", "space", "future", "alien", "cyberpunk", "time travel"]):
         if "sci-fi" not in genres:
             genres.append("sci-fi")
-    if any(w in lower for w in ["mind-bending", "twist", "psychological", "suspense", "dark", "thriller"]):
+    if any(w in lower for w in ["mind-bending", "twist", "psychological", "suspense", "dark", "thriller", "stuck", "trapped", "survive", "survival"]):
         if "thriller" not in genres:
             genres.append("thriller")
-    if any(w in lower for w in ["scary", "horror", "ghost", "creepy", "haunted", "slasher"]):
+    if any(w in lower for w in ["scary", "horror", "ghost", "creepy", "haunted", "slasher", "monster"]):
         if "horror" not in genres:
             genres.append("horror")
     if any(w in lower for w in ["action", "explosive", "fight", "martial arts", "blockbuster"]):
@@ -412,12 +540,17 @@ def smart_local_nlp_parse(message, history, username="Guest"):
         if re.search(rf"\b{re.escape(g_name)}\b", lower) and g_name not in genres:
             genres.append(g_name)
 
-    # 4. Special Curated Boost for Korean Romcoms!
     if origin_country == "KR" and "romance" in genres:
         guesses = CURATED_KOREAN_ROMCOMS
-        direct_reply = f"I've curated the sweetest, funniest Korean romantic comedies for you, {username}—starting with 'Love Reset', '20th Century Girl', and the iconic 'My Sassy Girl'!"
+        direct_reply = f"I've curated the sweetest, funniest Korean romantic comedies for you, {username}—starting with 'Love Reset', '20th Century Girl', and 'My Sassy Girl'!"
 
-    # 5. Handle Follow-Up Memory (e.g. "similar to the first one", "something darker")
+    # Extract meaningful content words as mood_keywords for TMDB keyword lookup
+    stop_words = {"i", "am", "looking", "for", "a", "an", "the", "movie", "movies", "film", "where", "about", "that", "is", "are", "was", "were", "with", "in", "on", "from", "to", "and", "or", "really", "very", "super", "some", "something", "give", "me", "find", "show", "want", "wanna", "see", "watch"}
+    content_words = [w for w in re.findall(r"[a-z0-9]+", lower) if w not in stop_words and len(w) > 2]
+    if content_words:
+        mood_keywords = content_words[:4]
+
+    # Follow-Up Memory
     if any(w in lower for w in ["first one", "first movie", "similar to that", "more like", "darker", "funnier"]) and history:
         for turn in reversed(history):
             content = turn.get("content", "")
@@ -432,10 +565,10 @@ def smart_local_nlp_parse(message, history, username="Guest"):
     if not direct_reply:
         desc_parts = [p for p in [country_label, "/".join(genres[:2]).title()] if p]
         desc = " ".join(desc_parts) if desc_parts else f"'{message}'"
-        direct_reply = f"Here are my top handpicked {desc} matches tailored to your vibe, {username}!"
+        direct_reply = f"Here are the closest matches I found for {desc}, {username}!"
 
     return {
-        "intent": intent,
+        "intent": "plot_search" if looks_like_plot else intent,
         "plot_guesses": guesses,
         "genres": genres,
         "origin_country": origin_country,
@@ -447,10 +580,8 @@ def smart_local_nlp_parse(message, history, username="Guest"):
 
 
 def extract_intent(message, history, username="Guest", fav_genres=None, selected_country=None):
-    # Always compute our deterministic local NLP parse first
     local_parsed = smart_local_nlp_parse(message, history, username)
 
-    # Try Groq LLM for deeper plot/nuance enrichment
     ctx_lines = []
     for h in (history or [])[-10:]:
         if isinstance(h, dict) and h.get("content"):
@@ -462,15 +593,16 @@ def extract_intent(message, history, username="Guest", fav_genres=None, selected
     llm_parsed = groq_json(PARSE_PROMPT, user_prompt, temperature=0.2)
 
     if llm_parsed and isinstance(llm_parsed, dict):
-        # Merge LLM intelligence with guaranteed local constraints (so "Korean" or "Romcom" is never lost)
         if not llm_parsed.get("origin_country") and local_parsed.get("origin_country"):
             llm_parsed["origin_country"] = local_parsed["origin_country"]
         if not llm_parsed.get("language") and local_parsed.get("language"):
             llm_parsed["language"] = local_parsed["language"]
         if not llm_parsed.get("genres") and local_parsed.get("genres"):
             llm_parsed["genres"] = local_parsed["genres"]
-        if not llm_parsed.get("plot_guesses") and local_parsed.get("plot_guesses"):
-            llm_parsed["plot_guesses"] = local_parsed["plot_guesses"]
+        # Combine LLM guesses with local plot detective guesses so neither is lost
+        llm_guesses = llm_parsed.get("plot_guesses") or []
+        local_guesses = local_parsed.get("plot_guesses") or []
+        llm_parsed["plot_guesses"] = llm_guesses + [g for g in local_guesses if g not in llm_guesses]
         return llm_parsed
 
     return local_parsed
@@ -493,8 +625,8 @@ def keyword_ids(words):
 def plot_search(p):
     results, seen = [], set()
 
-    # 1) Verify the LLM's guesses on TMDB
-    for idx, g in enumerate((p.get("plot_guesses") or [])[:6]):
+    # 1) Verify the LLM / Plot Detective's guesses on TMDB
+    for idx, g in enumerate((p.get("plot_guesses") or [])[:7]):
         title = g.get("title") if isinstance(g, dict) else str(g)
         year = g.get("year") if isinstance(g, dict) else None
         why = g.get("why") if isinstance(g, dict) else None
@@ -506,13 +638,22 @@ def plot_search(p):
         hits = tmdb("/search/movie", **params).get("results", [])
         if not hits and year:
             hits = tmdb("/search/movie", query=title).get("results", [])
-        if hits and hits[0].get("poster_path") and hits[0]["id"] not in seen:
-            seen.add(hits[0]["id"])
-            hits[0]["_bonus"] = 50.0 - (idx * 4.0)
-            hits[0]["_is_guess"] = True
+        # Prefer exact title match when a short title like "Fall" is searched
+        chosen = None
+        for h in hits:
+            if h.get("poster_path") and h.get("title", "").lower() == title.lower():
+                chosen = h
+                break
+        if not chosen and hits:
+            chosen = next((h for h in hits if h.get("poster_path")), None)
+
+        if chosen and chosen["id"] not in seen:
+            seen.add(chosen["id"])
+            chosen["_bonus"] = 50.0 - (idx * 4.0)
+            chosen["_is_guess"] = True
             if why:
-                hits[0]["_guess_why"] = why
-            results.append(hits[0])
+                chosen["_guess_why"] = why
+            results.append(chosen)
 
     # 2) Backup: match on plot keywords
     if len(results) < 6:
@@ -526,14 +667,14 @@ def plot_search(p):
                     m["_bonus"] = 10.0
                     results.append(m)
 
-    # 3) Pull recommendations from #1 hit to round out the grid
+    # 3) Pull recommendations from #1 verified movie to round out the grid
     if results and len(results) < 8:
         top_id = results[0]["id"]
         for m in tmdb(f"/movie/{top_id}/recommendations").get("results", []):
             if m.get("poster_path") and m["id"] not in seen:
                 seen.add(m["id"])
                 m["_bonus"] = 8.0
-                m["_guess_why"] = f"Recommended because it shares key themes with {results[0].get('title')}."
+                m["_guess_why"] = f"Recommended because it shares key survival/plot themes with {results[0].get('title')}."
                 results.append(m)
     return results
 
@@ -562,7 +703,6 @@ def find_movies(intent):
             else:
                 cands[m["id"]]["_bonus"] = max(cands[m["id"]].get("_bonus", 0), bonus)
 
-    # 1) Verify curated / LLM specific guesses first
     for idx, g in enumerate((intent.get("plot_guesses") or [])[:8]):
         title = g.get("title") if isinstance(g, dict) else str(g)
         year = g.get("year") if isinstance(g, dict) else None
@@ -578,14 +718,12 @@ def find_movies(intent):
         if hits:
             add([hits[0]], bonus=35.0 - (idx * 2.0), why_note=why)
 
-    # 2) Similar-to movie recommendations
     for t in (intent.get("similar_to") or [])[:2]:
         mid = find_movie_id(t)
         if mid:
             add(tmdb(f"/movie/{mid}/recommendations").get("results", []), bonus=15.0,
                 why_note=f"Recommended based on '{t}'.")
 
-    # 3) TMDB Discover with strict genre & country matching
     gids = []
     for g in (intent.get("genres") or []):
         if g.lower() in GENRES and str(GENRES[g.lower()]) not in gids:
@@ -593,12 +731,10 @@ def find_movies(intent):
 
     xids = [str(GENRES[g.lower()]) for g in intent.get("exclude_genres") or [] if g.lower() in GENRES]
 
-    # Vote threshold is lower for non-US cinema so Korean/Filipino/Asian gems aren't filtered out!
     min_votes = 25 if (target_country or target_lang) else 120
     p = {"include_adult": "false", "vote_count.gte": min_votes, "language": "en-US", "sort_by": "popularity.desc"}
 
     if gids:
-        # First try AND combination (e.g. Romance AND Comedy for Romcom)
         p["with_genres"] = ",".join(gids[:2])
     if xids:
         p["without_genres"] = ",".join(xids)
@@ -607,10 +743,13 @@ def find_movies(intent):
     if target_country:
         p["with_origin_country"] = target_country
 
+    kws = keyword_ids(intent.get("mood_keywords"))
+    if kws and not gids:
+        p["with_keywords"] = "|".join(kws)
+
     for page in (1, 2):
         add(tmdb("/discover/movie", page=page, **p).get("results", []), bonus=10.0, enforce_country=True)
 
-    # If AND genres was too strict (fewer than 8 movies), also fetch OR genres (`|`) while keeping Country strict!
     if len(cands) < 8 and len(gids) > 1:
         p["with_genres"] = "|".join(gids)
         for page in (1, 2):
@@ -656,8 +795,10 @@ def rank(cands, intent, seen_ids):
     top = out[:12]
     if top:
         for idx, m in enumerate(top):
-            if m.get("_bonus", 0) >= 30:
-                m["_match"] = max(94, 99 - idx)
+            if m.get("_bonus", 0) >= 45:
+                m["_match"] = 99
+            elif m.get("_bonus", 0) >= 30:
+                m["_match"] = max(94, 98 - idx)
             else:
                 best = top[0]["_score"] or 1
                 m["_match"] = max(82, min(97, int(82 + 15 * (m["_score"] / best))))
@@ -697,8 +838,10 @@ def chat():
         reply = intent.get("direct_reply") or f"I'm Nova, your AI cinema companion, {username}! Describe any movie plot or mood and I'll find it."
         return jsonify({"reply": reply, "movies": [], "intent": intent_type, "success": True})
 
-    if intent_type == "recommend" and not intent.get("genres") and not intent.get("plot_guesses") and fav_genres:
+    # CRITICAL FIX: Only fall back to user's 3 profile genres if they typed a generic greeting/vibe (<= 3 words), NEVER on specific plot queries!
+    if intent_type == "recommend" and len(message.split()) <= 3 and not intent.get("genres") and not intent.get("plot_guesses") and fav_genres:
         intent["genres"] = [g.lower() for g in fav_genres[:3]]
+
     if not intent.get("origin_country") and selected_country and intent_type != "plot_search":
         intent["origin_country"] = selected_country
 
@@ -714,7 +857,7 @@ def chat():
 
     if not top:
         return jsonify({
-            "reply": f"I couldn't find an exact match for '{message}', {username}. Try describing the plot or another genre!",
+            "reply": f"I couldn't find an exact match for '{message}', {username}. Try describing another detail or scene from the movie!",
             "movies": [],
             "intent": intent_type,
             "success": True
@@ -734,7 +877,7 @@ def chat():
         "overview": m.get("overview", ""),
         "match": m.get("_match", 96),
         "platforms": [region or "Global"],
-        "rationale": reasons.get(str(m["id"])) or m.get("_guess_why") or f"Matched to your '{message}' request based on genre, origin, and audience acclaim.",
+        "rationale": reasons.get(str(m["id"])) or m.get("_guess_why") or f"Identified via plot & thematic similarity to '{message}'.",
     } for m in top]
 
     return jsonify({"reply": reply, "movies": movies, "intent": intent_type, "success": True})
@@ -744,7 +887,7 @@ def chat():
 def trends():
     return jsonify({
         "ai_forecast": "Super-Nova Multi-API Memory & Plot-Search Pipeline Online.",
-        "trending_genres": ["Groq Plot & Intent Recognition", "TMDB Candidate Verification", "OMDb Metadata Enrichment"]
+        "trending_genres": ["Groq Plot & Intent Recognition", "Wikipedia/TMDB Plot Detective", "OMDb Metadata Enrichment"]
     })
 
 
