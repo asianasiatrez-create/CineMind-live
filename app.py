@@ -1,247 +1,204 @@
-import os
-import json
-import sqlite3
-from flask import Flask, jsonify, request
-from flask_cors import CORS
-import requests
-import hashlib
+import re
 
-app = Flask(__name__)
-CORS(app)
+TMDB = "https://api.themoviedb.org/3"
+GENRES = {
+    "action": 28, "adventure": 12, "animation": 16, "comedy": 35, "crime": 80,
+    "documentary": 99, "drama": 18, "family": 10751, "fantasy": 14, "history": 36,
+    "horror": 27, "music": 10402, "mystery": 9648, "romance": 10749,
+    "sci-fi": 878, "science fiction": 878, "thriller": 53, "war": 10752, "western": 37,
+}
 
-# API Keys from Render Environment Variables
-TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "3dc27f9ae386c422fdc5994e6fda6823")
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "").strip().strip('"').strip("'")
-OMDB_API_KEY = os.environ.get("OMDB_API_KEY", "554ae239").strip().strip('"').strip("'")
-
-DB_NAME = "cinemind.db"
-
-def init_db():
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    cursor.execute('''CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, password TEXT NOT NULL)''')
-    cursor.execute('''CREATE TABLE IF NOT EXISTS watchlist (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL, movie_id INTEGER NOT NULL, title TEXT NOT NULL, poster TEXT, vote_average REAL, UNIQUE(username, movie_id))''')
-    cursor.execute('''CREATE TABLE IF NOT EXISTS favorites (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL, movie_id INTEGER NOT NULL, title TEXT NOT NULL, poster TEXT, vote_average REAL, UNIQUE(username, movie_id))''')
-    cursor.execute('''CREATE TABLE IF NOT EXISTS interactions (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL, movie_id INTEGER NOT NULL, title TEXT NOT NULL, action TEXT NOT NULL, vote_average REAL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
-    conn.commit()
-    conn.close()
-
-init_db()
-
-@app.route("/", methods=["GET"])
-def home():
-    return jsonify({"status": "CineMind Production Engine Live", "version": "8000.0"})
-
-@app.route("/api/signup", methods=["POST"])
-def signup():
-    data = request.get_json() or {}
-    username = data.get("username", "").strip().lower()
-    password = data.get("password", "")
-    if not username or not password:
-        return jsonify({"success": False, "message": "Username and password required."}), 400
-    hashed_pw = hashlib.sha256(password.encode()).hexdigest()
+def tmdb(path, **params):
+    params["api_key"] = TMDB_API_KEY
     try:
-        conn = sqlite3.connect(DB_NAME)
-        cursor = conn.cursor()
-        cursor.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, hashed_pw))
-        conn.commit()
-        conn.close()
-        return jsonify({"success": True, "message": "Account created successfully!"})
-    except sqlite3.IntegrityError:
-        return jsonify({"success": False, "message": "Username already exists."}), 400
+        r = requests.get(f"{TMDB}{path}", params=params, timeout=6)
+        return r.json() if r.status_code == 200 else {}
+    except Exception:
+        return {}
 
-@app.route("/api/login", methods=["POST"])
-def login():
-    data = request.get_json() or {}
-    username = data.get("username", "").strip().lower()
-    password = data.get("password", "")
-    hashed_pw = hashlib.sha256(password.encode()).hexdigest()
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, hashed_pw))
-    user = cursor.fetchone()
-    conn.close()
-    if user:
-        return jsonify({"success": True, "username": username, "message": "Login successful!"})
-    return jsonify({"success": False, "message": "Invalid username or password."}), 401
+def groq_json(system, user, timeout=10):
+    if not GROQ_API_KEY:
+        return None
+    try:
+        res = requests.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"},
+            json={
+                "model": "llama-3.3-70b-versatile",
+                "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+                "response_format": {"type": "json_object"},
+                "temperature": 0.3,
+            },
+            timeout=timeout,
+        )
+        if res.status_code == 200:
+            return json.loads(res.json()["choices"][0]["message"]["content"])
+    except Exception:
+        pass
+    return None
 
-@app.route("/api/user/library", methods=["GET"])
-def get_library():
-    username = request.args.get("username", "").strip().lower()
-    if not username:
-        return jsonify({"watchlist": [], "favorites": []})
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    cursor.execute("SELECT movie_id, title, poster, vote_average FROM watchlist WHERE username = ?", (username,))
-    watchlist = [{"id": r[0], "title": r[1], "poster": r[2], "vote_average": r[3]} for r in cursor.fetchall()]
-    cursor.execute("SELECT movie_id, title, poster, vote_average FROM favorites WHERE username = ?", (username,))
-    favorites = [{"id": r[0], "title": r[1], "poster": r[2], "vote_average": r[3]} for r in cursor.fetchall()]
-    conn.close()
-    return jsonify({"watchlist": watchlist, "favorites": favorites})
+# ---------- Step 1: Groq understands the request ----------
+def extract_intent(message, history):
+    system = f"""You extract movie preferences. Return ONLY JSON:
+{{
+ "genres": [],            // from: {", ".join(GENRES.keys())}
+ "exclude_genres": [],    // genres the user does NOT want
+ "year_from": null, "year_to": null,   // integers
+ "min_rating": null,      // 0-10
+ "language": null,        // ISO 639-1 code, e.g. "ko", "ja", "fr"
+ "sort": "popularity",    // "popularity" | "rating" | "newest"
+ "keywords": [],          // themes/plots, e.g. "time travel", "heist"
+ "similar_to": [],        // movie titles the user mentions liking
+ "exclude_titles": []     // movie titles the user says they've seen or dislike
+}}
+Use earlier conversation to resolve follow-ups like "something newer" or "not that one"."""
+    ctx = "\n".join(f'{h.get("role")}: {h.get("content")}' for h in (history or [])[-6:])
+    return groq_json(system, f"Conversation so far:\n{ctx}\n\nLatest request: {message}") or {}
 
-@app.route("/api/user/library/toggle", methods=["POST"])
-def toggle_library():
-    data = request.get_json() or {}
-    username = data.get("username", "").strip().lower()
-    lib_type = data.get("type")
-    movie = data.get("movie", {})
-    if not username or not lib_type or not movie:
-        return jsonify({"success": False, "message": "Invalid payload."}), 400
-    movie_id = movie.get("id")
-    title = movie.get("title") or movie.get("name")
-    poster = movie.get("poster") or ""
-    vote_average = movie.get("vote_average", 0.0)
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    table = "watchlist" if lib_type == "watchlist" else "favorites"
-    cursor.execute(f"SELECT id FROM {table} WHERE username = ? AND movie_id = ?", (username, movie_id))
-    exists = cursor.fetchone()
-    if exists:
-        cursor.execute(f"DELETE FROM {table} WHERE username = ? AND movie_id = ?", (username, movie_id))
-        action = "removed"
-    else:
-        cursor.execute(f"INSERT OR REPLACE INTO {table} (username, movie_id, title, poster, vote_average) VALUES (?, ?, ?, ?, ?)", (username, movie_id, title, poster, vote_average))
-        action = "added"
-        cursor.execute("INSERT INTO interactions (username, movie_id, title, action, vote_average) VALUES (?, ?, ?, ?, ?)", (username, movie_id, title, 'like' if lib_type=='favorites' else 'watched', vote_average))
-    conn.commit()
-    conn.close()
-    return jsonify({"success": True, "action": action})
+# ---------- Step 2: TMDB finds real candidates ----------
+def find_movie_id(title):
+    res = tmdb("/search/movie", query=title).get("results", [])
+    return res[0]["id"] if res else None
 
-@app.route("/api/user/insights", methods=["GET"])
-def get_insights():
-    username = request.args.get("username", "").strip().lower()
+def keyword_ids(words):
+    ids = []
+    for w in (words or [])[:3]:
+        r = tmdb("/search/keyword", query=w).get("results", [])
+        if r:
+            ids.append(str(r[0]["id"]))
+    return ids
+
+def gather_candidates(intent):
+    cands = {}  # id -> movie dict (with "_src" bonus)
+
+    def add(movies, bonus=0):
+        for m in movies:
+            if m.get("id") and m.get("poster_path"):
+                m["_bonus"] = max(m.get("_bonus", 0), bonus)
+                cands.setdefault(m["id"], m)
+
+    # similar-to titles -> TMDB recommendations
+    for t in (intent.get("similar_to") or [])[:2]:
+        mid = find_movie_id(t)
+        if mid:
+            add(tmdb(f"/movie/{mid}/recommendations").get("results", []), bonus=1.0)
+
+    # discover with structured filters
+    p = {"include_adult": "false", "vote_count.gte": 150, "language": "en-US"}
+    gids = [str(GENRES[g.lower()]) for g in intent.get("genres") or [] if g.lower() in GENRES]
+    xids = [str(GENRES[g.lower()]) for g in intent.get("exclude_genres") or [] if g.lower() in GENRES]
+    if gids: p["with_genres"] = ",".join(gids)          # AND
+    if xids: p["without_genres"] = ",".join(xids)
+    if intent.get("language"): p["with_original_language"] = intent["language"]
+    if intent.get("year_from"): p["primary_release_date.gte"] = f'{int(intent["year_from"])}-01-01'
+    if intent.get("year_to"): p["primary_release_date.lte"] = f'{int(intent["year_to"])}-12-31'
+    if intent.get("min_rating"): p["vote_average.gte"] = float(intent["min_rating"])
+    kws = keyword_ids(intent.get("keywords"))
+    if kws: p["with_keywords"] = "|".join(kws)          # OR
+
+    sort = {"rating": "vote_average.desc", "newest": "primary_release_date.desc"}.get(
+        intent.get("sort"), "popularity.desc")
+    p["sort_by"] = sort
+    if sort == "vote_average.desc":
+        p["vote_count.gte"] = 500
+    if sort == "primary_release_date.desc":
+        p["primary_release_date.lte"] = p.get("primary_release_date.lte", __import__("datetime").date.today().isoformat())
+
+    for page in (1, 2):
+        add(tmdb("/discover/movie", page=page, **p).get("results", []))
+
+    # If filters were too strict, relax by dropping keywords
+    if len(cands) < 6 and "with_keywords" in p:
+        p.pop("with_keywords")
+        add(tmdb("/discover/movie", **p).get("results", []))
+    return list(cands.values())
+
+# ---------- Step 3: CineHub logic filters + ranks ----------
+def get_seen_ids(username):
+    if not username or username == "Guest":
+        return set()
     conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    cursor.execute("SELECT action, vote_average FROM interactions WHERE username = ?", (username,))
-    interactions = cursor.fetchall()
-    cursor.execute("SELECT COUNT(*) FROM favorites WHERE username = ?", (username,))
-    total_liked = cursor.fetchone()[0]
-    cursor.execute("SELECT COUNT(*) FROM watchlist WHERE username = ?", (username,))
-    total_watchlist = cursor.fetchone()[0]
+    c = conn.cursor()
+    ids = set()
+    for q in ("SELECT movie_id FROM watchlist WHERE username=?",
+              "SELECT movie_id FROM favorites WHERE username=?",
+              "SELECT movie_id FROM interactions WHERE username=?"):
+        c.execute(q, (username.lower(),))
+        ids.update(r[0] for r in c.fetchall())
     conn.close()
-    
-    total_interactions = len(interactions) or 4
-    avg_rating = sum(r[1] for r in interactions if r[1]) / total_interactions if total_interactions > 0 else 8.5
-    
-    return jsonify({
-        "username": username or "Guest",
-        "total_recommendations_viewed": total_interactions + 18,
-        "total_liked": total_liked + 4,
-        "total_watchlist": total_watchlist + 2,
-        "average_rating_of_interest": round(avg_rating, 2),
-        "dominant_mood": "Multi-API Neural Match",
-        "genre_distribution": {"Drama": 35, "Sci-Fi": 25, "Romance": 20, "Action": 20}
-    })
+    return ids
+
+def norm(t):
+    return re.sub(r"[^a-z0-9]", "", (t or "").lower())
+
+def rank(cands, intent, seen_ids):
+    blocked = {norm(t) for t in (intent.get("exclude_titles") or [])}
+    blocked |= {norm(t) for t in (intent.get("similar_to") or [])}  # don't recommend the seed itself
+    out = []
+    for m in cands:
+        if m["id"] in seen_ids or norm(m.get("title")) in blocked:
+            continue
+        if (m.get("vote_count") or 0) < 50:
+            continue
+        pop = min((m.get("popularity") or 0) / 100, 1.0)
+        score = (m.get("vote_average") or 0) * 0.7 + pop * 1.5 + m.get("_bonus", 0)
+        m["_score"] = score
+        out.append(m)
+    out.sort(key=lambda x: x["_score"], reverse=True)
+    top = out[:8]
+    if top:
+        best = top[0]["_score"] or 1
+        for m in top:
+            m["_match"] = max(70, min(99, int(70 + 29 * (m["_score"] / best) ** 2)))
+    return top
+
+# ---------- Step 4: Groq explains the REAL results ----------
+def explain(message, username, movies):
+    listing = [{"id": m["id"], "title": m["title"], "year": (m.get("release_date") or "")[:4],
+                "overview": (m.get("overview") or "")[:200]} for m in movies]
+    system = f"""You are Nova, a friendly movie assistant talking to {username}.
+Return ONLY JSON: {{"reply": "1-2 warm sentences", "reasons": {{"<id>": "one sentence why it fits the request"}}}}
+Only mention movies from the provided list. Never invent titles."""
+    return groq_json(system, f"Request: {message}\nMovies: {json.dumps(listing)}") or {}
 
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.get_json() or {}
-    user_message = data.get("message", "").strip()
-    profile = data.get("profile", {"name": "Guest"})
-    username = profile.get("name", "Guest")
+    message = (data.get("message") or "").strip()
+    username = (data.get("profile") or {}).get("name", "Guest")
+    history = data.get("history") or []
 
-    if not user_message:
+    if not message:
         return jsonify({"reply": f"Hey {username}! Tell me what kind of movie you're looking for.", "movies": []})
 
-    ai_reply = f"Here are your neural matches for '{user_message}', {username}!"
-    extracted_titles = []
+    intent = extract_intent(message, history)
 
-    # 1. Groq Intent Extraction
-    if GROQ_API_KEY:
-        try:
-            prompt = f"""You are Nova, an expert AI movie recommender. 
-            User request: "{user_message}"
-            
-            Return ONLY a valid JSON object in this exact format. Do NOT wrap in backticks.
-            {{
-              "reply": "1-sentence conversational response addressing {username}.",
-              "titles": ["Movie Title 1", "Movie Title 2", "Movie Title 3", "Movie Title 4"]
-            }}"""
+    cands = gather_candidates(intent)
+    if not cands:  # Groq down or filters too strict -> plain TMDB search, then trending
+        cands = tmdb("/search/movie", query=message).get("results", []) \
+                or tmdb("/trending/movie/week").get("results", [])
+        cands = [m for m in cands if m.get("poster_path")]
 
-            groq_url = "https://api.groq.com/openai/v1/chat/completions"
-            headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
-            payload = {
-                "model": "llama-3.3-70b-versatile",
-                "messages": [{"role": "user", "content": prompt}],
-                "response_format": {"type": "json_object"}
-            }
-            res = requests.post(groq_url, headers=headers, json=payload, timeout=8)
-            if res.status_code == 200:
-                res_data = res.json()
-                content = json.loads(res_data["choices"][0]["message"]["content"])
-                ai_reply = content.get("reply", ai_reply)
-                extracted_titles = content.get("titles", [])
-        except Exception:
-            pass
+    top = rank(cands, intent, get_seen_ids(username))
+    if not top:
+        return jsonify({"reply": "I couldn't find anything new matching that. Try loosening your filters!",
+                        "movies": [], "success": True})
 
-    movies = []
-    search_queries = extracted_titles if extracted_titles else [user_message]
+    ex = explain(message, username, top)
+    reasons = ex.get("reasons", {})
+    reply = ex.get("reply") or f"Here are some matches for '{message}', {username}!"
 
-    for query in search_queries[:4]:
-        try:
-            # 2. TMDB Candidate Discovery
-            tmdb_url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&query={requests.utils.quote(str(query))}"
-            t_res = requests.get(tmdb_url, timeout=5).json()
-            results = t_res.get("results", [])
-            if results:
-                m = results[0]
-                title = m.get("title")
-                poster = f"https://image.tmdb.org/t/p/w500{m.get('poster_path')}" if m.get('poster_path') else ""
-                vote_avg = m.get("vote_average", 0.0)
-                release = m.get("release_date", "2026")
-                overview = m.get("overview", "")
+    movies = [{
+        "id": m["id"],
+        "title": m["title"],
+        "poster": f"https://image.tmdb.org/t/p/w500{m['poster_path']}",
+        "vote_average": m.get("vote_average", 0.0),
+        "vote_count": m.get("vote_count", 0),
+        "release_date": m.get("release_date", ""),
+        "overview": m.get("overview", ""),
+        "match": m["_match"],
+        "platforms": ["TMDB"],
+        "rationale": reasons.get(str(m["id"])) or "Matches your request based on genre, rating and popularity.",
+    } for m in top]
 
-                # 3. OMDb Verification & Metadata Enhancement
-                try:
-                    omdb_url = f"http://www.omdbapi.com/?apikey={OMDB_API_KEY}&t={requests.utils.quote(title)}"
-                    o_res = requests.get(omdb_url, timeout=3).json()
-                    if o_res.get("Response") == "True":
-                        if o_res.get("Plot") and o_res.get("Plot") != "N/A":
-                            overview = o_res.get("Plot")
-                        if o_res.get("imdbRating") and o_res.get("imdbRating") != "N/A":
-                            vote_avg = float(o_res.get("imdbRating"))
-                except Exception:
-                    pass
-
-                movies.append({
-                    "id": m.get("id"),
-                    "title": title,
-                    "poster": poster,
-                    "vote_average": vote_avg,
-                    "release_date": release,
-                    "overview": overview or "Verified metadata record.",
-                    "match": 98,
-                    "platforms": ["TMDB + OMDb Verified"],
-                    "rationale": f"Curated via Groq intent and verified via OMDb."
-                })
-        except Exception:
-            continue
-
-    if not movies:
-        movies.append({
-            "id": 157336,
-            "title": "Interstellar",
-            "poster": "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
-            "vote_average": 8.7,
-            "release_date": "2014",
-            "overview": "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival.",
-            "match": 99,
-            "platforms": ["TMDB + OMDb Verified"],
-            "rationale": "Multi-API fallback record."
-        })
-
-    return jsonify({"reply": ai_reply, "movies": movies, "success": True})
-
-@app.route("/trends", methods=["GET"])
-def trends():
-    return jsonify({
-        "ai_forecast": "Multi-API pipeline online with 100% verification.",
-        "trending_genres": [
-            "Groq Neural Intent (99.4 Index)",
-            "TMDB Visual Discovery (98.9 Index)",
-            "OMDb Verified Metadata (99.8 Index)"
-        ]
-    })
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    return jsonify({"reply": reply, "movies": movies, "success": True})
