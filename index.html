@@ -201,7 +201,7 @@ html[data-theme="light"] .cosmic-stars { opacity: 0.15; }
 .movie-grid .movie-card { width: 100%; min-width: 0; }
 .infinite-loader { text-align: center; padding: 30px; color: var(--secondary-glow); font-weight: 600; font-size: 0.95rem; display: flex; justify-content: center; align-items: center; gap: 10px; }
 
-/* ---- Nova Holographic Animations ---- */
+/* ---- Nova Holographic Animations & Moving Tooltip ---- */
 @keyframes novaFloat {
     0%, 100% { transform: translateY(0px) rotate(0deg); }
     50% { transform: translateY(-9px) rotate(3deg); }
@@ -211,6 +211,19 @@ html[data-theme="light"] .cosmic-stars { opacity: 0.15; }
     70% { transform: scale(1.28); opacity: 0; }
     100% { transform: scale(1.3); opacity: 0; }
 }
+@keyframes tooltipFloat {
+    0%, 100% {
+        transform: translateY(0px) scale(1);
+        box-shadow: 0 6px 25px rgba(0, 242, 254, 0.35), 0 0 15px rgba(217, 70, 239, 0.25);
+        border-color: var(--secondary-glow);
+    }
+    50% {
+        transform: translateY(-8px) scale(1.05);
+        box-shadow: 0 14px 32px rgba(217, 70, 239, 0.65), 0 0 22px rgba(0, 242, 254, 0.55);
+        border-color: var(--primary-glow);
+    }
+}
+
 .nova-avatar-animated { animation: novaFloat 3.4s ease-in-out infinite; filter: drop-shadow(0 0 18px rgba(0, 242, 254, 0.75)); }
 .nova-chathead {
     width: 76px; height: 76px; background: radial-gradient(circle, #1a0b4b, #070318);
@@ -224,6 +237,38 @@ html[data-theme="light"] .cosmic-stars { opacity: 0.15; }
     border: 2px solid var(--primary-glow); animation: novaRingPulse 2.4s infinite; pointer-events: none;
 }
 .nova-chathead img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+.chat-tooltip {
+    background: linear-gradient(135deg, rgba(25, 12, 64, 0.95), rgba(8, 4, 24, 0.95));
+    padding: 11px 20px;
+    border-radius: 22px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #ffffff;
+    border: 1.5px solid var(--secondary-glow);
+    cursor: pointer;
+    position: relative;
+    animation: tooltipFloat 2.8s ease-in-out infinite;
+    backdrop-filter: blur(12px);
+    user-select: none;
+    white-space: nowrap;
+}
+html[data-theme="light"] .chat-tooltip {
+    background: linear-gradient(135deg, #ffffff, #f3e8ff);
+    color: #0f172a;
+}
+.chat-tooltip::after {
+    content: "";
+    position: absolute;
+    bottom: -7px;
+    right: 28px;
+    width: 12px;
+    height: 12px;
+    background: inherit;
+    border-right: 1.5px solid var(--secondary-glow);
+    border-bottom: 1.5px solid var(--secondary-glow);
+    transform: rotate(45deg);
+}
 
 /* ---- Analytics & Accordions ---- */
 .cascade-accordion { display: flex; flex-direction: column; gap: 16px; }
@@ -266,9 +311,8 @@ html[data-theme="light"] .cosmic-stars { opacity: 0.15; }
 .modal-sim-card img { width: 100%; height: 155px; object-fit: cover; border-radius: 12px; border: 1px solid var(--glass-border); }
 .modal-sim-card span { font-size: 0.74rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* ---- Floating Chat ---- */
+/* ---- Floating Chat Wrapper & Modal ---- */
 .chat-wrapper { position: fixed; bottom: 26px; right: 26px; z-index: 100; display: flex; align-items: flex-end; flex-direction: column; gap: 14px; }
-.chat-tooltip { background: var(--card-bg); padding: 10px 18px; border-radius: 20px; font-size: 0.88rem; font-weight: 700; border: 1px solid var(--secondary-glow); box-shadow: 0 6px 25px rgba(0, 242, 254, 0.35); }
 .chat-modal { width: 420px; max-width: calc(100vw - 28px); background: var(--modal-bg); border-radius: 28px; border: 1px solid var(--glass-border-hover); box-shadow: var(--shadow-heavy); display: flex; flex-direction: column; position: absolute; bottom: 92px; right: 0; opacity: 0; pointer-events: none; transition: 0.25s; }
 .chat-modal.active { opacity: 1; pointer-events: auto; }
 .chat-header { padding: 16px 20px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
@@ -451,7 +495,6 @@ html[data-theme="light"] .cosmic-stars { opacity: 0.15; }
             <button class="btn-action btn-fav" id="favoriteBtn"><i class="fa-solid fa-heart"></i> Favorite</button>
             <button class="btn-action btn-fav" id="watchedBtn"><i class="fa-solid fa-eye"></i> Mark Watched</button>
         </div>
-        <!-- AI Similar Recommendations Strip (Appears automatically & when marked Watched) -->
         <div id="modalSimilarBox" style="display:none; flex-direction:column; gap:8px; margin-top:8px; padding-top:10px; border-top:1px solid var(--glass-border);">
             <span style="font-size:0.84rem; font-weight:700; color:var(--secondary-glow);"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Recommended Similar Titles:</span>
             <div class="modal-similar-strip" id="modalSimilarStrip"></div>
@@ -572,8 +615,8 @@ let lastNovaMovies = JSON.parse(sessionStorage.getItem('cinemind_nova_movies') |
 let lastNovaQuery = sessionStorage.getItem('cinemind_nova_query') || '';
 
 let currentView = "discover";
-let selectedMedia = "all"; // "all" | "movie" | "tv"
-let selectedProvider = ""; // e.g. "8" Netflix, "337" Disney+
+let selectedMedia = "all";
+let selectedProvider = "";
 let selectedGenre = "";
 let selectedCountry = "";
 let activeSearchQuery = "";
@@ -596,7 +639,6 @@ const COUNTRY_NAMES = {
     FR: "France 🇫🇷", ES: "Spain 🇪🇸", TH: "Thailand 🇹🇭"
 };
 
-// Map Movie Genre IDs to TV Genre IDs when querying /discover/tv
 const MOVIE_TO_TV_GENRE = {
     "28": "10759", "12": "10759", "16": "16", "35": "35", "80": "80",
     "18": "18", "14": "10765", "27": "9648", "9648": "9648", "10749": "18",
@@ -890,7 +932,6 @@ logoutBtn.onclick = () => {
     initEndlessNetflixHome();
 };
 
-// Standard Movie/Series Card + Top 10 Ranked Card Builder
 function createMovieCard(movie, isAI = false, searchContext = "", rankNum = null) {
     const poster = (movie.poster && movie.poster.startsWith('http'))
         ? movie.poster
@@ -1033,7 +1074,6 @@ async function initEndlessNetflixHome() {
 
     const specialRows = [];
 
-    // 1. AI Recommendation Row based on Most Recently Watched Movie/Series!
     if (watchedMovies.length > 0) {
         const lastWatched = watchedMovies[0];
         const lwType = lastWatched.media_type === 'tv' ? 'tv' : 'movie';
@@ -1046,7 +1086,6 @@ async function initEndlessNetflixHome() {
         });
     }
 
-    // 2. Streaming App Spotlight Row (if Netflix, Disney+, Prime, Max, Apple TV+, or Viu is clicked)
     if (selectedProvider) {
         const pName = PROVIDER_NAMES[selectedProvider];
         if (!isSeriesTab) {
@@ -1069,7 +1108,6 @@ async function initEndlessNetflixHome() {
         }
     }
 
-    // 3. Top 10 Movies Today & Top 10 TV Series Today
     if (!isSeriesTab) {
         const top10MovieUrl = (selectedProvider || selectedCountry || selectedGenre)
             ? `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams('movie')}&page=1`
@@ -1093,7 +1131,6 @@ async function initEndlessNetflixHome() {
         });
     }
 
-    // 4. Now Showing in Theaters, Brand New Releases, & Upcoming Movies
     if (!isSeriesTab && !selectedProvider && !selectedCountry) {
         specialRows.push(
             {
@@ -1132,7 +1169,6 @@ async function initEndlessNetflixHome() {
         );
     }
 
-    // 5. Personalized User Genre Calibration Rows
     if (userGenres.length && !selectedGenre) {
         const gNames = userGenres.map(id => GENRE_OPTIONS[id]).filter(Boolean);
         specialRows.push({
@@ -1163,7 +1199,6 @@ async function initEndlessNetflixHome() {
     await appendNextNetflixRowBatch(4);
 }
 
-// Filter Pill Click Handlers (Media Format, Streaming Apps, Genres, Country, Region)
 document.querySelectorAll('.filter-row').forEach(row => {
     row.querySelectorAll('.filter-pill').forEach(pill => {
         pill.onclick = (e) => {
@@ -1185,7 +1220,7 @@ document.querySelectorAll('.filter-row').forEach(row => {
     });
 });
 
-// ---------------- ENDLESS MULTI-SEARCH ENGINE (MOVIES + TV SERIES + NOVA PLOT) ----------------
+// ---------------- ENDLESS MULTI-SEARCH ENGINE ----------------
 async function performSearch() {
     playSciFiChime();
     const query = searchInput.value.trim();
@@ -1363,7 +1398,6 @@ navItems.forEach(item => {
             };
             mainContainer.innerHTML = `<h3 class="row-title">${titles[currentView]}</h3>`;
 
-            // If viewing Watched tab and user has watched items, show AI Similar Recommendations row at the top!
             if (currentView === 'watched' && watchedMovies.length > 0) {
                 try {
                     const lw = watchedMovies[0];
@@ -1733,7 +1767,6 @@ document.getElementById('favoriteBtn').onclick = async () => {
     } catch(e) { alert("Sync error."); }
 };
 
-// When user marks a movie/series as Watched, save it AND immediately refresh AI Similar Recommendations!
 document.getElementById('watchedBtn').onclick = () => {
     playSciFiChime();
     if (!currentMovieData) return;
@@ -1763,6 +1796,7 @@ chatToggle.onclick = () => {
     chatTooltip.style.display = chatModal.classList.contains('active') ? 'none' : 'block';
     if (chatModal.classList.contains('active')) chatInput.focus();
 };
+chatTooltip.onclick = () => chatToggle.click();
 closeChat.onclick = () => { chatModal.classList.remove('active'); chatTooltip.style.display = 'block'; };
 
 function appendBubbleToBothChats(text, sender, isHTML = false) {
