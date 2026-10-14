@@ -87,6 +87,9 @@ z-index: -2; pointer-events: none;
 .movie-title { font-weight: 700; font-size: 0.98rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .match-score { font-size: 0.85rem; font-weight: 700; color: #38bdf8; display: flex; align-items: center; gap: 6px; }
 .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 26px; }
+.movie-grid .movie-card { width: 100%; min-width: 0; }
+
+.glass-panel { background: var(--panel-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(20px); }
 
 .cascade-accordion { display: flex; flex-direction: column; gap: 16px; }
 .cascade-item { background: var(--panel-bg); border: 1px solid var(--glass-border); border-radius: 20px; overflow: hidden; backdrop-filter: blur(20px); transition: 0.3s; }
@@ -108,6 +111,7 @@ z-index: -2; pointer-events: none;
 
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2, 0, 8, 0.9); z-index: 200; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.35s; backdrop-filter: blur(25px); padding: 20px; }
 .modal-overlay.active { opacity: 1; pointer-events: auto; }
+#videoModal { z-index: 210; }
 .modal-content { display: flex; gap: 30px; width: 850px; max-width: 100%; max-height: 85vh; background: linear-gradient(135deg, #120c30, #070314); padding: 35px; border-radius: 28px; position: relative; border: 1px solid var(--glass-border-hover); box-shadow: 0 40px 100px rgba(0,0,0,0.95); overflow-y: auto; }
 .modal-content img { width: 240px; height: 350px; object-fit: cover; border-radius: 18px; flex-shrink: 0; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
 .modal-info { display: flex; flex-direction: column; gap: 16px; flex: 1; min-width: 0; overflow-y: auto; max-height: 72vh; padding-right: 5px; }
@@ -123,6 +127,7 @@ z-index: -2; pointer-events: none;
 .modal-actions { display: flex; gap: 12px; margin-top: auto; flex-wrap: wrap; }
 .btn-action { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); border: none; padding: 12px 24px; border-radius: 26px; color: white; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; font-size: 0.9rem; }
 .btn-action:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(56,189,248,0.8); }
+.btn-action:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 .btn-trailer { background: linear-gradient(135deg, #f43f5e, #e11d48); }
 .btn-fav { background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border); }
 
@@ -144,6 +149,7 @@ z-index: -2; pointer-events: none;
 .chat-footer { padding: 14px 20px; border-top: 1px solid var(--glass-border); display: flex; gap: 10px; background: rgba(8, 4, 20, 0.95); }
 .chat-footer input { flex: 1; background: #160f38; border: 1px solid var(--glass-border); border-radius: 20px; padding: 12px 18px; outline: none; font-size: 0.95rem; color: white; }
 .send-btn { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.send-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 @media (max-width: 1100px) {
 .app-layout { flex-direction: column; padding: 12px; gap: 16px; }
@@ -170,7 +176,7 @@ z-index: -2; pointer-events: none;
 <div class="app-layout">
 <aside class="sidebar">
 <div class="logo-free-wrapper">
-<img src="CineMind-Logo.png" alt="CineMind Logo" class="logo-unboxed" onerror="this.src='nova.png'">
+<img src="CineMind-Logo.png" alt="CineMind Logo" class="logo-unboxed" onerror="this.onerror=null;this.src='nova.png'">
 </div>
 
 <div class="account-top-btn" id="openProfile" title="Click to log in or switch account">
@@ -219,7 +225,7 @@ z-index: -2; pointer-events: none;
 </div>
 <div class="filter-row">
 <span class="filter-label">Streaming Region:</span>
-<button class="filter-pill active" data-region="PH">🇵🇭 Philippines</button>
+<button class="filter-pill" data-region="PH">🇵🇭 Philippines</button>
 <button class="filter-pill" data-region="US">🇺🇸 USA</button>
 <button class="filter-pill" data-region="KR">🇰🇷 South Korea</button>
 <button class="filter-pill" data-region="JP">🇯🇵 Japan</button>
@@ -234,7 +240,7 @@ z-index: -2; pointer-events: none;
 <div class="modal-overlay" id="movieModal">
 <div class="modal-content">
 <i class="fa-solid fa-xmark close-modal" id="closeModal"></i>
-<img id="modalPoster" src="" alt="Poster" onerror="this.src='https://via.placeholder.com/500x750?text=No+Poster'">
+<img id="modalPoster" src="" alt="Poster" onerror="this.onerror=null;this.src='https://via.placeholder.com/500x750?text=No+Poster'">
 <div class="modal-info">
 <h2 class="modal-title" id="modalTitle">Loading...</h2>
 <p class="modal-meta" id="modalMeta"></p>
@@ -262,7 +268,7 @@ z-index: -2; pointer-events: none;
 <i class="fa-solid fa-xmark close-modal" id="closeVideoModal" style="position:static; font-size:1.3rem;"></i>
 </div>
 <div class="video-wrapper" style="position: relative; width: 100%; padding-bottom: 56.25%;">
-<iframe id="youtubeIframe" src="" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" allowfullscreen></iframe>
+<iframe id="youtubeIframe" src="" allow="autoplay; encrypted-media; picture-in-picture" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" allowfullscreen></iframe>
 </div>
 </div>
 </div>
@@ -273,8 +279,8 @@ z-index: -2; pointer-events: none;
 <h2><i class="fa-solid fa-shield-halved" style="color: var(--secondary-glow);"></i> Cloud Account Login</h2>
 <p style="font-size: 0.85rem; color: var(--text-muted);" id="authMsg">Log in to sync your watchlist across all devices:</p>
 <div class="pref-group" style="display:flex; flex-direction:column; gap:12px;">
-<input type="text" id="authUsername" placeholder="Username..." style="width: 100%; background: #160f38; border: 1px solid var(--glass-border); border-radius: 14px; padding: 13px 18px; color: white; outline: none; font-size: 0.95rem;">
-<input type="password" id="authPassword" placeholder="Password..." style="width: 100%; background: #160f38; border: 1px solid var(--glass-border); border-radius: 14px; padding: 13px 18px; color: white; outline: none; font-size: 0.95rem;">
+<input type="text" id="authUsername" placeholder="Username..." autocomplete="username" style="width: 100%; background: #160f38; border: 1px solid var(--glass-border); border-radius: 14px; padding: 13px 18px; color: white; outline: none; font-size: 0.95rem;">
+<input type="password" id="authPassword" placeholder="Password..." autocomplete="current-password" style="width: 100%; background: #160f38; border: 1px solid var(--glass-border); border-radius: 14px; padding: 13px 18px; color: white; outline: none; font-size: 0.95rem;">
 </div>
 <div style="display: flex; gap: 10px;">
 <button class="btn-action" id="loginBtn" style="flex:1; justify-content:center;"><i class="fa-solid fa-right-to-bracket"></i> Login</button>
@@ -288,7 +294,7 @@ z-index: -2; pointer-events: none;
 <div class="chat-tooltip" id="chatTooltip">Ask Nova anything ✨</div>
 <div class="chat-modal" id="chatModal">
 <div class="chat-header">
-<div><img src="nova.png" alt="Nova" style="width:24px; height:24px; vertical-align:middle; margin-right:6px; object-fit:contain;" onerror="this.src='assets/nova.png'"> Nova AI</div>
+<div><img src="nova.png" alt="Nova" style="width:24px; height:24px; vertical-align:middle; margin-right:6px; object-fit:contain;" onerror="this.onerror=null;this.src='assets/nova.png'"> Nova AI</div>
 <i class="fa-solid fa-xmark close-chat" id="closeChat" style="cursor: pointer;"></i>
 </div>
 <div class="chat-body" id="chatHistory">
@@ -306,13 +312,17 @@ z-index: -2; pointer-events: none;
 </div>
 </div>
 <div class="nova-chathead" id="chatToggle">
-<img src="nova.png" alt="Nova" onerror="this.src='assets/nova.png'">
+<img src="nova.png" alt="Nova" onerror="this.onerror=null;this.src='assets/nova.png'">
 </div>
 </div>
 
 <script>
-const TMDB_API_KEY = "3dc27f9ae386c422fdc5994e6fda6823"; 
+// NOTE: This key is visible to anyone who opens the page. Regenerate it on TMDB
+// (you pasted it in public), and ideally proxy TMDB calls through your backend.
+const TMDB_API_KEY = "3dc27f9ae386c422fdc5994e6fda6823";
 const BACKEND_URL = "https://cinemind-live.onrender.com"; // Live Render backend
+const PLACEHOLDER_POSTER = 'https://via.placeholder.com/500x750?text=No+Poster';
+const MAX_HISTORY = 20;
 
 let currentMovieData = null;
 let currentUser = localStorage.getItem('cinemind_auth_user') || null;
@@ -324,24 +334,76 @@ let conversationHistory = [];
 let currentView = "discover";
 let selectedGenre = "";
 let selectedCountry = "";
+let loadToken = 0;
 
-function playSciFiChime() {
-try {
-const ctx = new (window.AudioContext || window.webkitAudioContext)();
-const osc = ctx.createOscillator();
-const gain = ctx.createGain();
-osc.type = 'sine';
-osc.frequency.setValueAtTime(587.33, ctx.currentTime);
-osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
-gain.gain.setValueAtTime(0.08, ctx.currentTime);
-gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-osc.connect(gain);
-gain.connect(ctx.destination);
-osc.start();
-osc.stop(ctx.currentTime + 0.3);
-} catch(e) {}
+// ---------- Helpers ----------
+function escapeHTML(str) {
+  return String(str ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
 }
 
+let audioCtx = null;
+function playSciFiChime() {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const ctx = audioCtx;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.3);
+  } catch (e) {}
+}
+
+function goToView(viewName) {
+  const item = document.querySelector(`.nav-item[data-view="${viewName}"]`);
+  if (item) item.click();
+}
+
+// Appends a chat bubble to any container. isHtml only for trusted static markup.
+function appendBubble(container, text, sender, isHtml = false) {
+  const bubble = document.createElement('div');
+  bubble.className = `chat-bubble ${sender}-bubble`;
+  if (isHtml) bubble.innerHTML = text;
+  else bubble.textContent = text;
+  container.appendChild(bubble);
+  container.scrollTop = container.scrollHeight;
+  return bubble;
+}
+
+// Shared backend chat call
+async function askNova(message) {
+  const response = await fetch(`${BACKEND_URL}/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message,
+      profile: { name: currentUser || 'Guest' },
+      region: selectedRegion,
+      history: conversationHistory.slice(-MAX_HISTORY)
+    })
+  });
+  if (!response.ok) throw new Error(`Server responded with ${response.status}`);
+  const data = await response.json();
+  const reply = data.reply || "Sorry, I didn't get a response. Please try again.";
+
+  conversationHistory.push({ role: "user", content: message });
+  conversationHistory.push({ role: "assistant", content: reply });
+  if (conversationHistory.length > MAX_HISTORY * 2) {
+    conversationHistory.splice(0, conversationHistory.length - MAX_HISTORY * 2);
+  }
+  return { reply, movies: Array.isArray(data.movies) ? data.movies : [] };
+}
+
+// ---------- DOM refs ----------
 const mainContainer = document.getElementById('mainContainer');
 const searchInput = document.getElementById('searchInput');
 const searchSubmitBtn = document.getElementById('searchSubmitBtn');
@@ -356,30 +418,32 @@ const welcomeName = document.getElementById('welcomeName');
 const novaGreeting = document.getElementById('novaGreeting');
 const logoutBtn = document.getElementById('logoutBtn');
 
+// ---------- Account / cloud library ----------
 async function syncCloudLibrary() {
-if (!currentUser) {
-watchlist = [];
-favorites = [];
-profileDisplayName.innerText = "Guest User";
-profileSubText.innerText = "Tap to Login";
-welcomeName.innerText = "Guest";
-novaGreeting.innerHTML = `Hi Guest! 👽 I'm Nova. Log in to sync your library!`;
-logoutBtn.style.display = "none";
-return;
-}
+  if (!currentUser) {
+    watchlist = [];
+    favorites = [];
+    profileDisplayName.textContent = "Guest User";
+    profileSubText.textContent = "Tap to Login";
+    welcomeName.textContent = "Guest";
+    novaGreeting.textContent = "Hi Guest! 👽 I'm Nova. Log in to sync your library!";
+    logoutBtn.style.display = "none";
+    return;
+  }
 
-profileDisplayName.innerText = currentUser;
-profileSubText.innerText = "Cloud Synced";
-welcomeName.innerText = currentUser;
-novaGreeting.innerHTML = `Hi ${currentUser}! 👽 I'm Nova. What are we watching today?`;
-logoutBtn.style.display = "block";
+  profileDisplayName.textContent = currentUser;
+  profileSubText.textContent = "Cloud Synced";
+  welcomeName.textContent = currentUser;
+  novaGreeting.textContent = `Hi ${currentUser}! 👽 I'm Nova. What are we watching today?`;
+  logoutBtn.style.display = "block";
 
-try {
-const res = await fetch(`${BACKEND_URL}/api/user/library?username=${encodeURIComponent(currentUser)}`);
-const data = await res.json();
-watchlist = data.watchlist || [];
-favorites = data.favorites || [];
-} catch (e) {}
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/user/library?username=${encodeURIComponent(currentUser)}`);
+    if (!res.ok) throw new Error(`Server responded with ${res.status}`);
+    const data = await res.json();
+    watchlist = data.watchlist || [];
+    favorites = data.favorites || [];
+  } catch (e) { console.error(e); }
 }
 syncCloudLibrary();
 
@@ -387,478 +451,566 @@ document.getElementById('openProfile').onclick = () => { playSciFiChime(); profi
 document.getElementById('closeProfileModal').onclick = () => profileModal.classList.remove('active');
 
 document.getElementById('loginBtn').onclick = async () => {
-const u = document.getElementById('authUsername').value.trim();
-const p = document.getElementById('authPassword').value.trim();
-if(!u || !p) return alert("Please enter username and password.");
+  const u = document.getElementById('authUsername').value.trim();
+  const p = document.getElementById('authPassword').value.trim();
+  if (!u || !p) return alert("Please enter username and password.");
 
-try {
-const res = await fetch(`${BACKEND_URL}/api/login`, {
-method: 'POST',
-headers: {'Content-Type': 'application/json'},
-body: JSON.stringify({username: u, password: p})
-});
-const data = await res.json();
-if(data.success) {
-currentUser = data.username;
-localStorage.setItem('cinemind_auth_user', currentUser);
-await syncCloudLibrary();
-profileModal.classList.remove('active');
-alert("Successfully logged in!");
-} else {
-alert(data.message);
-}
-} catch(e) { alert("Authentication error."); }
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: u, password: p })
+    });
+    const data = await res.json();
+    if (data.success) {
+      currentUser = data.username;
+      localStorage.setItem('cinemind_auth_user', currentUser);
+      document.getElementById('authPassword').value = '';
+      await syncCloudLibrary();
+      profileModal.classList.remove('active');
+      alert("Successfully logged in!");
+    } else {
+      alert(data.message || "Login failed.");
+    }
+  } catch (e) { console.error(e); alert("Authentication error."); }
 };
 
 document.getElementById('signupBtn').onclick = async () => {
-const u = document.getElementById('authUsername').value.trim();
-const p = document.getElementById('authPassword').value.trim();
-if(!u || !p) return alert("Please enter username and password.");
+  const u = document.getElementById('authUsername').value.trim();
+  const p = document.getElementById('authPassword').value.trim();
+  if (!u || !p) return alert("Please enter username and password.");
 
-try {
-const res = await fetch(`${BACKEND_URL}/api/signup`, {
-method: 'POST',
-headers: {'Content-Type': 'application/json'},
-body: JSON.stringify({username: u, password: p})
-});
-const data = await res.json();
-if(data.success) {
-alert("Account created! You can now log in.");
-} else {
-alert(data.message);
-}
-} catch(e) { alert("Signup error."); }
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: u, password: p })
+    });
+    const data = await res.json();
+    if (data.success) alert("Account created! You can now log in.");
+    else alert(data.message || "Signup failed.");
+  } catch (e) { console.error(e); alert("Signup error."); }
 };
 
 logoutBtn.onclick = () => {
-currentUser = null;
-localStorage.removeItem('cinemind_auth_user');
-syncCloudLibrary();
-profileModal.classList.remove('active');
-alert("Logged out successfully.");
+  currentUser = null;
+  localStorage.removeItem('cinemind_auth_user');
+  syncCloudLibrary();
+  profileModal.classList.remove('active');
+  alert("Logged out successfully.");
 };
 
+// ---------- Movie cards ----------
 function createMovieCard(movie, isAI = false) {
-const poster = isAI ? movie.poster : (movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Poster');
-const title = movie.title || movie.name;
-const score = isAI ? `<i class="fa-solid fa-bolt" style="color: var(--secondary-glow);"></i> ${movie.match}% Neural Match` : `<i class="fa-solid fa-star" style="color: #fbbf24;"></i> ${movie.vote_average ? movie.vote_average.toFixed(1) : 'NR'}`;
-const rationale = movie.rationale || "Curated via neural collaborative filters.";
+  const poster = isAI
+    ? (movie.poster || PLACEHOLDER_POSTER)
+    : (movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : PLACEHOLDER_POSTER);
+  const title = movie.title || movie.name || 'Untitled';
+  const rationale = movie.rationale || "Curated via neural collaborative filters.";
 
-const card = document.createElement('div');
-card.className = 'movie-card';
-card.onclick = () => { playSciFiChime(); fetchAndOpenModal(title, poster, rationale); };
-card.innerHTML = `
-    <img src="${poster}" onerror="this.src='https://via.placeholder.com/500x750?text=No+Poster'">
-    <div class="movie-info">
-        <div class="movie-title">${title}</div>
-        <div class="match-score">${score}</div>
-    </div>
-`;
-return card;
+  const card = document.createElement('div');
+  card.className = 'movie-card';
+  card.onclick = () => { playSciFiChime(); fetchAndOpenModal(title, poster, rationale); };
+
+  const img = document.createElement('img');
+  img.src = poster;
+  img.alt = title;
+  img.loading = 'lazy';
+  img.onerror = () => { img.onerror = null; img.src = PLACEHOLDER_POSTER; };
+
+  const info = document.createElement('div');
+  info.className = 'movie-info';
+
+  const titleEl = document.createElement('div');
+  titleEl.className = 'movie-title';
+  titleEl.textContent = title;
+
+  const scoreEl = document.createElement('div');
+  scoreEl.className = 'match-score';
+  if (isAI) {
+    scoreEl.innerHTML = `<i class="fa-solid fa-bolt" style="color: var(--secondary-glow);"></i> ${escapeHTML(movie.match)}% Neural Match`;
+  } else {
+    const rating = movie.vote_average ? Number(movie.vote_average).toFixed(1) : 'NR';
+    scoreEl.innerHTML = `<i class="fa-solid fa-star" style="color: #fbbf24;"></i> ${rating}`;
+  }
+
+  info.append(titleEl, scoreEl);
+  card.append(img, info);
+  return card;
 }
 
 async function loadNetflixRows() {
-if (currentView !== 'discover') return;
-mainContainer.innerHTML = `<p style="color: var(--text-muted); text-align:center; padding: 40px; font-weight:600;"><i class="fa-solid fa-spinner fa-spin"></i> Initializing Neural Cinematic Streams...</p>`;
+  if (currentView !== 'discover') return;
+  const myToken = ++loadToken;
+  mainContainer.innerHTML = `<p style="color: var(--text-muted); text-align:center; padding: 40px; font-weight:600;"><i class="fa-solid fa-spinner fa-spin"></i> Initializing Neural Cinematic Streams...</p>`;
 
-let baseQuery = `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=popularity.desc`;
-if (selectedGenre) baseQuery += `&with_genres=${selectedGenre}`;
-if (selectedCountry) baseQuery += `&with_origin_country=${selectedCountry}`;
+  let baseQuery = `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=popularity.desc`;
+  if (selectedGenre) baseQuery += `&with_genres=${selectedGenre}`;
+  if (selectedCountry) baseQuery += `&with_origin_country=${selectedCountry}`;
 
-const categories = [
-{ title: "🔥 Trending Cinematic Data", url: `${baseQuery}&page=1` },
-{ title: "🧠 AI Recommended Blockbusters", url: `${baseQuery}&page=2` },
-{ title: "✨ Masterpiece Cinema", url: `${baseQuery}&sort_by=vote_average.desc&page=1` }
-];
+  const categories = [
+    { title: "🔥 Trending Cinematic Data", url: `${baseQuery}&page=1` },
+    { title: "🧠 AI Recommended Blockbusters", url: `${baseQuery}&page=2` },
+    { title: "✨ Masterpiece Cinema", url: `${baseQuery}&sort_by=vote_average.desc&vote_count.gte=500&page=1` }
+  ];
 
-mainContainer.innerHTML = '';
+  const sections = [];
+  for (const cat of categories) {
+    try {
+      const res = await fetch(cat.url);
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (myToken !== loadToken) return; // a newer load started; discard this one
+      if (data.results && data.results.length > 0) {
+        const rowSection = document.createElement('div');
+        rowSection.className = 'row-section';
 
-for (let cat of categories) {
-try {
-const res = await fetch(cat.url);
-const data = await res.json();
-if (data.results && data.results.length > 0) {
-const rowSection = document.createElement('div');
-rowSection.className = 'row-section';
+        const titleEl = document.createElement('h3');
+        titleEl.className = 'row-title';
+        titleEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles" style="color: var(--secondary-glow);"></i> ${cat.title}`;
+        rowSection.appendChild(titleEl);
 
-const titleEl = document.createElement('h3');
-titleEl.className = 'row-title';
-titleEl.innerHTML = `<i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> ${cat.title}`;
-rowSection.appendChild(titleEl);
+        const movieRow = document.createElement('div');
+        movieRow.className = 'movie-row';
+        data.results.forEach(movie => movieRow.appendChild(createMovieCard(movie)));
 
-const movieRow = document.createElement('div');
-movieRow.className = 'movie-row';
-data.results.forEach(movie => movieRow.appendChild(createMovieCard(movie)));
+        rowSection.appendChild(movieRow);
+        sections.push(rowSection);
+      }
+    } catch (err) { console.error(err); }
+  }
 
-rowSection.appendChild(movieRow);
-mainContainer.appendChild(rowSection);
+  if (myToken !== loadToken || currentView !== 'discover') return;
+  mainContainer.innerHTML = '';
+  if (sections.length === 0) {
+    mainContainer.innerHTML = `<p style="color: var(--text-muted); text-align:center; padding: 40px; font-weight:600;">Could not load movies. Please try again.</p>`;
+  } else {
+    sections.forEach(s => mainContainer.appendChild(s));
+  }
 }
-} catch (err) {}
-}
-}
+
+// ---------- Filters ----------
+// Highlight the saved region on load
+document.querySelectorAll('.filter-pill[data-region]').forEach(p => {
+  p.classList.toggle('active', p.getAttribute('data-region') === selectedRegion);
+});
 
 document.querySelectorAll('.filter-row').forEach(row => {
-row.querySelectorAll('.filter-pill').forEach(pill => {
-pill.onclick = (e) => {
-playSciFiChime();
-row.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
-e.target.classList.add('active');
+  row.querySelectorAll('.filter-pill').forEach(pill => {
+    pill.onclick = (e) => {
+      playSciFiChime();
+      const target = e.currentTarget;
+      row.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+      target.classList.add('active');
 
-if (e.target.hasAttribute('data-genre')) selectedGenre = e.target.getAttribute('data-genre');
-if (e.target.hasAttribute('data-country')) selectedCountry = e.target.getAttribute('data-country');
-if (e.target.hasAttribute('data-region')) {
-selectedRegion = e.target.getAttribute('data-region');
-localStorage.setItem('cinemind_region', selectedRegion);
-}
+      if (target.hasAttribute('data-genre')) selectedGenre = target.getAttribute('data-genre');
+      if (target.hasAttribute('data-country')) selectedCountry = target.getAttribute('data-country');
+      if (target.hasAttribute('data-region')) {
+        selectedRegion = target.getAttribute('data-region');
+        localStorage.setItem('cinemind_region', selectedRegion);
+        return; // region only affects streaming providers, no need to reload rows
+      }
 
-loadNetflixRows();
-};
+      loadNetflixRows();
+    };
+  });
 });
-});
 
+// ---------- Search ----------
 async function performSearch() {
-playSciFiChime();
-const query = searchInput.value.trim();
-if (currentView !== 'discover') return;
+  playSciFiChime();
+  const query = searchInput.value.trim();
+  if (currentView !== 'discover') return;
 
-if (!query) {
-heroBanner.style.display = "flex";
-filterPanel.style.display = "flex";
-loadNetflixRows();
-return;
-}
+  if (!query) {
+    heroBanner.style.display = "flex";
+    filterPanel.style.display = "flex";
+    loadNetflixRows();
+    return;
+  }
 
-heroBanner.style.display = "none";
-filterPanel.style.display = "none";
+  heroBanner.style.display = "none";
+  filterPanel.style.display = "none";
+  loadToken++; // cancel any in-flight row loads
 
-try {
-const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}`);
-const data = await res.json();
+  try {
+    const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}`);
+    if (!res.ok) throw new Error(`TMDB responded with ${res.status}`);
+    const data = await res.json();
 
-mainContainer.innerHTML = `<h3 class="row-title">Neural Search Results for "${query}"</h3>`;
-const grid = document.createElement('div');
-grid.className = 'movie-grid';
+    mainContainer.innerHTML = `<h3 class="row-title">Neural Search Results for "${escapeHTML(query)}"</h3>`;
+    const grid = document.createElement('div');
+    grid.className = 'movie-grid';
 
-if (data.results && data.results.length > 0) {
-data.results.forEach(movie => grid.appendChild(createMovieCard(movie)));
-} else {
-grid.innerHTML = `<p style="color: var(--text-muted); font-weight:500;">No matching films found in database.</p>`;
-}
-mainContainer.appendChild(grid);
-} catch (err) {}
+    if (data.results && data.results.length > 0) {
+      data.results.forEach(movie => grid.appendChild(createMovieCard(movie)));
+    } else {
+      grid.innerHTML = `<p style="color: var(--text-muted); font-weight:500;">No matching films found in database.</p>`;
+    }
+    mainContainer.appendChild(grid);
+  } catch (err) {
+    console.error(err);
+    mainContainer.innerHTML = `<p style="color: var(--text-muted); font-weight:500;">Search failed. Please try again.</p>`;
+  }
 }
 
 searchSubmitBtn.onclick = performSearch;
-searchInput.onkeypress = (e) => { if (e.key === 'Enter') performSearch(); };
+searchInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.isComposing) performSearch();
+});
 
+// ---------- Navigation ----------
 navItems.forEach(item => {
-item.addEventListener('click', async () => {
-playSciFiChime();
-navItems.forEach(nav => nav.classList.remove('active'));
-item.classList.add('active');
-currentView = item.getAttribute('data-view');
+  item.addEventListener('click', async () => {
+    playSciFiChime();
+    navItems.forEach(nav => nav.classList.remove('active'));
+    item.classList.add('active');
+    currentView = item.getAttribute('data-view');
+    loadToken++; // cancel any in-flight row loads
 
-if (currentView === 'discover') {
-heroBanner.style.display = "flex";
-filterPanel.style.display = "flex";
-loadNetflixRows();
-} else if (currentView === 'nova') {
-heroBanner.style.display = "none";
-filterPanel.style.display = "none";
-renderEnlargedNovaView();
-} else if (currentView === 'dataviz') {
-heroBanner.style.display = "none";
-filterPanel.style.display = "none";
-renderDataAnalyticsDashboard();
-} else {
-heroBanner.style.display = "none";
-filterPanel.style.display = "none";
+    if (currentView === 'discover') {
+      heroBanner.style.display = "flex";
+      filterPanel.style.display = "flex";
+      loadNetflixRows();
+    } else if (currentView === 'nova') {
+      heroBanner.style.display = "none";
+      filterPanel.style.display = "none";
+      renderEnlargedNovaView();
+    } else if (currentView === 'dataviz') {
+      heroBanner.style.display = "none";
+      filterPanel.style.display = "none";
+      renderDataAnalyticsDashboard();
+    } else {
+      heroBanner.style.display = "none";
+      filterPanel.style.display = "none";
 
-if(currentUser) await syncCloudLibrary();
+      if (currentUser) await syncCloudLibrary();
+      if (currentView !== item.getAttribute('data-view')) return;
 
-const isWatchlist = currentView === 'watchlist';
-mainContainer.innerHTML = `<h3 class="row-title">${isWatchlist ? 'My Saved Watchlist' : 'My Favorite Movies'}</h3>`;
-const grid = document.createElement('div');
-grid.className = 'movie-grid';
+      const isWatchlist = currentView === 'watchlist';
+      mainContainer.innerHTML = `<h3 class="row-title">${isWatchlist ? 'My Saved Watchlist' : 'My Favorite Movies'}</h3>`;
+      const grid = document.createElement('div');
+      grid.className = 'movie-grid';
 
-const targetArr = isWatchlist ? watchlist : favorites;
-if (targetArr.length > 0) {
-targetArr.forEach(movie => grid.appendChild(createMovieCard(movie)));
-} else {
-grid.innerHTML = `<p style="color: var(--text-muted); font-weight:500;">${currentUser ? 'No items saved here yet.' : 'Please log in to sync cloud watchlist items.'}</p>`;
-}
-mainContainer.appendChild(grid);
-}
+      const targetArr = isWatchlist ? watchlist : favorites;
+      if (targetArr.length > 0) {
+        targetArr.forEach(movie => grid.appendChild(createMovieCard(movie)));
+      } else {
+        grid.innerHTML = `<p style="color: var(--text-muted); font-weight:500;">${currentUser ? 'No items saved here yet.' : 'Please log in to sync cloud watchlist items.'}</p>`;
+      }
+      mainContainer.appendChild(grid);
+    }
+  });
 });
-});
+
+// ---------- Analytics ----------
+let genreChartInstance = null;
 
 async function renderDataAnalyticsDashboard() {
-let insights = { total_recommendations_viewed: 0, total_liked: 0, total_watchlist: 0, average_rating_of_interest: 0.0, dominant_mood: "Multi-Condition & Immersive" };
-if(currentUser) {
-try {
-const res = await fetch(`${BACKEND_URL}/api/user/insights?username=${encodeURIComponent(currentUser)}`);
-insights = await res.json();
-} catch(e) {}
-}
+  let insights = { total_recommendations_viewed: 0, total_liked: 0, total_watchlist: 0, average_rating_of_interest: 0.0, dominant_mood: "Multi-Condition & Immersive" };
+  if (currentUser) {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/user/insights?username=${encodeURIComponent(currentUser)}`);
+      if (res.ok) insights = { ...insights, ...(await res.json()) };
+    } catch (e) { console.error(e); }
+  }
 
-mainContainer.innerHTML = `
+  if (currentView !== 'dataviz') return;
+
+  mainContainer.innerHTML = `
     <div class="dataviz-container" style="display:flex; flex-direction:column; gap:25px;">
-        <div class="nova-banner-clean">
-            <div style="display:flex; align-items:center; gap:20px;">
-                <i class="fa-solid fa-chart-line" style="font-size: 2.5rem; color: var(--secondary-glow);"></i>
-                <div>
-                    <h2>CineMind Data Science & Analytics Hub</h2>
-                    <p>Live metrics from user interaction telemetry and SQLite preference weighting models.</p>
-                </div>
-            </div>
+      <div class="nova-banner-clean">
+        <div style="display:flex; align-items:center; gap:20px;">
+          <i class="fa-solid fa-chart-line" style="font-size: 2.5rem; color: var(--secondary-glow);"></i>
+          <div>
+            <h2>CineMind Data Science & Analytics Hub</h2>
+            <p>Live metrics from user interaction telemetry and SQLite preference weighting models.</p>
+          </div>
         </div>
+      </div>
 
-        <div class="cascade-accordion">
-            <div class="cascade-item active">
-                <div class="cascade-header">
-                    <span><i class="fa-solid fa-chart-pie" style="margin-right:10px;"></i> User Insights & Genre Popularity Distribution</span>
-                    <i class="fa-solid fa-chevron-down cascade-icon"></i>
-                </div>
-                <div class="cascade-body" style="max-height:1000px; padding:25px 28px;">
-                    <div class="analytics-grid-packed">
-                        <div class="analytics-stat-card">
-                            <h4><i class="fa-solid fa-eye"></i> Recommendations Viewed</h4>
-                            <p>${insights.total_recommendations_viewed}</p>
-                        </div>
-                        <div class="analytics-stat-card">
-                            <h4><i class="fa-solid fa-heart"></i> Total Liked Items</h4>
-                            <p>${insights.total_liked}</p>
-                        </div>
-                        <div class="analytics-stat-card">
-                            <h4><i class="fa-solid fa-star"></i> Avg. Rating of Interest</h4>
-                            <p>${insights.average_rating_of_interest}</p>
-                        </div>
-                        <div class="analytics-stat-card">
-                            <h4><i class="fa-solid fa-brain"></i> Dominant Mood</h4>
-                            <p>${insights.dominant_mood}</p>
-                        </div>
-                    </div>
-                    <canvas id="genreChart" height="100" style="margin-top: 20px;"></canvas>
-                </div>
+      <div class="cascade-accordion">
+        <div class="cascade-item active">
+          <div class="cascade-header">
+            <span><i class="fa-solid fa-chart-pie" style="margin-right:10px;"></i> User Insights & Genre Popularity Distribution</span>
+            <i class="fa-solid fa-chevron-down cascade-icon"></i>
+          </div>
+          <div class="cascade-body" style="max-height:1000px; padding:25px 28px;">
+            <div class="analytics-grid-packed">
+              <div class="analytics-stat-card">
+                <h4><i class="fa-solid fa-eye"></i> Recommendations Viewed</h4>
+                <p>${escapeHTML(insights.total_recommendations_viewed)}</p>
+              </div>
+              <div class="analytics-stat-card">
+                <h4><i class="fa-solid fa-heart"></i> Total Liked Items</h4>
+                <p>${escapeHTML(insights.total_liked)}</p>
+              </div>
+              <div class="analytics-stat-card">
+                <h4><i class="fa-solid fa-star"></i> Avg. Rating of Interest</h4>
+                <p>${escapeHTML(insights.average_rating_of_interest)}</p>
+              </div>
+              <div class="analytics-stat-card">
+                <h4><i class="fa-solid fa-brain"></i> Dominant Mood</h4>
+                <p>${escapeHTML(insights.dominant_mood)}</p>
+              </div>
             </div>
+            <canvas id="genreChart" height="100" style="margin-top: 20px;"></canvas>
+          </div>
         </div>
+      </div>
     </div>
-`;
+  `;
 
-const ctx = document.getElementById('genreChart').getContext('2d');
-new Chart(ctx, {
-type: 'bar',
-data: {
-labels: ['Drama', 'Sci-Fi', 'Romance', 'Action', 'Comedy'],
-datasets: [{
-label: 'Cluster Weight Index',
-data: [35, 25, 20, 20, 15],
-backgroundColor: ['#38bdf8', '#c084fc', '#f43f5e', '#38bdf8', '#c084fc'],
-borderRadius: 10
-}]
-},
-options: {
-responsive: true,
-plugins: { legend: { display: false } },
-scales: {
-y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
-x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
-}
-}
-});
+  if (genreChartInstance) { genreChartInstance.destroy(); genreChartInstance = null; }
+  if (typeof Chart === 'undefined') return;
+
+  const ctx = document.getElementById('genreChart').getContext('2d');
+  genreChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Drama', 'Sci-Fi', 'Romance', 'Action', 'Comedy'],
+      datasets: [{
+        label: 'Cluster Weight Index',
+        data: [35, 25, 20, 20, 15],
+        backgroundColor: ['#38bdf8', '#c084fc', '#f43f5e', '#38bdf8', '#c084fc'],
+        borderRadius: 10
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+        x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+      }
+    }
+  });
 }
 
+// ---------- Enlarged Nova view ----------
 function renderEnlargedNovaView() {
-mainContainer.innerHTML = `
+  mainContainer.innerHTML = `
     <div class="nova-view-container" style="display:flex; flex-direction:column; gap:22px;">
-        <div class="nova-banner-clean">
-            <div style="display:flex; align-items:center; gap:20px;">
-                <img src="nova.png" alt="Nova" onerror="this.src='assets/nova.png'">
-                <div>
-                    <h2>Nova AI Intelligence Hub</h2>
-                    <p>Ask Nova for complex plot premises or deep emotional vibes below!</p>
-                </div>
-            </div>
+      <div class="nova-banner-clean">
+        <div style="display:flex; align-items:center; gap:20px;">
+          <img src="nova.png" alt="Nova" onerror="this.onerror=null;this.src='assets/nova.png'">
+          <div>
+            <h2>Nova AI Intelligence Hub</h2>
+            <p>Ask Nova for complex plot premises or deep emotional vibes below!</p>
+          </div>
         </div>
+      </div>
 
-        <div class="nova-chat-box-large glass-panel" style="border-radius: 28px; padding: 30px; display: flex; flex-direction: column; gap: 20px;">
-            <div class="nova-history-large" id="novaEnlargedHistory" style="height: 290px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; background: rgba(3, 1, 10, 0.9); padding: 22px; border-radius: 20px; border: 1px solid var(--glass-border);">
-                <div class="chat-bubble ai-bubble">Hi ${currentUser || 'Guest'}! 👽 I am Nova. What cinematic experience are we calculating today?</div>
-            </div>
-            <div class="quick-chips">
-                <span class="chip" onclick="sendEnlargedPrompt('Korean romcom')">🇰🇷 Korean Romcom</span>
-                <span class="chip" onclick="sendEnlargedPrompt('Mind-bending sci-fi')">🧠 Sci-Fi</span>
-                <span class="chip" onclick="sendEnlargedPrompt('Heartbreaking sad romance')">💔 Sad Romance</span>
-                <span class="chip" onclick="sendEnlargedPrompt('Action blockbusters')">💥 Action</span>
-            </div>
-            <div class="nova-input-row" style="display: flex; gap: 12px;">
-                <input type="text" id="novaEnlargedInput" placeholder="Ask Nova anything..." autocomplete="off" style="flex: 1; background: #160f38; border: 1px solid var(--glass-border); border-radius: 26px; padding: 14px 22px; outline: none; font-size: 0.98rem; color: white;">
-                <button class="btn-action" id="novaEnlargedSendBtn"><i class="fa-solid fa-paper-plane"></i> Send</button>
-            </div>
+      <div class="nova-chat-box-large glass-panel" style="border-radius: 28px; padding: 30px; display: flex; flex-direction: column; gap: 20px;">
+        <div class="nova-history-large" id="novaEnlargedHistory" style="height: 290px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; background: rgba(3, 1, 10, 0.9); padding: 22px; border-radius: 20px; border: 1px solid var(--glass-border);"></div>
+        <div class="quick-chips">
+          <span class="chip" onclick="sendEnlargedPrompt('Korean romcom')">🇰🇷 Korean Romcom</span>
+          <span class="chip" onclick="sendEnlargedPrompt('Mind-bending sci-fi')">🧠 Sci-Fi</span>
+          <span class="chip" onclick="sendEnlargedPrompt('Heartbreaking sad romance')">💔 Sad Romance</span>
+          <span class="chip" onclick="sendEnlargedPrompt('Action blockbusters')">💥 Action</span>
         </div>
+        <div class="nova-input-row" style="display: flex; gap: 12px;">
+          <input type="text" id="novaEnlargedInput" placeholder="Ask Nova anything..." autocomplete="off" style="flex: 1; background: #160f38; border: 1px solid var(--glass-border); border-radius: 26px; padding: 14px 22px; outline: none; font-size: 0.98rem; color: white;">
+          <button class="btn-action" id="novaEnlargedSendBtn"><i class="fa-solid fa-paper-plane"></i> Send</button>
+        </div>
+      </div>
 
-        <h3 class="row-title" id="novaResultsTitle" style="margin-top: 10px;"><i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> Neural Recommendations</h3>
-        <div id="novaVerticalGrid" class="movie-grid">
-            <p style="color: var(--text-muted); font-weight:500;">Enter a prompt above to generate recommendations.</p>
-        </div>
+      <h3 class="row-title" id="novaResultsTitle" style="margin-top: 10px;"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--secondary-glow);"></i> Neural Recommendations</h3>
+      <div id="novaVerticalGrid" class="movie-grid">
+        <p style="color: var(--text-muted); font-weight:500;">Enter a prompt above to generate recommendations.</p>
+      </div>
     </div>
-`;
+  `;
 
-const inputField = document.getElementById('novaEnlargedInput');
-const sendButton = document.getElementById('novaEnlargedSendBtn');
+  const historyDiv = document.getElementById('novaEnlargedHistory');
+  const inputField = document.getElementById('novaEnlargedInput');
+  const sendButton = document.getElementById('novaEnlargedSendBtn');
+  appendBubble(historyDiv, `Hi ${currentUser || 'Guest'}! 👽 I am Nova. What cinematic experience are we calculating today?`, 'ai');
 
-const executeEnlargedChat = async (promptText) => {
-playSciFiChime();
-const msg = promptText || inputField.value.trim();
-if (!msg) return;
+  let busy = false;
+  const executeEnlargedChat = async (promptText) => {
+    if (busy) return;
+    const msg = (typeof promptText === 'string' ? promptText : inputField.value).trim();
+    if (!msg) return;
 
-const historyDiv = document.getElementById('novaEnlargedHistory');
-historyDiv.innerHTML += `<div class="chat-bubble user-bubble">${msg}</div>`;
-if(!promptText) inputField.value = '';
+    busy = true;
+    sendButton.disabled = true;
+    playSciFiChime();
 
-historyDiv.innerHTML += `<div class="chat-bubble ai-bubble"><i class="fa-solid fa-spinner fa-spin"></i> Processing neural query vectors...</div>`;
-historyDiv.scrollTop = historyDiv.scrollHeight;
-const typingInd = historyDiv.lastChild;
+    appendBubble(historyDiv, msg, 'user');
+    if (typeof promptText !== 'string') inputField.value = '';
+    const typingInd = appendBubble(historyDiv, `<i class="fa-solid fa-spinner fa-spin"></i> Processing neural query vectors...`, 'ai', true);
 
-try {
-const response = await fetch(`${BACKEND_URL}/chat`, {
-method: 'POST',
-headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({ message: msg, profile: {name: currentUser || 'Guest'}, region: selectedRegion, history: conversationHistory })
-});
-const data = await response.json();
-typingInd.remove();
-historyDiv.innerHTML += `<div class="chat-bubble ai-bubble">${data.reply}</div>`;
-historyDiv.scrollTop = historyDiv.scrollHeight;
+    try {
+      const { reply, movies } = await askNova(msg);
+      typingInd.remove();
+      appendBubble(historyDiv, reply, 'ai');
 
-conversationHistory.push({ role: "user", content: msg });
-conversationHistory.push({ role: "assistant", content: data.reply });
+      const titleEl = document.getElementById('novaResultsTitle');
+      const vGrid = document.getElementById('novaVerticalGrid');
+      if (movies.length > 0 && titleEl && vGrid) {
+        titleEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles" style="color: var(--secondary-glow);"></i> Results for "${escapeHTML(msg)}"`;
+        vGrid.innerHTML = '';
+        movies.forEach(movie => vGrid.appendChild(createMovieCard(movie, true)));
+      }
+    } catch (err) {
+      console.error(err);
+      typingInd.remove();
+      appendBubble(historyDiv, "Sorry, I couldn't reach the server right now. Please try again in a moment.", 'ai');
+    } finally {
+      busy = false;
+      sendButton.disabled = false;
+    }
+  };
 
-if (data.movies && data.movies.length > 0) {
-document.getElementById('novaResultsTitle').innerHTML = `<i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> Results for "${msg}"`;
-const vGrid = document.getElementById('novaVerticalGrid');
-vGrid.innerHTML = '';
-data.movies.forEach(movie => vGrid.appendChild(createMovieCard(movie, true)));
+  sendButton.onclick = () => executeEnlargedChat();
+  inputField.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); executeEnlargedChat(); }
+  });
+  window.sendEnlargedPrompt = (p) => executeEnlargedChat(p);
 }
-} catch (err) {
-typingInd.remove();
-historyDiv.innerHTML += `<div class="chat-bubble ai-bubble">Connection error. Ensure backend server is running.</div>`;
-}
-};
 
-sendButton.onclick = () => executeEnlargedChat();
-inputField.onkeypress = (e) => { if (e.key === 'Enter') executeEnlargedChat(); };
-window.sendEnlargedPrompt = (p) => executeEnlargedChat(p);
-}
-
+// ---------- Movie modal ----------
 async function fetchAndOpenModal(title, fallbackPoster, customRationale) {
-try {
-const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(title)}`);
-const data = await res.json();
+  try {
+    const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(title)}`);
+    if (!res.ok) throw new Error(`TMDB responded with ${res.status}`);
+    const data = await res.json();
 
-if (data.results && data.results.length > 0) {
-currentMovieData = data.results[0];
-currentMovieData.poster_path = currentMovieData.poster_path ? currentMovieData.poster_path : fallbackPoster;
-currentMovieData.rationale = customRationale;
+    if (data.results && data.results.length > 0) {
+      currentMovieData = data.results[0];
+      currentMovieData.rationale = customRationale;
 
-document.getElementById('modalTitle').innerText = currentMovieData.title;
-document.getElementById('modalMeta').innerHTML = `<span><i class="fa-solid fa-calendar"></i> ${currentMovieData.release_date ? currentMovieData.release_date.split('-')[0] : 'N/A'}</span> <span><i class="fa-solid fa-star" style="color: #fbbf24;"></i> ${currentMovieData.vote_average ? currentMovieData.vote_average.toFixed(1) : 'NR'}</span>`;
-document.getElementById('modalOverview').innerText = currentMovieData.overview || "No description available.";
-document.getElementById('modalPoster').src = `https://image.tmdb.org/t/p/w500${currentMovieData.poster_path}`;
-document.getElementById('modalRationale').innerText = customRationale || `Matched via collaborative filters for ${currentUser || 'Guest'}.`;
+      document.getElementById('modalTitle').textContent = currentMovieData.title;
+      document.getElementById('modalMeta').innerHTML = `<span><i class="fa-solid fa-calendar"></i> ${currentMovieData.release_date ? escapeHTML(currentMovieData.release_date.split('-')[0]) : 'N/A'}</span> <span><i class="fa-solid fa-star" style="color: #fbbf24;"></i> ${currentMovieData.vote_average ? currentMovieData.vote_average.toFixed(1) : 'NR'}</span>`;
+      document.getElementById('modalOverview').textContent = currentMovieData.overview || "No description available.";
+      document.getElementById('modalPoster').src = currentMovieData.poster_path
+        ? `https://image.tmdb.org/t/p/w500${currentMovieData.poster_path}`
+        : (fallbackPoster || PLACEHOLDER_POSTER);
+      document.getElementById('modalRationale').textContent = customRationale || `Matched via collaborative filters for ${currentUser || 'Guest'}.`;
 
-document.getElementById('modalProviders').innerHTML = `<i class="fa-solid fa-tv"></i> <span>Checking streaming availability (${selectedRegion})...</span>`;
-fetch(`https://api.themoviedb.org/3/movie/${currentMovieData.id}/watch/providers?api_key=${TMDB_API_KEY}`)
-.then(r => r.json())
-.then(provData => {
-const provs = provData.results && (provData.results[selectedRegion] || provData.results.US);
-const flat = provs && provs.flatrate ? provs.flatrate.map(p => p.provider_name).join(', ') : null;
-document.getElementById('modalProviders').innerHTML = `<i class="fa-solid fa-tv"></i> <span>Streaming in ${selectedRegion}: <strong>${flat || 'TMDB VOD Catalog'}</strong></span>`;
-}).catch(() => {
-document.getElementById('modalProviders').innerHTML = `<i class="fa-solid fa-tv"></i> <span>Streaming on: <strong>TMDB VOD Catalog</strong></span>`;
-});
+      const providersEl = document.getElementById('modalProviders');
+      providersEl.innerHTML = `<i class="fa-solid fa-tv"></i> <span>Checking streaming availability (${escapeHTML(selectedRegion)})...</span>`;
+      const movieIdAtRequest = currentMovieData.id;
+      fetch(`https://api.themoviedb.org/3/movie/${movieIdAtRequest}/watch/providers?api_key=${TMDB_API_KEY}`)
+        .then(r => r.json())
+        .then(provData => {
+          if (!currentMovieData || currentMovieData.id !== movieIdAtRequest) return;
+          const provs = provData.results && (provData.results[selectedRegion] || provData.results.US);
+          const flat = provs && provs.flatrate ? provs.flatrate.map(p => p.provider_name).join(', ') : null;
+          providersEl.innerHTML = `<i class="fa-solid fa-tv"></i> <span>Streaming in ${escapeHTML(selectedRegion)}: <strong>${escapeHTML(flat || 'TMDB VOD Catalog')}</strong></span>`;
+        }).catch(() => {
+          providersEl.innerHTML = `<i class="fa-solid fa-tv"></i> <span>Streaming on: <strong>TMDB VOD Catalog</strong></span>`;
+        });
 
-document.getElementById('trailerBtn').onclick = () => { playSciFiChime(); fetchAndPlayTrailer(currentMovieData.id, currentMovieData.title); };
+      document.getElementById('trailerBtn').onclick = () => {
+        playSciFiChime();
+        fetchAndPlayTrailer(currentMovieData.id, currentMovieData.title);
+      };
 
-updateButtonStates();
-document.getElementById('movieModal').classList.add('active');
+      updateButtonStates();
+      document.getElementById('movieModal').classList.add('active');
+    } else {
+      alert("Sorry, no details found for this title.");
+    }
+  } catch (error) {
+    console.error(error);
+    alert("Could not load movie details.");
+  }
 }
-} catch (error) {}
-}
 
+// ---------- Trailer ----------
 async function fetchAndPlayTrailer(movieId, movieTitle) {
-try {
-const res = await fetch(`https://api.themoviedb.org/3/movie/${movieId}/videos?api_key=${TMDB_API_KEY}`);
-const data = await res.json();
-const trailer = data.results.find(v => v.type === 'Trailer' && v.site === 'YouTube') || data.results[0];
+  try {
+    const res = await fetch(`https://api.themoviedb.org/3/movie/${movieId}/videos?api_key=${TMDB_API_KEY}`);
+    if (!res.ok) throw new Error(`TMDB responded with ${res.status}`);
+    const data = await res.json();
 
-if (trailer) {
-document.getElementById('youtubeIframe').src = `https://www.youtube.com/embed/${trailer.key}?autoplay=1`;
-document.getElementById('videoModalTitle').innerText = `${movieTitle} - Trailer`;
-document.getElementById('videoModal').classList.add('active');
-} else {
-alert("Official trailer currently unavailable.");
-}
-} catch (err) {
-alert("Could not load trailer.");
-}
+    const ytVideos = (data.results || []).filter(v => v.site === 'YouTube');
+    const trailer = ytVideos.find(v => v.type === 'Trailer') || ytVideos[0];
+
+    if (trailer) {
+      document.getElementById('youtubeIframe').src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(trailer.key)}?autoplay=1`;
+      document.getElementById('videoModalTitle').textContent = `${movieTitle} - Trailer`;
+      document.getElementById('videoModal').classList.add('active');
+    } else {
+      alert("Official trailer currently unavailable.");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Could not load trailer.");
+  }
 }
 
-document.getElementById('closeModal').onclick = () => document.getElementById('movieModal').classList.remove('active');
-document.getElementById('closeVideoModal').onclick = () => {
-document.getElementById('youtubeIframe').src = "";
-document.getElementById('videoModal').classList.remove('active');
-};
+function closeVideoModal() {
+  document.getElementById('youtubeIframe').src = "";
+  document.getElementById('videoModal').classList.remove('active');
+}
+function closeMovieModal() {
+  closeVideoModal();
+  document.getElementById('movieModal').classList.remove('active');
+}
 
+document.getElementById('closeModal').onclick = closeMovieModal;
+document.getElementById('closeVideoModal').onclick = closeVideoModal;
+
+// Click the dark backdrop to close
+document.getElementById('movieModal').addEventListener('click', (e) => { if (e.target.id === 'movieModal') closeMovieModal(); });
+document.getElementById('videoModal').addEventListener('click', (e) => { if (e.target.id === 'videoModal') closeVideoModal(); });
+profileModal.addEventListener('click', (e) => { if (e.target === profileModal) profileModal.classList.remove('active'); });
+
+// Escape closes the top-most modal
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (document.getElementById('videoModal').classList.contains('active')) closeVideoModal();
+  else if (profileModal.classList.contains('active')) profileModal.classList.remove('active');
+  else if (document.getElementById('movieModal').classList.contains('active')) closeMovieModal();
+});
+
+// ---------- Watchlist / Favorites ----------
 function updateButtonStates() {
-const inWatchlist = watchlist.find(m => m.id === currentMovieData.id);
-const wBtn = document.getElementById('watchlistBtn');
-wBtn.innerHTML = inWatchlist ? `<i class="fa-solid fa-check"></i> In Watchlist` : `<i class="fa-solid fa-plus"></i> Watchlist`;
-wBtn.style.background = inWatchlist ? "#10b981" : "linear-gradient(135deg, var(--primary-glow), var(--secondary-glow))";
+  if (!currentMovieData) return;
 
-const inFavs = favorites.find(m => m.id === currentMovieData.id);
-const fBtn = document.getElementById('favoriteBtn');
-fBtn.innerHTML = inFavs ? `<i class="fa-solid fa-heart" style="color: #f43f5e;"></i> Favorited` : `<i class="fa-solid fa-heart"></i> Favorite`;
+  const inWatchlist = watchlist.some(m => m.id === currentMovieData.id);
+  const wBtn = document.getElementById('watchlistBtn');
+  wBtn.innerHTML = inWatchlist ? `<i class="fa-solid fa-check"></i> In Watchlist` : `<i class="fa-solid fa-plus"></i> Watchlist`;
+  wBtn.style.background = inWatchlist ? "#10b981" : "linear-gradient(135deg, var(--primary-glow), var(--secondary-glow))";
+
+  const inFavs = favorites.some(m => m.id === currentMovieData.id);
+  const fBtn = document.getElementById('favoriteBtn');
+  fBtn.innerHTML = inFavs ? `<i class="fa-solid fa-heart" style="color: #f43f5e;"></i> Favorited` : `<i class="fa-solid fa-heart"></i> Favorite`;
 }
 
-document.getElementById('watchlistBtn').onclick = async () => {
-playSciFiChime();
-if(!currentUser) { alert("Please log in to save items to your cloud watchlist."); profileModal.classList.add('active'); return; }
+async function toggleLibrary(type) {
+  playSciFiChime();
+  if (!currentUser) {
+    alert(`Please log in to save items to your cloud ${type}.`);
+    profileModal.classList.add('active');
+    return;
+  }
+  if (!currentMovieData) return;
 
-try {
-const res = await fetch(`${BACKEND_URL}/api/user/library/toggle`, {
-method: 'POST',
-headers: {'Content-Type': 'application/json'},
-body: JSON.stringify({username: currentUser, type: 'watchlist', movie: currentMovieData})
-});
-const data = await res.json();
-if(data.success) {
-await syncCloudLibrary();
-updateButtonStates();
-if (currentView === 'watchlist') navItems[3].click();
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/user/library/toggle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      // NOTE: the server should verify the user (session/token) instead of trusting this username.
+      body: JSON.stringify({ username: currentUser, type, movie: currentMovieData })
+    });
+    if (!res.ok) throw new Error(`Server responded with ${res.status}`);
+    const data = await res.json();
+    if (data.success) {
+      await syncCloudLibrary();
+      updateButtonStates();
+      if (currentView === type) goToView(type);
+    }
+  } catch (e) { console.error(e); alert("Sync error."); }
 }
-} catch(e) { alert("Sync error."); }
-};
 
-document.getElementById('favoriteBtn').onclick = async () => {
-playSciFiChime();
-if(!currentUser) { alert("Please log in to save items to your cloud favorites."); profileModal.classList.add('active'); return; }
+document.getElementById('watchlistBtn').onclick = () => toggleLibrary('watchlist');
+document.getElementById('favoriteBtn').onclick = () => toggleLibrary('favorites');
 
-try {
-const res = await fetch(`${BACKEND_URL}/api/user/library/toggle`, {
-method: 'POST',
-headers: {'Content-Type': 'application/json'},
-body: JSON.stringify({username: currentUser, type: 'favorites', movie: currentMovieData})
-});
-const data = await res.json();
-if(data.success) {
-await syncCloudLibrary();
-updateButtonStates();
-if (currentView === 'favorites') navItems[4].click();
-}
-} catch(e) { alert("Sync error."); }
-};
-
+// ---------- Floating chat ----------
 const chatToggle = document.getElementById('chatToggle');
 const chatModal = document.getElementById('chatModal');
 const closeChat = document.getElementById('closeChat');
@@ -866,64 +1018,73 @@ const chatTooltip = document.getElementById('chatTooltip');
 const chatInput = document.getElementById('chatInput');
 const sendBtn = document.getElementById('sendBtn');
 const chatHistory = document.getElementById('chatHistory');
+let isSending = false;
 
 chatToggle.onclick = () => {
-playSciFiChime();
-chatModal.classList.toggle('active');
-chatTooltip.style.display = chatModal.classList.contains('active') ? 'none' : 'block';
-if (chatModal.classList.contains('active')) chatInput.focus();
+  playSciFiChime();
+  chatModal.classList.toggle('active');
+  chatTooltip.style.display = chatModal.classList.contains('active') ? 'none' : 'block';
+  if (chatModal.classList.contains('active')) chatInput.focus();
 };
 closeChat.onclick = () => { chatModal.classList.remove('active'); chatTooltip.style.display = 'block'; };
 
-function addBubble(text, sender) {
-const bubble = document.createElement('div');
-bubble.className = `chat-bubble ${sender}-bubble`;
-bubble.innerHTML = text;
-chatHistory.appendChild(bubble);
-chatHistory.scrollTop = chatHistory.scrollHeight;
+function addBubble(text, sender, isHtml = false) {
+  return appendBubble(chatHistory, text, sender, isHtml);
 }
 
 async function handleChat(queryText) {
-playSciFiChime();
-const message = queryText || chatInput.value.trim();
-if (!message) return;
+  if (isSending) return;
+  const message = (typeof queryText === 'string' ? queryText : chatInput.value).trim();
+  if (!message) return;
 
-addBubble(message, 'user');
-chatInput.value = '';
-addBubble(`<i class="fa-solid fa-spinner fa-spin"></i> Analyzing cinematic vectors for ${currentUser || 'Guest'}...`, 'ai');
-const typingIndicator = chatHistory.lastChild;
+  isSending = true;
+  sendBtn.disabled = true;
+  playSciFiChime();
 
-try {
-const response = await fetch(`${BACKEND_URL}/chat`, {
-method: 'POST',
-headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({ message: message, profile: {name: currentUser || 'Guest'}, region: selectedRegion, history: conversationHistory })
-});
-const data = await response.json();
-typingIndicator.remove();
-addBubble(data.reply, 'ai');
+  const displayName = currentUser || 'Guest';
+  addBubble(message, 'user');
+  chatInput.value = '';
+  const typingIndicator = addBubble(
+    `<i class="fa-solid fa-spinner fa-spin"></i> Analyzing cinematic vectors for ${escapeHTML(displayName)}...`,
+    'ai',
+    true
+  );
 
-conversationHistory.push({ role: "user", content: message });
-conversationHistory.push({ role: "assistant", content: data.reply });
+  try {
+    const { reply, movies } = await askNova(message);
+    typingIndicator.remove();
+    addBubble(reply, 'ai');
 
-if (data.movies && data.movies.length > 0) {
-heroBanner.style.display = "none";
-filterPanel.style.display = "none";
-mainContainer.innerHTML = `<h3 class="row-title"><i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> Neural Recommendations for ${currentUser || 'Guest'}</h3>`;
-const grid = document.createElement('div');
-grid.className = 'movie-grid';
-data.movies.forEach(movie => grid.appendChild(createMovieCard(movie, true)));
-mainContainer.appendChild(grid);
-}
-} catch (error) {
-typingIndicator.remove();
-addBubble(`Could not connect to Python backend server. Make sure app.py is running on Render.`, 'ai');
-}
+    if (movies.length > 0) {
+      // Show results on the main page, switching away from other views
+      navItems.forEach(nav => nav.classList.remove('active'));
+      document.querySelector('.nav-item[data-view="discover"]').classList.add('active');
+      currentView = 'discover';
+      loadToken++;
+
+      heroBanner.style.display = "none";
+      filterPanel.style.display = "none";
+      mainContainer.innerHTML = `<h3 class="row-title"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--secondary-glow);"></i> Neural Recommendations for ${escapeHTML(displayName)}</h3>`;
+      const grid = document.createElement('div');
+      grid.className = 'movie-grid';
+      movies.forEach(movie => grid.appendChild(createMovieCard(movie, true)));
+      mainContainer.appendChild(grid);
+    }
+  } catch (error) {
+    console.error(error);
+    typingIndicator.remove();
+    addBubble("Sorry, I couldn't reach the server right now. Please try again in a moment.", 'ai');
+  } finally {
+    isSending = false;
+    sendBtn.disabled = false;
+  }
 }
 
 window.sendQuickPrompt = (prompt) => handleChat(prompt);
 sendBtn.onclick = () => handleChat();
-chatInput.onkeypress = (e) => { if (e.key === 'Enter') handleChat(); };
+chatInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); handleChat(); }
+});
 
 loadNetflixRows();
 </script>
