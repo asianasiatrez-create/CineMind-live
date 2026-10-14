@@ -114,7 +114,7 @@ z-index: -2; pointer-events: none;
 .analytics-stat-card p { font-size: 1.3rem; font-weight: 800; color: white; }
 .chart-box-wrapper { position: relative; width: 100%; height: 280px; background: rgba(255,255,255,0.02); border: 1px solid rgba(56, 189, 248, 0.15); border-radius: 16px; padding: 18px; }
  
-.nova-banner-clean { background: linear-gradient(135deg, rgba(192,132,252,0.2), rgba(56,189,248,0.2)); border: 1px solid var(--secondary-glow); border-radius: 28px; padding: 30px 35px; display: flex; align-items: center; justify-content: space-between; gap: 22px; backdrop-filter: blur(20px); }
+.nova-banner-clean { background: linear-gradient(135deg, rgba(192,132,252,0.2), rgba(56,189,248,0.2)); border: 1px solid var(--secondary-glow); border-radius: 28px; padding: 30px 35px; display: flex; align-items: center; justify-content: space-between; gap: 22px; backdrop-filter: blur(20px); flex-wrap: wrap; }
 .nova-banner-clean img { width: 70px; height: 70px; object-fit: contain; }
  
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2, 0, 8, 0.9); z-index: 200; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.35s; backdrop-filter: blur(25px); padding: 20px; }
@@ -144,17 +144,17 @@ z-index: -2; pointer-events: none;
 .nova-chathead { width: 75px; height: 75px; background: #0f0a28; border: 2.5px solid var(--secondary-glow); border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.4s; box-shadow: 0 0 30px rgba(56, 189, 248, 0.6); overflow: hidden; padding: 4px; }
 .nova-chathead img { width: 100%; height: 100%; object-fit: cover; }
  
-.chat-modal { width: 420px; max-width: calc(100vw - 30px); background: #080414; border-radius: 30px; border: 1px solid var(--glass-border-hover); box-shadow: 0 30px 80px rgba(0,0,0,0.95); display: flex; flex-direction: column; position: absolute; bottom: 95px; right: 0; opacity: 0; pointer-events: none; transition: 0.25s; }
+.chat-modal { width: 430px; max-width: calc(100vw - 30px); background: #080414; border-radius: 30px; border: 1px solid var(--glass-border-hover); box-shadow: 0 30px 80px rgba(0,0,0,0.95); display: flex; flex-direction: column; position: absolute; bottom: 95px; right: 0; opacity: 0; pointer-events: none; transition: 0.25s; }
 .chat-modal.active { opacity: 1; pointer-events: auto; }
-.chat-header { padding: 20px 24px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
-.chat-body { padding: 20px; height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; background: rgba(3, 1, 10, 0.9); }
-.chat-bubble { padding: 12px 16px; border-radius: 16px; font-size: 0.95rem; line-height: 1.5; max-width: 88%; word-break: break-word; }
+.chat-header { padding: 18px 22px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
+.chat-body { padding: 20px; height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; background: rgba(3, 1, 10, 0.9); }
+.chat-bubble { padding: 12px 16px; border-radius: 16px; font-size: 0.94rem; line-height: 1.5; max-width: 88%; word-break: break-word; }
 .ai-bubble { background: #160f38; border: 1px solid rgba(56, 189, 248, 0.4); color: #fff; align-self: flex-start; }
 .user-bubble { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); color: #fff; align-self: flex-end; }
 .quick-chips { display: flex; gap: 8px; padding: 12px 18px; overflow-x: auto; background: rgba(8, 4, 20, 0.95); border-top: 1px solid var(--glass-border); scrollbar-width: none; }
 .chip { background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); padding: 6px 14px; border-radius: 14px; font-size: 0.8rem; font-weight: 600; cursor: pointer; color: var(--text-muted); white-space: nowrap; transition: 0.2s; }
 .chip:hover { background: var(--primary-glow); color: white; }
-.chat-footer { padding: 14px 20px; border-top: 1px solid var(--glass-border); display: flex; gap: 10px; background: rgba(8, 4, 20, 0.95); }
+.chat-footer { padding: 14px 20px; border-top: 1px solid var(--glass-border); display: flex; gap: 10px; background: rgba(8, 4, 20, 0.95); border-radius: 0 0 30px 30px; }
 .chat-footer input { flex: 1; background: #160f38; border: 1px solid var(--glass-border); border-radius: 20px; padding: 12px 18px; outline: none; font-size: 0.95rem; color: white; }
 .send-btn { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
  
@@ -221,14 +221,13 @@ z-index: -2; pointer-events: none;
 <div class="hero-search-box">
 <div class="search-input-wrap">
 <i class="fa-solid fa-brain"></i>
-<input type="text" id="searchInput" placeholder="Search titles, plots, or query AI naturally e.g. 'Guy relives the same day'...">
+<input type="text" id="searchInput" placeholder="Search titles or describe a plot e.g. 'Poor family infiltrates a rich household'...">
 </div>
 <button class="search-btn-submit" id="searchSubmitBtn"><i class="fa-solid fa-search"></i> Search</button>
 </div>
 </div>
  
 <div class="filter-panel" id="filterPanel">
-<!-- 1. GENRE FILTER ROW -->
 <div class="filter-row">
 <span class="filter-label"><i class="fa-solid fa-film"></i> Genres:</span>
 <button class="filter-pill active" data-genre="">All</button>
@@ -246,7 +245,6 @@ z-index: -2; pointer-events: none;
 <button class="filter-pill" data-genre="53">Thriller</button>
 </div>
 
-<!-- 2. ORIGIN COUNTRY FILTER ROW (FILTERS WHERE THE MOVIE WAS CREATED) -->
 <div class="filter-row">
 <span class="filter-label"><i class="fa-solid fa-earth-asia"></i> Origin Country:</span>
 <button class="filter-pill active" data-country="">🌍 All Countries</button>
@@ -261,7 +259,6 @@ z-index: -2; pointer-events: none;
 <button class="filter-pill" data-country="TH">🇹🇭 Thailand</button>
 </div>
 
-<!-- 3. STREAMING REGION FILTER ROW -->
 <div class="filter-row">
 <span class="filter-label"><i class="fa-solid fa-tv"></i> Streaming Region:</span>
 <button class="filter-pill active" data-region="PH">🇵🇭 Philippines</button>
@@ -340,7 +337,6 @@ z-index: -2; pointer-events: none;
 <input type="password" id="authPassword" placeholder="Password (6+ chars)..." style="width: 100%; background: #160f38; border: 1px solid var(--glass-border); border-radius: 14px; padding: 13px 18px; color: white; outline: none; font-size: 0.95rem;">
 </div>
 
-<!-- Always-visible 3+ Genre Calibration Card -->
 <div id="signupGenres" style="display:flex; flex-direction:column; gap:10px; background: rgba(255,255,255,0.03); padding: 16px; border-radius: 18px; border: 1px solid var(--glass-border);">
 <div style="display:flex; justify-content:space-between; align-items:center;">
 <span style="font-size:0.86rem; font-weight:700; color:var(--secondary-glow);"><i class="fa-solid fa-sparkles"></i> Pick at least 3 Genres You Love:</span>
@@ -373,20 +369,25 @@ z-index: -2; pointer-events: none;
 <div class="chat-tooltip" id="chatTooltip">Ask Nova anything ✨</div>
 <div class="chat-modal" id="chatModal">
 <div class="chat-header">
-<div><img src="nova.png" alt="Nova" style="width:24px; height:24px; vertical-align:middle; margin-right:6px; object-fit:contain;" onerror="this.src='CineMind-Logo.png'"> Nova AI</div>
+<div style="display:flex; align-items:center; gap:8px;">
+<img src="nova.png" alt="Nova" style="width:26px; height:26px; object-fit:contain;" onerror="this.src='CineMind-Logo.png'">
+<span>Nova AI</span>
+<span style="font-size:0.7rem; background:rgba(16,185,129,0.2); color:#10b981; padding:2px 8px; border-radius:10px; border:1px solid rgba(16,185,129,0.4);">Memory Active</span>
+</div>
+<div style="display:flex; align-items:center; gap:12px;">
+<i class="fa-solid fa-broom" title="Clear Nova Memory" onclick="clearNovaMemory()" style="cursor:pointer; color:var(--text-muted); font-size:0.9rem;"></i>
 <i class="fa-solid fa-xmark close-chat" id="closeChat" style="cursor: pointer;"></i>
 </div>
-<div class="chat-body" id="chatHistory">
-<div class="chat-bubble ai-bubble" id="novaGreeting">Hi! 👽 I'm Nova. Tell me a movie mood or plot!</div>
 </div>
+<div class="chat-body" id="chatHistory"></div>
 <div class="quick-chips">
-<span class="chip" onclick="sendQuickPrompt('Korean romcom')">🇰🇷 Korean Romcom</span>
-<span class="chip" onclick="sendQuickPrompt('Mind-bending sci-fi')">🧠 Sci-Fi</span>
-<span class="chip" onclick="sendQuickPrompt('Heartbreaking sad romance')">💔 Sad Romance</span>
-<span class="chip" onclick="sendQuickPrompt('Movie where a guy relives the same day')">⏳ Time Loop</span>
+<span class="chip" onclick="sendQuickPrompt('The movie about a poor family who infiltrates a rich household')">🕵️ Poor Family / Rich House</span>
+<span class="chip" onclick="sendQuickPrompt('That movie where a guy wakes up and relives the same day')">⏳ Time Loop Plot</span>
+<span class="chip" onclick="sendQuickPrompt('Korean romcom that is super funny and sweet')">🇰🇷 Korean Romcom</span>
+<span class="chip" onclick="sendQuickPrompt('Mind-bending sci-fi with a crazy plot twist')">🧠 Sci-Fi Twist</span>
 </div>
 <div class="chat-footer">
-<input type="text" id="chatInput" placeholder="Ask Nova..." autocomplete="off">
+<input type="text" id="chatInput" placeholder="Describe a plot, scene, or mood..." autocomplete="off">
 <button class="send-btn" id="sendBtn"><i class="fa-solid fa-paper-plane" style="color: white; font-size: 0.85rem;"></i></button>
 </div>
 </div>
@@ -408,33 +409,29 @@ let favorites = [];
 let watchedMovies = JSON.parse(localStorage.getItem(`cinemind_watched_${currentUser || 'guest'}`) || '[]');
 let selectedRegion = localStorage.getItem('cinemind_region') || "PH";
  
-let conversationHistory = [];
+// Persistent Nova AI Memory (survives tab switches and page refreshes)
+let conversationHistory = JSON.parse(sessionStorage.getItem('cinemind_nova_history') || '[]');
+let lastNovaMovies = JSON.parse(sessionStorage.getItem('cinemind_nova_movies') || '[]');
+let lastNovaQuery = sessionStorage.getItem('cinemind_nova_query') || '';
+
 let currentView = "discover";
 let selectedGenre = "";
 let selectedCountry = "";
 let activeSearchQuery = "";
 let analyticsChartInstance = null;
  
-// Infinite Scroll State
-let infiniteMode = "rows"; // "rows" | "search" | "none"
+let infiniteMode = "rows";
 let nextRowIndex = 0;
 let searchPage = 1;
 let searchTotalPages = 1;
 let isFetchingMore = false;
 
 const COUNTRY_NAMES = {
-    KR: "South Korea 🇰🇷",
-    PH: "Philippines 🇵🇭",
-    US: "USA 🇺🇸",
-    JP: "Japan 🇯🇵",
-    GB: "United Kingdom 🇬🇧",
-    IN: "India 🇮🇳",
-    FR: "France 🇫🇷",
-    ES: "Spain 🇪🇸",
-    TH: "Thailand 🇹🇭"
+    KR: "South Korea 🇰🇷", PH: "Philippines 🇵🇭", US: "USA 🇺🇸",
+    JP: "Japan 🇯🇵", GB: "United Kingdom 🇬🇧", IN: "India 🇮🇳",
+    FR: "France 🇫🇷", ES: "Spain 🇪🇸", TH: "Thailand 🇹🇭"
 };
 
-// 22+ Endless Netflix Row Definitions
 const ENDLESS_ROW_CATALOG = [
     { title: "🔥 Trending Blockbusters Today", path: "/discover/movie", params: "sort_by=popularity.desc&page=1" },
     { title: "🧠 Mind-Bending Sci-Fi & Portals", path: "/discover/movie", params: "with_genres=878&sort_by=popularity.desc&page=1" },
@@ -458,7 +455,6 @@ const ENDLESS_ROW_CATALOG = [
     { title: "💎 Hidden Indie Gems", path: "/discover/movie", params: "sort_by=vote_average.desc&vote_count.gte=100&vote_count.lte=1000&page=1" }
 ];
  
-// ---------- Sign-up / Onboarding Genre Preferences (Minimum 3) ----------
 const GENRE_OPTIONS = {28:'Action',12:'Adventure',16:'Animation',35:'Comedy',80:'Crime',18:'Drama',14:'Fantasy',27:'Horror',9648:'Mystery',10749:'Romance',878:'Sci-Fi',53:'Thriller'};
 let userGenres = JSON.parse(localStorage.getItem('cinemind_genres') || '[]');
 let signupGenres = new Set(userGenres.map(String));
@@ -527,12 +523,43 @@ const profileModal = document.getElementById('profileModal');
 const profileDisplayName = document.getElementById('profileDisplayName');
 const profileSubText = document.getElementById('profileSubText');
 const welcomeName = document.getElementById('welcomeName');
-const novaGreeting = document.getElementById('novaGreeting');
 const logoutBtn = document.getElementById('logoutBtn');
+const chatHistory = document.getElementById('chatHistory');
 
 function escapeHTML(str) {
     return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
 }
+
+// Save and sync Nova's conversation memory across both chat interfaces
+function saveNovaMemory() {
+    sessionStorage.setItem('cinemind_nova_history', JSON.stringify(conversationHistory.slice(-20)));
+    sessionStorage.setItem('cinemind_nova_movies', JSON.stringify(lastNovaMovies));
+    sessionStorage.setItem('cinemind_nova_query', lastNovaQuery);
+}
+
+function renderChatHistoryInto(container) {
+    if (!container) return;
+    container.innerHTML = `<div class="chat-bubble ai-bubble">Hi ${escapeHTML(currentUser || 'Guest')}! 👽 I'm Nova. Describe any movie plot you vaguely remember (like <em>"poor family infiltrates a rich house"</em>) or tell me your mood, and I'll remember our whole conversation!</div>`;
+    conversationHistory.forEach(turn => {
+        if (!turn || !turn.content) return;
+        const div = document.createElement('div');
+        div.className = `chat-bubble ${turn.role === 'user' ? 'user-bubble' : 'ai-bubble'}`;
+        div.textContent = turn.content;
+        container.appendChild(div);
+    });
+    container.scrollTop = container.scrollHeight;
+}
+
+window.clearNovaMemory = () => {
+    playSciFiChime();
+    conversationHistory = [];
+    lastNovaMovies = [];
+    lastNovaQuery = '';
+    saveNovaMemory();
+    renderChatHistoryInto(chatHistory);
+    const enlargedHist = document.getElementById('novaEnlargedHistory');
+    if (enlargedHist) renderChatHistoryInto(enlargedHist);
+};
 
 function calculateSimilarityMatch(movie, queryText = "") {
     if (movie.match) return movie.match;
@@ -581,16 +608,16 @@ async function syncCloudLibrary() {
         profileDisplayName.innerText = "Guest User";
         profileSubText.innerText = userGenres.length >= 3 ? `${userGenres.length} Genres Calibrated` : "Tap to Login";
         welcomeName.innerText = "Guest";
-        novaGreeting.innerHTML = `Hi Guest! 👽 I'm Nova. Tell me a movie mood or plot!`;
         logoutBtn.style.display = "none";
+        renderChatHistoryInto(chatHistory);
         return;
     }
     
     profileDisplayName.innerText = currentUser;
     profileSubText.innerText = userGenres.length ? `Synced • ${userGenres.length} Genres` : "Cloud Synced";
     welcomeName.innerText = currentUser;
-    novaGreeting.innerHTML = `Hi ${currentUser}! 👽 I'm Nova. What are we watching today?`;
     logoutBtn.style.display = "block";
+    renderChatHistoryInto(chatHistory);
     
     try {
         const res = await fetch(`${BACKEND_URL}/api/user/library?username=${encodeURIComponent(currentUser)}`);
@@ -605,7 +632,6 @@ async function syncCloudLibrary() {
 }
 syncCloudLibrary();
 
-// Automatically show Login / Sign-up / 3-Genre Card on link open if not logged in
 window.addEventListener('DOMContentLoaded', () => {
     if (!currentUser) {
         profileModal.classList.add('active');
@@ -620,7 +646,6 @@ document.getElementById('openProfile').onclick = () => {
 };
 document.getElementById('closeProfileModal').onclick = () => { profileModal.classList.remove('active'); };
 
-// Continue as Guest (Logged Out) button
 document.getElementById('continueGuestBtn').onclick = () => {
     playSciFiChime();
     if (signupGenres.size > 0 && signupGenres.size < 3) {
@@ -739,7 +764,7 @@ function createMovieCard(movie, isAI = false, searchContext = "") {
     return card;
 }
  
-// ---------------- ENDLESS NETFLIX ROWS ENGINE (WITH COUNTRY + GENRE CUSTOMIZATION) ----------------
+// ---------------- ENDLESS NETFLIX ROWS ENGINE ----------------
 async function appendNextNetflixRowBatch(count = 3) {
     if (isFetchingMore || currentView !== 'discover' || infiniteMode !== 'rows') return;
     isFetchingMore = true;
@@ -811,7 +836,6 @@ async function initEndlessNetflixHome() {
     const countryQuery = selectedCountry ? `&with_origin_country=${selectedCountry}` : "";
     const countryBadge = selectedCountry ? ` (${COUNTRY_NAMES[selectedCountry]})` : "";
 
-    // Deep per-genre customization from Sign-In / Guest Genre Picker
     if (userGenres.length && !selectedGenre) {
         try {
             const gNames = userGenres.map(id => GENRE_OPTIONS[id]).filter(Boolean);
@@ -861,7 +885,6 @@ async function initEndlessNetflixHome() {
     await appendNextNetflixRowBatch(4);
 }
  
-// Filter Pill Click Handlers (Genres, Origin Country, Streaming Region)
 document.querySelectorAll('.filter-row').forEach(row => {
     row.querySelectorAll('.filter-pill').forEach(pill => {
         pill.onclick = (e) => {
@@ -881,7 +904,7 @@ document.querySelectorAll('.filter-row').forEach(row => {
     });
 });
  
-// ---------------- ENDLESS NETFLIX SEARCH ENGINE ----------------
+// ---------------- ENDLESS NETFLIX SEARCH ENGINE (WITH NOVA PLOT DETECTION) ----------------
 async function performSearch() {
     playSciFiChime();
     const query = searchInput.value.trim();
@@ -905,9 +928,9 @@ async function performSearch() {
     
     heroBanner.style.display = "flex";
     filterPanel.style.display = "none";
-    mainContainer.innerHTML = `<p style="color: var(--text-muted); text-align:center; padding: 40px;"><i class="fa-solid fa-spinner fa-spin"></i> Scanning neural cinema index for "${escapeHTML(query)}"...</p>`;
+    mainContainer.innerHTML = `<p style="color: var(--text-muted); text-align:center; padding: 40px;"><i class="fa-solid fa-spinner fa-spin"></i> Nova is scanning titles & plot vectors for "${escapeHTML(query)}"...</p>`;
     
-    const looksLikePlot = query.split(/\s+/).length >= 5 || /\b(where|about a|who|movie that|forgot|relives|steals)\b/i.test(query);
+    const looksLikePlot = query.split(/\s+/).length >= 5 || /\b(where|about a|who|movie that|forgot|relives|infiltrates|poor family|guy|girl|steals)\b/i.test(query);
     
     try {
         let initialMovies = [];
@@ -936,6 +959,7 @@ async function performSearch() {
             }
         }
 
+        // Send sentence/plot queries OR empty title searches directly to Super-Nova AI
         if (initialMovies.length === 0) {
             const res = await fetch(`${BACKEND_URL}/chat`, {
                 method: 'POST',
@@ -955,18 +979,27 @@ async function performSearch() {
             initialMovies = data.movies || [];
             aiNote = data.reply || "";
             isAISearch = true;
+            if (aiNote) {
+                conversationHistory.push({ role: "user", content: query });
+                conversationHistory.push({ role: "assistant", content: aiNote + (initialMovies.length ? ` [Recommended: ${initialMovies.slice(0,4).map(m=>m.title).join(', ')}]` : '') });
+                lastNovaMovies = initialMovies;
+                lastNovaQuery = query;
+                saveNovaMemory();
+                renderChatHistoryInto(chatHistory);
+            }
         }
 
         mainContainer.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-                <h3 class="row-title"><i class="fa-solid fa-magnifying-glass-chart" style="color: var(--secondary-glow);"></i> Results & Similar Titles for "${escapeHTML(query)}"</h3>
+                <h3 class="row-title"><i class="fa-solid fa-magnifying-glass-chart" style="color: var(--secondary-glow);"></i> Results & Neural Plot Matches for "${escapeHTML(query)}"</h3>
                 <button class="filter-pill" onclick="searchInput.value='';performSearch();"><i class="fa-solid fa-arrow-left"></i> Back to All Rows</button>
             </div>
         `;
         if (aiNote) {
-            const p = document.createElement('p');
-            p.style.cssText = 'color: var(--secondary-glow); font-weight: 600; margin-top: -20px;';
-            p.textContent = aiNote;
+            const p = document.createElement('div');
+            p.className = 'ai-rationale-box';
+            p.style.marginTop = '-18px';
+            p.innerHTML = `<span class="ai-rationale-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Nova AI Plot & Intent Analysis</span><span class="ai-rationale-text" style="color:white; font-size:0.95rem;">${escapeHTML(aiNote)}</span>`;
             mainContainer.appendChild(p);
         }
 
@@ -1173,6 +1206,7 @@ async function renderDataAnalyticsDashboard() {
     });
 }
  
+// ---------------- ENLARGED NOVA AI HUB (WITH FULL PERSISTENT MEMORY) ----------------
 function renderEnlargedNovaView() {
     mainContainer.innerHTML = `
         <div class="nova-view-container" style="display:flex; flex-direction:column; gap:22px;">
@@ -1180,33 +1214,40 @@ function renderEnlargedNovaView() {
                 <div style="display:flex; align-items:center; gap:20px;">
                     <img src="nova.png" alt="Nova" onerror="this.src='CineMind-Logo.png'">
                     <div>
-                        <h2>Nova AI Intelligence Hub</h2>
-                        <p>Describe any plot, vibe, or specific movie combination and Nova will verify & rank candidates!</p>
+                        <h2>Nova AI Intelligence Hub <span style="font-size:0.8rem; background:rgba(16,185,129,0.2); color:#10b981; padding:4px 10px; border-radius:12px; vertical-align:middle; margin-left:8px;">Contextual Memory Active</span></h2>
+                        <p>Describe any vague plot (e.g. "poor family infiltrates a rich household"), scene, twist, or follow up on previous suggestions!</p>
                     </div>
                 </div>
+                <button class="filter-pill" onclick="clearNovaMemory()"><i class="fa-solid fa-broom"></i> Clear Memory</button>
             </div>
             <div class="nova-chat-box-large glass-panel" style="border-radius: 28px; padding: 30px; display: flex; flex-direction: column; gap: 20px; background: var(--panel-bg); border: 1px solid var(--glass-border);">
-                <div class="nova-history-large" id="novaEnlargedHistory" style="height: 260px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; background: rgba(3, 1, 10, 0.9); padding: 22px; border-radius: 20px; border: 1px solid var(--glass-border);">
-                    <div class="chat-bubble ai-bubble">Hi ${currentUser || 'Guest'}! 👽 Tell me a plot you vaguely remember or the exact mood you want tonight!</div>
-                </div>
+                <div class="nova-history-large" id="novaEnlargedHistory" style="height: 290px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; background: rgba(3, 1, 10, 0.9); padding: 22px; border-radius: 20px; border: 1px solid var(--glass-border);"></div>
                 <div class="quick-chips">
-                    <span class="chip" onclick="sendEnlargedPrompt('Korean romcom')">🇰🇷 Korean Romcom</span>
-                    <span class="chip" onclick="sendEnlargedPrompt('Mind-bending sci-fi')">🧠 Sci-Fi</span>
-                    <span class="chip" onclick="sendEnlargedPrompt('Heartbreaking sad romance')">💔 Sad Romance</span>
-                    <span class="chip" onclick="sendEnlargedPrompt('Movie where a poor family infiltrates a rich household')">🕵️ Plot Search</span>
+                    <span class="chip" onclick="sendEnlargedPrompt('The movie about a poor family who infiltrates a rich household')">🕵️ "Poor family infiltrates a rich household"</span>
+                    <span class="chip" onclick="sendEnlargedPrompt('That movie where a guy wakes up and relives the same day over and over')">⏳ "Guy relives the same day"</span>
+                    <span class="chip" onclick="sendEnlargedPrompt('I forgot the name, a guy has short-term memory loss and uses tattoos to find his wife\\'s killer')">🧩 "Memory loss & tattoos"</span>
+                    <span class="chip" onclick="sendEnlargedPrompt('Give me something similar to the first movie you recommended, but darker')">🔄 Follow-Up Test</span>
                 </div>
                 <div class="nova-input-row" style="display: flex; gap: 12px;">
-                    <input type="text" id="novaEnlargedInput" placeholder="Ask Nova anything..." autocomplete="off" style="flex: 1; background: #160f38; border: 1px solid var(--glass-border); border-radius: 26px; padding: 14px 22px; outline: none; font-size: 0.98rem; color: white;">
+                    <input type="text" id="novaEnlargedInput" placeholder="Describe a plot, scene, or ask a follow-up..." autocomplete="off" style="flex: 1; background: #160f38; border: 1px solid var(--glass-border); border-radius: 26px; padding: 14px 22px; outline: none; font-size: 0.98rem; color: white;">
                     <button class="btn-action" id="novaEnlargedSendBtn"><i class="fa-solid fa-paper-plane"></i> Send</button>
                 </div>
             </div>
-            <h3 class="row-title" id="novaResultsTitle" style="margin-top: 10px;"><i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> Neural Recommendations</h3>
-            <div id="novaVerticalGrid" class="movie-grid">
-                <p style="color: var(--text-muted); font-weight:500;">Enter a prompt above to generate recommendations.</p>
-            </div>
+            <h3 class="row-title" id="novaResultsTitle" style="margin-top: 10px;"><i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> ${lastNovaQuery ? `Neural Matches for "${escapeHTML(lastNovaQuery)}"` : 'Neural Recommendations'}</h3>
+            <div id="novaVerticalGrid" class="movie-grid"></div>
         </div>
     `;
     
+    const enlargedHistory = document.getElementById('novaEnlargedHistory');
+    renderChatHistoryInto(enlargedHistory);
+
+    const vGrid = document.getElementById('novaVerticalGrid');
+    if (lastNovaMovies && lastNovaMovies.length > 0) {
+        lastNovaMovies.forEach(m => vGrid.appendChild(createMovieCard(m, true, lastNovaQuery)));
+    } else {
+        vGrid.innerHTML = `<p style="color: var(--text-muted); font-weight:500;">Try clicking one of the plot prompts above or ask Nova anything!</p>`;
+    }
+
     const inputField = document.getElementById('novaEnlargedInput');
     const sendButton = document.getElementById('novaEnlargedSendBtn');
     
@@ -1214,48 +1255,8 @@ function renderEnlargedNovaView() {
         playSciFiChime();
         const msg = promptText || inputField.value.trim();
         if (!msg) return;
-        
-        const historyDiv = document.getElementById('novaEnlargedHistory');
-        historyDiv.innerHTML += `<div class="chat-bubble user-bubble">${escapeHTML(msg)}</div>`;
-        if(!promptText) inputField.value = '';
-        
-        historyDiv.innerHTML += `<div class="chat-bubble ai-bubble"><i class="fa-solid fa-spinner fa-spin"></i> Processing neural query vectors...</div>`;
-        historyDiv.scrollTop = historyDiv.scrollHeight;
-        const typingInd = historyDiv.lastChild;
-        
-        try {
-            const response = await fetch(`${BACKEND_URL}/chat`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    message: msg,
-                    profile: {
-                        name: currentUser || 'Guest',
-                        favorite_genres: userGenres.map(id => GENRE_OPTIONS[id]).filter(Boolean),
-                        origin_country: selectedCountry
-                    },
-                    region: selectedRegion,
-                    history: conversationHistory
-                })
-            });
-            const data = await response.json();
-            typingInd.remove();
-            historyDiv.innerHTML += `<div class="chat-bubble ai-bubble">${escapeHTML(data.reply)}</div>`;
-            historyDiv.scrollTop = historyDiv.scrollHeight;
-            
-            conversationHistory.push({ role: "user", content: msg });
-            conversationHistory.push({ role: "assistant", content: data.reply });
-            
-            if (data.movies && data.movies.length > 0) {
-                document.getElementById('novaResultsTitle').innerHTML = `<i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> Neural Matches for "${escapeHTML(msg)}"`;
-                const vGrid = document.getElementById('novaVerticalGrid');
-                vGrid.innerHTML = '';
-                data.movies.forEach(movie => vGrid.appendChild(createMovieCard(movie, true, msg)));
-            }
-        } catch (err) {
-            typingInd.remove();
-            historyDiv.innerHTML += `<div class="chat-bubble ai-bubble">Connection error. Ensure Render backend is active.</div>`;
-        }
+        if (!promptText) inputField.value = '';
+        await sendToNovaEngine(msg, true);
     };
     
     sendButton.onclick = () => executeEnlargedChat();
@@ -1439,14 +1440,13 @@ document.getElementById('watchedBtn').onclick = () => {
     if (currentView === 'watched') navItems[5].click();
 };
  
-// ---------------- FLOATING NOVA CHAT WIDGET ----------------
+// ---------------- UNIFIED SUPER-NOVA CHAT ENGINE ----------------
 const chatToggle = document.getElementById('chatToggle');
 const chatModal = document.getElementById('chatModal');
 const closeChat = document.getElementById('closeChat');
 const chatTooltip = document.getElementById('chatTooltip');
 const chatInput = document.getElementById('chatInput');
 const sendBtn = document.getElementById('sendBtn');
-const chatHistory = document.getElementById('chatHistory');
  
 chatToggle.onclick = () => {
     playSciFiChime();
@@ -1456,24 +1456,22 @@ chatToggle.onclick = () => {
 };
 closeChat.onclick = () => { chatModal.classList.remove('active'); chatTooltip.style.display = 'block'; };
  
-function addBubble(text, sender) {
-    const bubble = document.createElement('div');
-    bubble.className = `chat-bubble ${sender}-bubble`;
-    bubble.innerHTML = text;
-    chatHistory.appendChild(bubble);
-    chatHistory.scrollTop = chatHistory.scrollHeight;
+function appendBubbleToBothChats(text, sender, isHTML = false) {
+    [chatHistory, document.getElementById('novaEnlargedHistory')].forEach(box => {
+        if (!box) return;
+        const bubble = document.createElement('div');
+        bubble.className = `chat-bubble ${sender}-bubble`;
+        if (isHTML) bubble.innerHTML = text;
+        else bubble.textContent = text;
+        box.appendChild(bubble);
+        box.scrollTop = box.scrollHeight;
+    });
 }
- 
-async function handleChat(queryText) {
-    playSciFiChime();
-    const message = queryText || chatInput.value.trim();
-    if (!message) return;
-    
-    addBubble(escapeHTML(message), 'user');
-    chatInput.value = '';
-    addBubble(`<i class="fa-solid fa-spinner fa-spin"></i> Analyzing cinematic vectors for ${currentUser || 'Guest'}...`, 'ai');
-    const typingIndicator = chatHistory.lastChild;
-    
+
+async function sendToNovaEngine(message, fromEnlargedView = false) {
+    appendBubbleToBothChats(message, 'user', false);
+    appendBubbleToBothChats(`<i class="fa-solid fa-spinner fa-spin"></i> Nova is thinking & verifying plot vectors...`, 'ai', true);
+
     try {
         const response = await fetch(`${BACKEND_URL}/chat`, {
             method: 'POST',
@@ -1490,32 +1488,72 @@ async function handleChat(queryText) {
             })
         });
         const data = await response.json();
-        typingIndicator.remove();
-        addBubble(escapeHTML(data.reply), 'ai');
-        
+
+        // Remove typing spinners
+        [chatHistory, document.getElementById('novaEnlargedHistory')].forEach(box => {
+            if (box && box.lastChild && box.lastChild.innerHTML.includes('fa-spinner')) {
+                box.lastChild.remove();
+            }
+        });
+
+        const replyText = data.reply || "Here are the best matches I found!";
+        appendBubbleToBothChats(replyText, 'ai', false);
+
+        // Store memory including what movies Nova just showed so follow-up questions work!
+        const movieContextNote = (data.movies && data.movies.length)
+            ? ` [Movies shown to user: ${data.movies.slice(0, 5).map(m => `${m.title} (${(m.release_date || '').slice(0,4)})`).join(', ')}]`
+            : '';
         conversationHistory.push({ role: "user", content: message });
-        conversationHistory.push({ role: "assistant", content: data.reply });
-        
+        conversationHistory.push({ role: "assistant", content: replyText + movieContextNote });
+
         if (data.movies && data.movies.length > 0) {
-            infiniteMode = "none";
-            infiniteSentinel.style.display = "none";
-            heroBanner.style.display = "none";
-            filterPanel.style.display = "none";
-            mainContainer.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-                    <h3 class="row-title"><i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> Nova AI Matches for "${escapeHTML(message)}"</h3>
-                    <button class="filter-pill" onclick="heroBanner.style.display='flex';filterPanel.style.display='flex';initEndlessNetflixHome();"><i class="fa-solid fa-arrow-left"></i> Back to Endless Home</button>
-                </div>
-            `;
-            const grid = document.createElement('div');
-            grid.className = 'movie-grid';
-            data.movies.forEach(movie => grid.appendChild(createMovieCard(movie, true, message)));
-            mainContainer.appendChild(grid);
+            lastNovaMovies = data.movies;
+            lastNovaQuery = message;
+            saveNovaMemory();
+
+            if (currentView === 'nova') {
+                const titleEl = document.getElementById('novaResultsTitle');
+                const vGrid = document.getElementById('novaVerticalGrid');
+                if (titleEl) titleEl.innerHTML = `<i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> Neural Matches for "${escapeHTML(message)}"`;
+                if (vGrid) {
+                    vGrid.innerHTML = '';
+                    data.movies.forEach(movie => vGrid.appendChild(createMovieCard(movie, true, message)));
+                }
+            } else {
+                infiniteMode = "none";
+                infiniteSentinel.style.display = "none";
+                heroBanner.style.display = "none";
+                filterPanel.style.display = "none";
+                mainContainer.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                        <h3 class="row-title"><i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> Nova AI Matches for "${escapeHTML(message)}"</h3>
+                        <button class="filter-pill" onclick="heroBanner.style.display='flex';filterPanel.style.display='flex';initEndlessNetflixHome();"><i class="fa-solid fa-arrow-left"></i> Back to Endless Home</button>
+                    </div>
+                `;
+                const grid = document.createElement('div');
+                grid.className = 'movie-grid';
+                data.movies.forEach(movie => grid.appendChild(createMovieCard(movie, true, message)));
+                mainContainer.appendChild(grid);
+            }
+        } else {
+            saveNovaMemory();
         }
     } catch (error) {
-        typingIndicator.remove();
-        addBubble(`Could not connect to Render server. Make sure your backend service is live.`, 'ai');
+        [chatHistory, document.getElementById('novaEnlargedHistory')].forEach(box => {
+            if (box && box.lastChild && box.lastChild.innerHTML.includes('fa-spinner')) {
+                box.lastChild.remove();
+            }
+        });
+        appendBubbleToBothChats("Could not connect to Render server. Make sure your backend service is live.", 'ai', false);
     }
+}
+ 
+async function handleChat(queryText) {
+    playSciFiChime();
+    const message = queryText || chatInput.value.trim();
+    if (!message) return;
+    if (!queryText) chatInput.value = '';
+    await sendToNovaEngine(message, false);
 }
  
 window.sendQuickPrompt = (prompt) => handleChat(prompt);
