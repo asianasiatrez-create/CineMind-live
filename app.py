@@ -13,10 +13,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 CORS(app)
 
-# Set these in Render -> Environment (use NEW rotated keys)
-TMDB_API_KEY = os.environ.get("7c7e21b0fe58e5868e262c9bd6b8e7e9", "").strip().strip('"').strip("'")
-GROQ_API_KEY = os.environ.get("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", "").strip().strip('"').strip("'")
-OMDB_API_KEY = os.environ.get("554ae239", "").strip().strip('"').strip("'")
+# Set these in Render -> Environment (using your live rotated keys)
+TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "7c7e21b0fe58e5868e262c9bd6b8e7e9").strip().strip('"').strip("'")
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "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").strip().strip('"').strip("'")
+OMDB_API_KEY = os.environ.get("OMDB_API_KEY", "554ae239").strip().strip('"').strip("'")
 
 DB_NAME = "cinemind.db"
 TMDB = "https://api.themoviedb.org/3"
@@ -46,7 +46,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Production Engine Live", "version": "9.0"})
+    return jsonify({"status": "CineMind Production Engine Live", "version": "9.5"})
 
 
 # ------------------------- AUTH -------------------------
@@ -173,7 +173,7 @@ def omdb_info():
         return jsonify({})
     try:
         o = requests.get("https://www.omdbapi.com/",
-                         params={"apikey": OMDB_API_KEY, "t": title, "y": year}, timeout=4).json()
+                           params={"apikey": OMDB_API_KEY, "t": title, "y": year}, timeout=4).json()
         if o.get("Response") == "True":
             return jsonify({"imdbRating": o.get("imdbRating"), "runtime": o.get("Runtime"),
                             "director": o.get("Director"), "awards": o.get("Awards")})
@@ -214,10 +214,12 @@ def groq_json(system, user, timeout=10):
     return None
 
 
-# Step 1: Groq understands the request
+# Step 1: Groq understands the request & intent (including plot search)
 def extract_intent(message, history):
     system = (
         "You extract movie preferences. Return ONLY a JSON object with these keys:\n"
+        '"intent": "recommend" | "similar_to" | "plot_search" | "chitchat" | "question",\n'
+        '"plot_guesses": [{"title": "...", "year": 1993}],\n'
         f'"genres": list from [{GENRE_LIST}],\n'
         '"exclude_genres": list of genres the user does NOT want,\n'
         '"year_from": integer or null, "year_to": integer or null,\n'
@@ -227,13 +229,17 @@ def extract_intent(message, history):
         '"keywords": list of themes/plots (e.g. "time travel"),\n'
         '"similar_to": list of movie titles the user says they like,\n'
         '"exclude_titles": list of movie titles the user has seen or dislikes.\n'
-        "Use earlier conversation to resolve follow-ups like 'something newer'."
+        "Use earlier conversation to resolve follow-ups like 'something newer'.\n"
+        "If the user describes a plot, scene, twist, character, or says things like 'what's that movie where...', "
+        "'I forgot the name', 'movie about a guy who...', use intent plot_search. Put your best 3-6 guesses of "
+        "the actual movie in plot_guesses (most likely first, with release year if you know it), and fill "
+        "keywords with 2-4 plot keywords (e.g. 'time loop', 'amnesia', 'heist')."
     )
     ctx = "\n".join(f'{h.get("role")}: {h.get("content")}' for h in (history or [])[-6:] if isinstance(h, dict))
     return groq_json(system, f"Conversation so far:\n{ctx}\n\nLatest request: {message}") or {}
 
 
-# Step 2: TMDB finds real candidates
+# Step 2: TMDB finds real candidates or plot search hits
 def find_movie_id(title):
     res = tmdb("/search/movie", query=title).get("results", [])
     return res[0]["id"] if res else None
@@ -248,7 +254,43 @@ def keyword_ids(words):
     return ids
 
 
+def plot_search(p):
+    results, seen = [], set()
+
+    # 1) Verify the LLM's guesses on TMDB
+    for g in p.get("plot_guesses", [])[:6]:
+        title, year = g.get("title"), g.get("year")
+        if not title:
+            continue
+        params = {"query": title}
+        if year:
+            params["year"] = year
+        hits = tmdb("/search/movie", **params).get("results", [])
+        if not hits and year:
+            hits = tmdb("/search/movie", query=title).get("results", [])
+        if hits and hits[0]["id"] not in seen:
+            seen.add(hits[0]["id"])
+            results.append(hits[0])
+
+    # 2) Backup: match on plot keywords
+    if len(results) < 4:
+        kws = keyword_ids(p.get("keywords", []))
+        if kws:
+            extra = tmdb("/discover/movie", with_keywords="|".join(kws),
+                         sort_by="popularity.desc", **{"vote_count.gte": 50}).get("results", [])
+            for m in extra:
+                if m["id"] not in seen:
+                    seen.add(m["id"])
+                    results.append(m)
+    return results
+
+
 def gather_candidates(intent, region=None):
+    if intent.get("intent") == "plot_search":
+        found = plot_search(intent)
+        if found:
+            return found
+
     cands = {}
 
     def add(movies, bonus=0):
@@ -399,8 +441,8 @@ def chat():
 @app.route("/trends", methods=["GET"])
 def trends():
     return jsonify({
-        "ai_forecast": "Groq + TMDB pipeline online.",
-        "trending_genres": ["Groq Intent Understanding", "TMDB Real-Movie Discovery", "CineHub Personal Ranking"]
+        "ai_forecast": "Groq + TMDB + Plot Search pipeline online.",
+        "trending_genres": ["Groq Intent Understanding", "TMDB Plot Verification", "CineHub Personal Ranking"]
     })
 
 
