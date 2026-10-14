@@ -4,23 +4,24 @@ import json
 import sqlite3
 import hashlib
 from datetime import date
-
+ 
 import requests
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
-
+ 
 app = Flask(__name__)
 CORS(app)
-
-# Correct environment variable lookups (Name first, fallback key second)
-TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "7c7e21b0fe58e5868e262c9bd6b8e7e9").strip().strip('"').strip("'")
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "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").strip().strip('"').strip("'")
-OMDB_API_KEY = os.environ.get("OMDB_API_KEY", "554ae239").strip().strip('"').strip("'")
-
+ 
+# Set these in Render -> Environment (use NEW rotated keys)
+TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "").strip().strip('"').strip("'")
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "").strip().strip('"').strip("'")
+OMDB_API_KEY = os.environ.get("OMDB_API_KEY", "").strip().strip('"').strip("'")
+ 
 DB_NAME = "cinemind.db"
 TMDB = "https://api.themoviedb.org/3"
-
+IMG = "https://image.tmdb.org/t/p/w500"
+ 
 GENRES = {
     "action": 28, "adventure": 12, "animation": 16, "comedy": 35, "crime": 80,
     "documentary": 99, "drama": 18, "family": 10751, "fantasy": 14, "history": 36,
@@ -28,53 +29,61 @@ GENRES = {
     "sci-fi": 878, "science fiction": 878, "thriller": 53, "war": 10752, "western": 37,
 }
 GENRE_LIST = ", ".join(GENRES.keys())
-
-
+GENRE_ID_TO_NAME = {v: k for k, v in reversed(list(GENRES.items()))}
+ 
+ 
 # ------------------------- DATABASE -------------------------
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, password TEXT NOT NULL)''')
+    try:
+        c.execute("ALTER TABLE users ADD COLUMN genres TEXT DEFAULT '[]'")
+    except sqlite3.OperationalError:
+        pass  # column already exists
     c.execute('''CREATE TABLE IF NOT EXISTS watchlist (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL, movie_id INTEGER NOT NULL, title TEXT NOT NULL, poster TEXT, vote_average REAL, UNIQUE(username, movie_id))''')
     c.execute('''CREATE TABLE IF NOT EXISTS favorites (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL, movie_id INTEGER NOT NULL, title TEXT NOT NULL, poster TEXT, vote_average REAL, UNIQUE(username, movie_id))''')
     c.execute('''CREATE TABLE IF NOT EXISTS interactions (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL, movie_id INTEGER NOT NULL, title TEXT NOT NULL, action TEXT NOT NULL, vote_average REAL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
     conn.commit()
     conn.close()
-
+ 
 init_db()
-
-
+ 
+ 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Production Engine Live", "version": "10.0"})
-
-
+    return jsonify({"status": "CineMind Production Engine Live", "version": "9.1"})
+ 
+ 
 # ------------------------- AUTH -------------------------
 @app.route("/api/signup", methods=["POST"])
 def signup():
     data = request.get_json() or {}
     username = data.get("username", "").strip().lower()
     password = data.get("password", "")
+    genres = [int(g) for g in (data.get("genres") or []) if str(g).isdigit()][:5]
     if not username or len(password) < 6:
         return jsonify({"success": False, "message": "Username required and password must be 6+ characters."}), 400
+    if not genres:
+        return jsonify({"success": False, "message": "Please pick at least one genre."}), 400
     try:
         conn = sqlite3.connect(DB_NAME)
-        conn.execute("INSERT INTO users (username, password) VALUES (?, ?)",
-                     (username, generate_password_hash(password)))
+        conn.execute("INSERT INTO users (username, password, genres) VALUES (?, ?, ?)",
+                     (username, generate_password_hash(password), json.dumps(genres)))
         conn.commit()
         conn.close()
         return jsonify({"success": True, "message": "Account created successfully!"})
     except sqlite3.IntegrityError:
         return jsonify({"success": False, "message": "Username already exists."}), 400
-
-
+ 
+ 
 @app.route("/api/login", methods=["POST"])
 def login():
     data = request.get_json() or {}
     username = data.get("username", "").strip().lower()
     password = data.get("password", "")
     conn = sqlite3.connect(DB_NAME)
-    row = conn.execute("SELECT password FROM users WHERE username = ?", (username,)).fetchone()
+    row = conn.execute("SELECT password, genres FROM users WHERE username = ?", (username,)).fetchone()
     ok = False
     if row:
         stored = row[0]
@@ -87,11 +96,30 @@ def login():
             conn.commit()
     conn.close()
     if ok:
-        return jsonify({"success": True, "username": username, "message": "Login successful!"})
+        try:
+            genres = json.loads(row[1] or "[]")
+        except Exception:
+            genres = []
+        return jsonify({"success": True, "username": username, "genres": genres, "message": "Login successful!"})
     return jsonify({"success": False, "message": "Invalid username or password."}), 401
-
-
+ 
+ 
 # ------------------------- LIBRARY -------------------------
+def rows_to_movies(c, table, username):
+    """Return saved movies; backfill any missing poster from TMDB and persist it."""
+    c.execute(f"SELECT movie_id, title, poster, vote_average FROM {table} WHERE username = ?", (username,))
+    out = []
+    for mid, title, poster, va in c.fetchall():
+        if not poster:
+            d = tmdb(f"/movie/{mid}")
+            if d.get("poster_path"):
+                poster = f"{IMG}{d['poster_path']}"
+                c.execute(f"UPDATE {table} SET poster = ? WHERE username = ? AND movie_id = ?",
+                          (poster, username, mid))
+        out.append({"id": mid, "title": title, "poster": poster, "vote_average": va})
+    return out
+ 
+ 
 @app.route("/api/user/library", methods=["GET"])
 def get_library():
     username = request.args.get("username", "").strip().lower()
@@ -99,14 +127,13 @@ def get_library():
         return jsonify({"watchlist": [], "favorites": []})
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
-    c.execute("SELECT movie_id, title, poster, vote_average FROM watchlist WHERE username = ?", (username,))
-    watchlist = [{"id": r[0], "title": r[1], "poster": r[2], "vote_average": r[3]} for r in c.fetchall()]
-    c.execute("SELECT movie_id, title, poster, vote_average FROM favorites WHERE username = ?", (username,))
-    favorites = [{"id": r[0], "title": r[1], "poster": r[2], "vote_average": r[3]} for r in c.fetchall()]
+    watchlist = rows_to_movies(c, "watchlist", username)
+    favorites = rows_to_movies(c, "favorites", username)
+    conn.commit()
     conn.close()
     return jsonify({"watchlist": watchlist, "favorites": favorites})
-
-
+ 
+ 
 @app.route("/api/user/library/toggle", methods=["POST"])
 def toggle_library():
     data = request.get_json() or {}
@@ -117,7 +144,8 @@ def toggle_library():
         return jsonify({"success": False, "message": "Invalid payload."}), 400
     movie_id = movie.get("id")
     title = movie.get("title") or movie.get("name")
-    poster = movie.get("poster") or ""
+    poster = movie.get("poster") or (
+        f"{IMG}{movie['poster_path']}" if movie.get("poster_path") else "")
     vote_average = movie.get("vote_average", 0.0)
     table = "watchlist" if lib_type == "watchlist" else "favorites"
     conn = sqlite3.connect(DB_NAME)
@@ -135,8 +163,8 @@ def toggle_library():
     conn.commit()
     conn.close()
     return jsonify({"success": True, "action": action})
-
-
+ 
+ 
 @app.route("/api/user/insights", methods=["GET"])
 def get_insights():
     username = request.args.get("username", "").strip().lower()
@@ -149,10 +177,10 @@ def get_insights():
     c.execute("SELECT COUNT(*) FROM watchlist WHERE username = ?", (username,))
     total_watchlist = c.fetchone()[0]
     conn.close()
-
+ 
     rated = [r[1] for r in interactions if r[1]]
     avg_rating = sum(rated) / len(rated) if rated else 0.0
-
+ 
     return jsonify({
         "username": username or "Guest",
         "total_recommendations_viewed": len(interactions),
@@ -162,8 +190,8 @@ def get_insights():
         "dominant_mood": "Multi-API Neural Match",
         "genre_distribution": {"Drama": 35, "Sci-Fi": 25, "Romance": 20, "Action": 20}
     })
-
-
+ 
+ 
 # ------------------------- OMDb (modal only) -------------------------
 @app.route("/api/omdb", methods=["GET"])
 def omdb_info():
@@ -173,15 +201,15 @@ def omdb_info():
         return jsonify({})
     try:
         o = requests.get("https://www.omdbapi.com/",
-                           params={"apikey": OMDB_API_KEY, "t": title, "y": year}, timeout=4).json()
+                         params={"apikey": OMDB_API_KEY, "t": title, "y": year}, timeout=4).json()
         if o.get("Response") == "True":
             return jsonify({"imdbRating": o.get("imdbRating"), "runtime": o.get("Runtime"),
                             "director": o.get("Director"), "awards": o.get("Awards")})
     except Exception:
         pass
     return jsonify({})
-
-
+ 
+ 
 # ------------------------- NOVA PIPELINE -------------------------
 def tmdb(path, **params):
     params["api_key"] = TMDB_API_KEY
@@ -190,8 +218,8 @@ def tmdb(path, **params):
         return r.json() if r.status_code == 200 else {}
     except Exception:
         return {}
-
-
+ 
+ 
 def groq_json(system, user, timeout=10):
     if not GROQ_API_KEY:
         return None
@@ -212,14 +240,12 @@ def groq_json(system, user, timeout=10):
     except Exception:
         pass
     return None
-
-
-# Step 1: Groq understands request & intent
+ 
+ 
+# Step 1: Groq understands the request
 def extract_intent(message, history):
     system = (
         "You extract movie preferences. Return ONLY a JSON object with these keys:\n"
-        '"intent": "recommend" | "similar_to" | "plot_search" | "chitchat" | "question",\n'
-        '"plot_guesses": [{"title": "...", "year": 1993}],\n'
         f'"genres": list from [{GENRE_LIST}],\n'
         '"exclude_genres": list of genres the user does NOT want,\n'
         '"year_from": integer or null, "year_to": integer or null,\n'
@@ -233,14 +259,27 @@ def extract_intent(message, history):
     )
     ctx = "\n".join(f'{h.get("role")}: {h.get("content")}' for h in (history or [])[-6:] if isinstance(h, dict))
     return groq_json(system, f"Conversation so far:\n{ctx}\n\nLatest request: {message}") or {}
-
-
+ 
+ 
+def get_user_genre_names(username):
+    """Genres the user picked at sign-up, as names usable by the pipeline."""
+    if not username or username == "Guest":
+        return []
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        r = conn.execute("SELECT genres FROM users WHERE username = ?", (username.lower(),)).fetchone()
+        conn.close()
+        return [GENRE_ID_TO_NAME[g] for g in json.loads((r and r[0]) or "[]") if g in GENRE_ID_TO_NAME]
+    except Exception:
+        return []
+ 
+ 
 # Step 2: TMDB finds real candidates
 def find_movie_id(title):
     res = tmdb("/search/movie", query=title).get("results", [])
     return res[0]["id"] if res else None
-
-
+ 
+ 
 def keyword_ids(words):
     ids = []
     for w in (words or [])[:3]:
@@ -248,55 +287,22 @@ def keyword_ids(words):
         if r:
             ids.append(str(r[0]["id"]))
     return ids
-
-
-def plot_search(p):
-    results, seen = [], set()
-    for g in p.get("plot_guesses", [])[:6]:
-        title, year = g.get("title"), g.get("year")
-        if not title:
-            continue
-        params = {"query": title}
-        if year:
-            params["year"] = year
-        hits = tmdb("/search/movie", **params).get("results", [])
-        if not hits and year:
-            hits = tmdb("/search/movie", query=title).get("results", [])
-        if hits and hits[0]["id"] not in seen:
-            seen.add(hits[0]["id"])
-            results.append(hits[0])
-
-    if len(results) < 4:
-        kws = keyword_ids(p.get("keywords", []))
-        if kws:
-            extra = tmdb("/discover/movie", with_keywords="|".join(kws),
-                         sort_by="popularity.desc", **{"vote_count.gte": 50}).get("results", [])
-            for m in extra:
-                if m["id"] not in seen:
-                    seen.add(m["id"])
-                    results.append(m)
-    return results
-
-
+ 
+ 
 def gather_candidates(intent, region=None):
-    if intent.get("intent") == "plot_search":
-        found = plot_search(intent)
-        if found:
-            return found
-
     cands = {}
-
+ 
     def add(movies, bonus=0):
         for m in movies:
             if m.get("id") and m.get("poster_path"):
                 m["_bonus"] = max(m.get("_bonus", 0), bonus)
                 cands.setdefault(m["id"], m)
-
+ 
     for t in (intent.get("similar_to") or [])[:2]:
         mid = find_movie_id(t)
         if mid:
             add(tmdb(f"/movie/{mid}/recommendations").get("results", []), bonus=1.0)
-
+ 
     p = {"include_adult": "false", "vote_count.gte": 150, "language": "en-US"}
     gids = [str(GENRES[g.lower()]) for g in intent.get("genres") or [] if g.lower() in GENRES]
     xids = [str(GENRES[g.lower()]) for g in intent.get("exclude_genres") or [] if g.lower() in GENRES]
@@ -311,7 +317,7 @@ def gather_candidates(intent, region=None):
         pass
     kws = keyword_ids(intent.get("keywords"))
     if kws: p["with_keywords"] = "|".join(kws)
-
+ 
     sort = {"rating": "vote_average.desc", "newest": "primary_release_date.desc"}.get(
         intent.get("sort"), "popularity.desc")
     p["sort_by"] = sort
@@ -319,23 +325,23 @@ def gather_candidates(intent, region=None):
         p["vote_count.gte"] = 500
     if sort == "primary_release_date.desc":
         p["primary_release_date.lte"] = p.get("primary_release_date.lte", date.today().isoformat())
-
+ 
     if region:
         rp = dict(p, watch_region=region, with_watch_monetization_types="flatrate")
         for page in (1, 2):
             add(tmdb("/discover/movie", page=page, **rp).get("results", []), bonus=0.5)
-
+ 
     if len(cands) < 6:
         for page in (1, 2):
             add(tmdb("/discover/movie", page=page, **p).get("results", []))
-
+ 
     if len(cands) < 6 and "with_keywords" in p:
         p.pop("with_keywords")
         add(tmdb("/discover/movie", **p).get("results", []))
     return list(cands.values())
-
-
-# Step 3: Filtering & ranking
+ 
+ 
+# Step 3: CineHub logic filters + ranks
 def get_seen_ids(username):
     if not username or username == "Guest":
         return set()
@@ -349,12 +355,12 @@ def get_seen_ids(username):
         ids.update(r[0] for r in c.fetchall())
     conn.close()
     return ids
-
-
+ 
+ 
 def norm(t):
     return re.sub(r"[^a-z0-9]", "", (t or "").lower())
-
-
+ 
+ 
 def rank(cands, intent, seen_ids):
     blocked = {norm(t) for t in (intent.get("exclude_titles") or [])}
     blocked |= {norm(t) for t in (intent.get("similar_to") or [])}
@@ -374,9 +380,9 @@ def rank(cands, intent, seen_ids):
         for m in top:
             m["_match"] = max(70, min(99, int(70 + 29 * (m["_score"] / best) ** 2)))
     return top
-
-
-# Step 4: Groq explains results
+ 
+ 
+# Step 4: Groq explains the REAL results
 def explain(message, username, movies):
     listing = [{"id": m["id"], "title": m["title"], "year": (m.get("release_date") or "")[:4],
                 "overview": (m.get("overview") or "")[:200]} for m in movies]
@@ -386,8 +392,8 @@ def explain(message, username, movies):
         "Only mention movies from the provided list. Never invent titles."
     )
     return groq_json(system, f"Request: {message}\nMovies: {json.dumps(listing)}") or {}
-
-
+ 
+ 
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.get_json() or {}
@@ -395,55 +401,56 @@ def chat():
     username = (data.get("profile") or {}).get("name", "Guest")
     history = data.get("history") or []
     region = (data.get("region") or "").upper() or None
-
+ 
     if not message:
         return jsonify({"reply": f"Hey {username}! Tell me what kind of movie you're looking for.", "movies": []})
-
+ 
     intent = extract_intent(message, history)
+ 
+    # No genre/theme in the request -> fall back to the genres picked at sign-up
+    if not intent.get("genres") and not intent.get("similar_to") and not intent.get("keywords"):
+        pref = get_user_genre_names(username)
+        if pref:
+            intent["genres"] = pref
+ 
     cands = gather_candidates(intent, region)
-    
-    # Guarantee refresh fallback if candidate results are empty or stale
-    if not cands or len(cands) < 4:
-        search_res = tmdb("/search/movie", query=message).get("results", [])
-        trending_res = tmdb("/trending/movie/week").get("results", [])
-        cands = search_res + trending_res
+    if not cands:
+        cands = tmdb("/search/movie", query=message).get("results", []) \
+            or tmdb("/trending/movie/week").get("results", [])
         cands = [m for m in cands if m.get("poster_path")]
-
+ 
     top = rank(cands, intent, get_seen_ids(username))
-    if not top and cands:
-        top = cands[:8]
-
     if not top:
-        return jsonify({"reply": "I couldn't find anything matching that. Try loosening your filters!",
+        return jsonify({"reply": "I couldn't find anything new matching that. Try loosening your filters!",
                         "movies": [], "success": True})
-
+ 
     ex = explain(message, username, top)
     reasons = ex.get("reasons", {}) if isinstance(ex.get("reasons"), dict) else {}
     reply = ex.get("reply") or f"Here are some matches for '{message}', {username}!"
-
+ 
     movies = [{
         "id": m["id"],
         "title": m["title"],
-        "poster": f"https://image.tmdb.org/t/p/w500{m['poster_path']}",
+        "poster": f"{IMG}{m['poster_path']}",
         "vote_average": m.get("vote_average", 0.0),
         "vote_count": m.get("vote_count", 0),
         "release_date": m.get("release_date", ""),
         "overview": m.get("overview", ""),
-        "match": m.get("_match", 95),
+        "match": m["_match"],
         "platforms": [region or "Global"],
-        "rationale": reasons.get(str(m["id"])) or f"Dynamic neural match for '{message}'.",
+        "rationale": reasons.get(str(m["id"])) or "Matches your request based on genre, rating and popularity.",
     } for m in top]
-
+ 
     return jsonify({"reply": reply, "movies": movies, "success": True})
-
-
+ 
+ 
 @app.route("/trends", methods=["GET"])
 def trends():
     return jsonify({
-        "ai_forecast": "Groq + TMDB + OMDb pipeline online.",
+        "ai_forecast": "Groq + TMDB pipeline online.",
         "trending_genres": ["Groq Intent Understanding", "TMDB Real-Movie Discovery", "CineHub Personal Ranking"]
     })
-
-
+ 
+ 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
