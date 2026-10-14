@@ -11,10 +11,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600&display=swap');
 
 :root {
-    --bg-deep: #03000c;
-    --sidebar-bg: rgba(8, 4, 24, 0.82);
-    --panel-bg: rgba(16, 10, 42, 0.68);
-    --card-bg: rgba(18, 11, 46, 0.85);
+    --bg-deep: #0d0628;
+    --sidebar-bg: rgba(16, 9, 44, 0.82);
+    --panel-bg: rgba(22, 13, 56, 0.68);
+    --card-bg: rgba(24, 14, 60, 0.85);
     --primary-glow: #d946ef;
     --secondary-glow: #00f2fe;
     --tertiary-glow: #7c3aed;
@@ -23,54 +23,60 @@
     --glass-border-hover: rgba(217, 70, 239, 0.75);
     --text-main: #ffffff;
     --text-muted: #a5b4fc;
-    --input-bg: rgba(5, 2, 18, 0.92);
-    --modal-bg: linear-gradient(135deg, #130938, #060214);
-    --shadow-heavy: 0 25px 65px rgba(0, 0, 0, 0.88);
+    --input-bg: rgba(12, 6, 34, 0.92);
+    --modal-bg: linear-gradient(135deg, #190d48, #0c0524);
+    --shadow-heavy: 0 25px 65px rgba(5, 2, 18, 0.88);
+    --chat-history-bg: linear-gradient(160deg, rgba(16, 9, 44, 0.92), rgba(28, 14, 68, 0.88));
+    --ai-bubble-bg: rgba(34, 19, 82, 0.95);
+    --ai-bubble-text: #ffffff;
 }
 
-/* Light Mode Galaxy Day Palette */
+/* Light Mode Galaxy Day Palette (No pure white - rich nebula lavender & sky glow) */
 html[data-theme="light"] {
-    --bg-deep: #f3f0ff;
-    --sidebar-bg: rgba(255, 255, 255, 0.88);
-    --panel-bg: rgba(255, 255, 255, 0.82);
-    --card-bg: #ffffff;
+    --bg-deep: #e6e0ff;
+    --sidebar-bg: rgba(235, 230, 255, 0.86);
+    --panel-bg: rgba(230, 224, 255, 0.78);
+    --card-bg: rgba(242, 238, 255, 0.92);
     --primary-glow: #9333ea;
     --secondary-glow: #0284c7;
     --tertiary-glow: #6366f1;
     --accent-pink: #e11d48;
-    --glass-border: rgba(147, 51, 234, 0.22);
+    --glass-border: rgba(147, 51, 234, 0.26);
     --glass-border-hover: rgba(2, 132, 199, 0.65);
-    --text-main: #0f172a;
-    --text-muted: #475569;
-    --input-bg: #f8fafc;
-    --modal-bg: linear-gradient(135deg, #ffffff, #f1effe);
-    --shadow-heavy: 0 20px 50px rgba(99, 102, 241, 0.16);
+    --text-main: #1e1b4b;
+    --text-muted: #4c1d95;
+    --input-bg: rgba(224, 231, 255, 0.9);
+    --modal-bg: linear-gradient(135deg, #ede9fe, #e0f2fe);
+    --shadow-heavy: 0 20px 50px rgba(99, 102, 241, 0.2);
+    --chat-history-bg: linear-gradient(160deg, rgba(228, 222, 255, 0.95), rgba(218, 236, 255, 0.92));
+    --ai-bubble-bg: rgba(243, 240, 255, 0.96);
+    --ai-bubble-text: #1e1b4b;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; color: var(--text-main); -webkit-font-smoothing: antialiased; }
 html, body { width: 100%; min-height: 100vh; background-color: var(--bg-deep); overflow-x: hidden; -webkit-tap-highlight-color: transparent; transition: background-color 0.35s ease; }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: rgba(3, 1, 12, 0.4); }
+::-webkit-scrollbar-track { background: rgba(13, 6, 40, 0.4); }
 ::-webkit-scrollbar-thumb { background: linear-gradient(var(--secondary-glow), var(--primary-glow)); border-radius: 4px; }
 
-/* ---- Rich Galaxy Nebula & Animated Starfield Background ---- */
+/* ---- Rich Galaxy Logo-Palette Nebula & Animated Starfield Background ---- */
 .cosmic-bg {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background:
-        radial-gradient(circle at 12% 18%, rgba(0, 242, 254, 0.22) 0%, transparent 38%),
-        radial-gradient(circle at 88% 22%, rgba(217, 70, 239, 0.24) 0%, transparent 42%),
-        radial-gradient(circle at 50% 80%, rgba(124, 58, 237, 0.22) 0%, transparent 48%),
-        radial-gradient(circle at 30% 60%, rgba(244, 63, 94, 0.10) 0%, transparent 40%),
-        linear-gradient(160deg, #02000a 0%, #090320 50%, #03010d 100%);
+        radial-gradient(circle at 14% 18%, rgba(0, 242, 254, 0.28) 0%, transparent 42%),
+        radial-gradient(circle at 86% 22%, rgba(217, 70, 239, 0.30) 0%, transparent 45%),
+        radial-gradient(circle at 50% 80%, rgba(124, 58, 237, 0.32) 0%, transparent 52%),
+        radial-gradient(circle at 30% 60%, rgba(244, 63, 94, 0.14) 0%, transparent 42%),
+        linear-gradient(160deg, #0d0628 0%, #190a42 50%, #0f072e 100%);
     z-index: -2; pointer-events: none; overflow: hidden;
 }
 html[data-theme="light"] .cosmic-bg {
     background:
-        radial-gradient(circle at 15% 20%, rgba(56, 189, 248, 0.22) 0%, transparent 40%),
-        radial-gradient(circle at 85% 25%, rgba(192, 132, 252, 0.28) 0%, transparent 45%),
-        radial-gradient(circle at 50% 85%, rgba(99, 102, 241, 0.18) 0%, transparent 50%),
-        linear-gradient(160deg, #f5f3ff 0%, #e0f2fe 55%, #fae8ff 100%);
+        radial-gradient(circle at 15% 20%, rgba(56, 189, 248, 0.35) 0%, transparent 45%),
+        radial-gradient(circle at 85% 25%, rgba(192, 132, 252, 0.38) 0%, transparent 48%),
+        radial-gradient(circle at 50% 85%, rgba(129, 140, 248, 0.30) 0%, transparent 52%),
+        linear-gradient(160deg, #e6e0ff 0%, #ddd6fe 45%, #bae6fd 100%);
 }
 .cosmic-stars {
     position: fixed; inset: 0; z-index: -1; pointer-events: none;
@@ -84,7 +90,7 @@ html[data-theme="light"] .cosmic-bg {
     opacity: 0.55;
     animation: driftStars 90s linear infinite;
 }
-html[data-theme="light"] .cosmic-stars { opacity: 0.15; }
+html[data-theme="light"] .cosmic-stars { opacity: 0.22; }
 @keyframes driftStars {
     from { transform: translateY(0); }
     to { transform: translateY(-320px); }
@@ -92,15 +98,38 @@ html[data-theme="light"] .cosmic-stars { opacity: 0.15; }
 
 .app-layout { display: flex; width: 100%; max-width: 1780px; margin: 0 auto; min-height: 100vh; padding: 28px; gap: 28px; }
 
-/* ---- Sidebar ---- */
+/* ---- Sidebar & Standalone Unboxed Logo + CineMind Header ---- */
 .sidebar { width: 290px; background: var(--sidebar-bg); border: 1px solid var(--glass-border); border-radius: 32px; padding: 26px 22px; display: flex; flex-direction: column; z-index: 20; gap: 20px; flex-shrink: 0; box-shadow: var(--shadow-heavy); backdrop-filter: blur(28px); position: sticky; top: 28px; height: fit-content; max-height: calc(100vh - 56px); overflow-y: auto; }
-.logo-free-wrapper { display: flex; justify-content: center; align-items: center; width: 100%; position: relative; }
-.logo-unboxed { width: 105px; height: 105px; border-radius: 50%; object-fit: cover; border: 3px solid var(--secondary-glow); box-shadow: 0 0 45px rgba(0, 242, 254, 0.65), 0 0 80px rgba(217, 70, 239, 0.45); transition: 0.4s; cursor: pointer; animation: galaxyPulse 4s ease-in-out infinite; }
-.logo-unboxed:hover { transform: scale(1.1) rotate(6deg); border-color: var(--primary-glow); }
-
-@keyframes galaxyPulse {
-    0%, 100% { box-shadow: 0 0 35px rgba(0, 242, 254, 0.65), 0 0 65px rgba(217, 70, 239, 0.35); }
-    50% { box-shadow: 0 0 55px rgba(217, 70, 239, 0.85), 0 0 90px rgba(0, 242, 254, 0.55); }
+.logo-free-wrapper { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; width: 100%; position: relative; background: transparent; border: none; box-shadow: none; }
+.logo-unboxed {
+    width: 120px;
+    height: auto;
+    max-height: 120px;
+    border-radius: 0;
+    object-fit: contain;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    filter: drop-shadow(0 0 18px rgba(0, 242, 254, 0.55)) drop-shadow(0 0 32px rgba(217, 70, 239, 0.35));
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.35s ease;
+    cursor: pointer;
+    display: block;
+}
+.logo-unboxed:hover, .logo-unboxed:active {
+    transform: scale(1.12) rotate(6deg);
+    filter: drop-shadow(0 0 25px rgba(217, 70, 239, 0.85)) drop-shadow(0 0 45px rgba(0, 242, 254, 0.75));
+}
+.logo-brand-title {
+    font-size: 1.45rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    background: linear-gradient(90deg, var(--secondary-glow), var(--primary-glow));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 12px rgba(0, 242, 254, 0.35));
+    text-align: center;
+    line-height: 1.1;
 }
 
 .top-controls-row { display: flex; gap: 10px; align-items: center; width: 100%; }
@@ -118,16 +147,45 @@ html[data-theme="light"] .cosmic-stars { opacity: 0.15; }
 .nav-item:hover { color: var(--text-main); background: rgba(124, 58, 237, 0.12); border-color: var(--glass-border); transform: translateX(5px); }
 .nav-item.active { background: linear-gradient(90deg, rgba(217, 70, 239, 0.28), rgba(0, 242, 254, 0.18)); border-left: 4px solid var(--secondary-glow); color: var(--text-main); font-weight: 700; }
 
-/* ---- Main Content & Hero ---- */
+/* ---- Main Content & Hero (With Mixed Boxed Poster Wall + Random Movie Backdrop Slideshow) ---- */
 .main-content { flex: 1; display: flex; flex-direction: column; gap: 28px; padding-bottom: 90px; min-width: 0; }
 .hero-banner {
-    background:
-        radial-gradient(circle at 85% 20%, rgba(217, 70, 239, 0.28), transparent 45%),
-        radial-gradient(circle at 15% 80%, rgba(0, 242, 254, 0.22), transparent 45%),
-        var(--panel-bg);
-    border: 1px solid var(--glass-border); border-radius: 32px; padding: 42px 46px; display: flex; flex-direction: column; gap: 22px; box-shadow: var(--shadow-heavy); backdrop-filter: blur(28px); position: relative; overflow: hidden;
+    position: relative;
+    overflow: hidden;
+    min-height: 310px;
+    justify-content: center;
+    background: #070314;
+    border: 1.5px solid var(--glass-border);
+    border-radius: 32px;
+    padding: 50px 46px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    box-shadow: var(--shadow-heavy), 0 0 40px rgba(0, 242, 254, 0.16);
+    backdrop-filter: blur(28px);
 }
-.welcome-title { font-size: clamp(1.85rem, 3.2vw, 2.65rem); font-weight: 800; line-height: 1.35; }
+.hero-slideshow { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; border-radius: inherit; }
+.hero-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1.1s ease-in-out, transform 6.5s ease-out; }
+.hero-slide.backdrop-slide { background-size: cover; background-position: center 22%; transform: scale(1.09); filter: brightness(1.08) contrast(1.12) saturate(1.3); }
+.hero-slide.backdrop-slide.active { opacity: 0.92; transform: scale(1); }
+.hero-slide.poster-wall-slide { display: grid; grid-template-columns: repeat(9, 1fr); grid-template-rows: repeat(2, 1fr); gap: 8px; padding: 8px; background: #05020e; transform: scale(1.03); }
+.hero-slide.poster-wall-slide.active { opacity: 0.96; transform: scale(1); }
+.poster-wall-tile { width: 100%; height: 100%; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.18); box-shadow: 0 6px 16px rgba(0,0,0,0.75); background: #120c30; }
+.poster-wall-tile img { width: 100%; height: 100%; object-fit: cover; display: block; filter: brightness(1.05) contrast(1.08) saturate(1.2); }
+.hero-slideshow-overlay {
+    position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background:
+        linear-gradient(90deg, rgba(4, 2, 14, 0.96) 0%, rgba(7, 4, 22, 0.82) 38%, rgba(10, 6, 28, 0.22) 72%, rgba(6, 3, 18, 0.12) 100%),
+        linear-gradient(to top, rgba(4, 2, 14, 0.88) 0%, transparent 45%);
+}
+html[data-theme="light"] .hero-slideshow-overlay {
+    background:
+        linear-gradient(90deg, rgba(230, 224, 255, 0.95) 0%, rgba(221, 214, 254, 0.84) 40%, rgba(221, 214, 254, 0.22) 74%, rgba(230, 224, 255, 0.10) 100%),
+        linear-gradient(to top, rgba(230, 224, 255, 0.88) 0%, transparent 45%);
+}
+.hero-banner > *:not(.hero-slideshow):not(.hero-slideshow-overlay) { position: relative; z-index: 2; }
+.welcome-title { font-size: clamp(1.85rem, 3.2vw, 2.65rem); font-weight: 800; line-height: 1.35; text-shadow: 0 4px 24px rgba(0, 0, 0, 0.65); }
+html[data-theme="light"] .welcome-title { text-shadow: 0 2px 14px rgba(255, 255, 255, 0.9); }
 .text-gradient { font-family: 'Playfair Display', serif; background: linear-gradient(to right, #f43f5e, var(--primary-glow), var(--secondary-glow)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-style: italic; font-weight: 600; }
 
 .hero-search-box { position: relative; width: 100%; max-width: 780px; display: flex; gap: 12px; }
@@ -201,7 +259,7 @@ html[data-theme="light"] .cosmic-stars { opacity: 0.15; }
 .movie-grid .movie-card { width: 100%; min-width: 0; }
 .infinite-loader { text-align: center; padding: 30px; color: var(--secondary-glow); font-weight: 600; font-size: 0.95rem; display: flex; justify-content: center; align-items: center; gap: 10px; }
 
-/* ---- Nova Holographic Animations & Moving Tooltip ---- */
+/* ---- Nova Holographic, Tilting Animations & Moving Tooltip ---- */
 @keyframes novaFloat {
     0%, 100% { transform: translateY(0px) rotate(0deg); }
     50% { transform: translateY(-9px) rotate(3deg); }
@@ -210,6 +268,12 @@ html[data-theme="light"] .cosmic-stars { opacity: 0.15; }
     0% { transform: scale(0.92); opacity: 0.85; }
     70% { transform: scale(1.28); opacity: 0; }
     100% { transform: scale(1.3); opacity: 0; }
+}
+@keyframes novaTiltTap {
+    0% { transform: scale(1) rotate(0deg); }
+    45% { transform: scale(1.16) rotate(8deg); }
+    75% { transform: scale(1.08) rotate(-5deg); }
+    100% { transform: scale(1) rotate(0deg); }
 }
 @keyframes tooltipFloat {
     0%, 100% {
@@ -224,19 +288,38 @@ html[data-theme="light"] .cosmic-stars { opacity: 0.15; }
     }
 }
 
-.nova-avatar-animated { animation: novaFloat 3.4s ease-in-out infinite; filter: drop-shadow(0 0 18px rgba(0, 242, 254, 0.75)); }
+.nova-avatar-animated {
+    animation: novaFloat 3.4s ease-in-out infinite;
+    filter: drop-shadow(0 0 18px rgba(0, 242, 254, 0.75));
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.35s ease;
+    cursor: pointer;
+}
+.nova-avatar-animated:hover, .nova-avatar-animated:active, .nova-tilt-active {
+    animation: novaTiltTap 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform: scale(1.12) rotate(6deg);
+    filter: drop-shadow(0 0 26px rgba(217, 70, 239, 0.95));
+}
 .nova-chathead {
     width: 76px; height: 76px; background: radial-gradient(circle, #1a0b4b, #070318);
-    border: 2.5px solid var(--secondary-glow); border-radius: 50%; cursor: pointer;
+    border: 2.5px solid var(--secondary-glow); border-radius: 50%; cursor: grab;
     display: flex; justify-content: center; align-items: center; position: relative;
     box-shadow: 0 0 35px rgba(0, 242, 254, 0.7), 0 0 60px rgba(217, 70, 239, 0.45);
     animation: novaFloat 3.6s ease-in-out infinite; padding: 5px;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+    user-select: none; touch-action: none;
+}
+.nova-chathead:active { cursor: grabbing; }
+.nova-chathead:hover, .nova-chathead.tilted {
+    transform: scale(1.12) rotate(6deg);
+    border-color: var(--primary-glow);
+    box-shadow: 0 0 55px rgba(217, 70, 239, 0.95), 0 0 80px rgba(0, 242, 254, 0.75);
 }
 .nova-chathead::before {
     content: ""; position: absolute; inset: -6px; border-radius: 50%;
     border: 2px solid var(--primary-glow); animation: novaRingPulse 2.4s infinite; pointer-events: none;
 }
-.nova-chathead img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.nova-chathead img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; pointer-events: none; transition: transform 0.35s ease; }
+.nova-chathead:hover img, .nova-chathead.tilted img { transform: rotate(6deg) scale(1.05); }
 
 .chat-tooltip {
     background: linear-gradient(135deg, rgba(25, 12, 64, 0.95), rgba(8, 4, 24, 0.95));
@@ -286,7 +369,7 @@ html[data-theme="light"] .chat-tooltip {
 .nova-banner-clean img { width: 72px; height: 72px; object-fit: contain; }
 
 /* ---- Modals ---- */
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2, 0, 10, 0.88); z-index: 200; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; backdrop-filter: blur(22px); padding: 20px; }
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(8, 3, 24, 0.88); z-index: 200; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; backdrop-filter: blur(22px); padding: 20px; }
 .modal-overlay.active { opacity: 1; pointer-events: auto; }
 .modal-content { display: flex; gap: 28px; width: 920px; max-width: 100%; max-height: 90vh; background: var(--modal-bg); padding: 32px; border-radius: 28px; position: relative; border: 1px solid var(--glass-border-hover); box-shadow: var(--shadow-heavy); overflow-y: auto; }
 .modal-content > img { width: 240px; height: 360px; object-fit: cover; border-radius: 18px; flex-shrink: 0; box-shadow: 0 10px 30px rgba(0,0,0,0.6); background: #160f38; }
@@ -311,14 +394,14 @@ html[data-theme="light"] .chat-tooltip {
 .modal-sim-card img { width: 100%; height: 155px; object-fit: cover; border-radius: 12px; border: 1px solid var(--glass-border); }
 .modal-sim-card span { font-size: 0.74rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* ---- Floating Chat Wrapper & Modal ---- */
-.chat-wrapper { position: fixed; bottom: 26px; right: 26px; z-index: 100; display: flex; align-items: flex-end; flex-direction: column; gap: 14px; }
-.chat-modal { width: 420px; max-width: calc(100vw - 28px); background: var(--modal-bg); border-radius: 28px; border: 1px solid var(--glass-border-hover); box-shadow: var(--shadow-heavy); display: flex; flex-direction: column; position: absolute; bottom: 92px; right: 0; opacity: 0; pointer-events: none; transition: 0.25s; }
+/* ---- Floating Messenger-Style Draggable Chat & Theme-Adaptive Conversation Background ---- */
+.chat-wrapper { position: fixed; bottom: 26px; right: 26px; z-index: 100; display: flex; align-items: flex-end; flex-direction: column; gap: 14px; touch-action: none; }
+.chat-modal { width: 420px; max-width: calc(100vw - 28px); background: var(--modal-bg); border-radius: 28px; border: 1px solid var(--glass-border-hover); box-shadow: var(--shadow-heavy); display: flex; flex-direction: column; position: absolute; bottom: 92px; right: 0; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
 .chat-modal.active { opacity: 1; pointer-events: auto; }
 .chat-header { padding: 16px 20px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
-.chat-body { padding: 18px; height: 290px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: rgba(3, 1, 10, 0.65); }
+.chat-body, .nova-history-large { padding: 18px; height: 290px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: var(--chat-history-bg); transition: background 0.35s ease; }
 .chat-bubble { padding: 11px 15px; border-radius: 16px; font-size: 0.92rem; line-height: 1.5; max-width: 88%; word-break: break-word; }
-.ai-bubble { background: #191040; border: 1px solid rgba(0, 242, 254, 0.45); color: #fff; align-self: flex-start; }
+.ai-bubble { background: var(--ai-bubble-bg); border: 1px solid rgba(0, 242, 254, 0.45); color: var(--ai-bubble-text); align-self: flex-start; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12); }
 .user-bubble { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); color: #fff; align-self: flex-end; }
 .quick-chips { display: flex; gap: 8px; padding: 10px 16px; overflow-x: auto; border-top: 1px solid var(--glass-border); scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .chip { background: rgba(124, 58, 237, 0.15); border: 1px solid var(--glass-border); padding: 6px 13px; border-radius: 14px; font-size: 0.78rem; font-weight: 600; cursor: pointer; color: var(--text-muted); white-space: nowrap; }
@@ -330,13 +413,15 @@ html[data-theme="light"] .chat-tooltip {
 @media (max-width: 1100px) {
     .app-layout { flex-direction: column; padding: 12px; gap: 16px; }
     .sidebar { width: 100%; height: auto; position: static; flex-direction: row; align-items: center; padding: 12px 16px; border-radius: 22px; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-    .logo-free-wrapper { width: auto; }
-    .logo-unboxed { width: 48px; height: 48px; }
+    .logo-free-wrapper { width: auto; flex-direction: column; gap: 3px; }
+    .logo-unboxed { width: 50px; max-height: 50px; }
+    .logo-brand-title { font-size: 0.95rem; }
     .top-controls-row { width: auto; }
     .account-info { display: none; }
     .nav-links { flex-direction: row; gap: 6px; overflow-x: auto; width: 100%; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
     .nav-item { padding: 9px 13px; font-size: 0.82rem; gap: 6px; white-space: nowrap; }
     .hero-banner { padding: 26px 18px; border-radius: 24px; }
+    .hero-slide.poster-wall-slide { grid-template-columns: repeat(5, 1fr); }
     .hero-search-box { flex-direction: column; }
     .search-btn-submit { padding: 14px; border-radius: 24px; }
     .filter-panel { padding: 18px; }
@@ -360,7 +445,8 @@ html[data-theme="light"] .chat-tooltip {
 <div class="app-layout">
 <aside class="sidebar">
     <div class="logo-free-wrapper">
-        <img src="CineMind-Logo.png" alt="CineMind Logo" class="logo-unboxed" onerror="this.src='nova.png'">
+        <img src="logo.png" alt="CineMind Logo" class="logo-unboxed" onerror="this.src='nova.png'">
+        <h2 class="logo-brand-title">CineMind</h2>
     </div>
 
     <div class="top-controls-row">
@@ -389,6 +475,8 @@ html[data-theme="light"] .chat-tooltip {
 
 <main class="main-content" id="scrollContainer">
     <div class="hero-banner" id="heroBanner">
+        <div class="hero-slideshow" id="heroSlideshow"></div>
+        <div class="hero-slideshow-overlay"></div>
         <div class="welcome-header">
             <h1 class="welcome-title">Hello <span class="text-gradient" id="welcomeName">Guest</span>,<br>Explore the Neural Cinema Galaxy.</h1>
         </div>
@@ -565,13 +653,13 @@ html[data-theme="light"] .chat-tooltip {
 </div>
 </div>
 
-<!-- FLOATING ANIMATED NOVA CHAT -->
-<div class="chat-wrapper">
+<!-- FLOATING ANIMATED & DRAGGABLE NOVA CHAT -->
+<div class="chat-wrapper" id="chatWrapper">
     <div class="chat-tooltip" id="chatTooltip">Ask Nova AI ✨</div>
     <div class="chat-modal" id="chatModal">
         <div class="chat-header">
             <div style="display:flex; align-items:center; gap:8px;">
-                <img src="nova.png" alt="Nova" class="nova-avatar-animated" style="width:28px; height:28px; object-fit:contain;" onerror="this.src='CineMind-Logo.png'">
+                <img src="nova.png" alt="Nova" class="nova-avatar-animated" onclick="this.classList.remove('nova-tilt-active'); void this.offsetWidth; this.classList.add('nova-tilt-active');" style="width:28px; height:28px; object-fit:contain;" onerror="this.src='logo.png'">
                 <span>Nova AI</span>
                 <span style="font-size:0.7rem; background:rgba(16,185,129,0.2); color:#10b981; padding:2px 8px; border-radius:10px; border:1px solid rgba(16,185,129,0.4);">Memory Active</span>
             </div>
@@ -592,8 +680,8 @@ html[data-theme="light"] .chat-tooltip {
             <button class="send-btn" id="sendBtn"><i class="fa-solid fa-paper-plane" style="color: white; font-size: 0.85rem;"></i></button>
         </div>
     </div>
-    <div class="nova-chathead" id="chatToggle">
-        <img src="nova.png" alt="Nova" onerror="this.src='CineMind-Logo.png'">
+    <div class="nova-chathead" id="chatToggle" title="Drag me anywhere or tap to chat!">
+        <img src="nova.png" alt="Nova" onerror="this.src='logo.png'">
     </div>
 </div>
 
@@ -737,6 +825,102 @@ const searchSubmitBtn = document.getElementById('searchSubmitBtn');
 const filterPanel = document.getElementById('filterPanel');
 const heroBanner = document.getElementById('heroBanner');
 const navItems = document.querySelectorAll('.nav-item');
+
+// ---------------- CONTINUOUS MIXED BANNER SLIDESHOW (BOXED POSTER WALLS + RANDOM MOVIE BACKDROPS) ----------------
+async function initHeroBannerSlideshow() {
+    const slideshowContainer = document.getElementById('heroSlideshow');
+    if (!slideshowContainer) return;
+    try {
+        const randPage1 = Math.floor(Math.random() * 5) + 1;
+        const randPage2 = Math.floor(Math.random() * 5) + 6;
+        const [trendingRes, discoverRes1, discoverRes2] = await Promise.all([
+            fetch(`https://api.themoviedb.org/3/trending/all/week?api_key=${TMDB_API_KEY}&page=1`).then(r => r.json()).catch(() => ({ results: [] })),
+            fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=popularity.desc&page=${randPage1}`).then(r => r.json()).catch(() => ({ results: [] })),
+            fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=vote_average.desc&vote_count.gte=400&page=${randPage2}`).then(r => r.json()).catch(() => ({ results: [] }))
+        ]);
+
+        const combined = [...(trendingRes.results || []), ...(discoverRes1.results || []), ...(discoverRes2.results || [])];
+        const seenBackdrops = new Set();
+        const seenPosters = new Set();
+        const backdrops = [];
+        const posters = [];
+
+        combined.forEach(m => {
+            if (m && m.backdrop_path && !seenBackdrops.has(m.backdrop_path)) {
+                seenBackdrops.add(m.backdrop_path);
+                backdrops.push(`https://image.tmdb.org/t/p/w1280${m.backdrop_path}`);
+            }
+            if (m && m.poster_path && !seenPosters.has(m.poster_path)) {
+                seenPosters.add(m.poster_path);
+                posters.push(`https://image.tmdb.org/t/p/w342${m.poster_path}`);
+            }
+        });
+
+        const shuffle = (arr) => {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        };
+        shuffle(backdrops);
+        shuffle(posters);
+
+        slideshowContainer.innerHTML = '';
+        const slideEls = [];
+
+        const buildPosterWallSlide = (posterSlice) => {
+            const wall = document.createElement('div');
+            wall.className = 'hero-slide poster-wall-slide';
+            for (let i = 0; i < 18; i++) {
+                const tile = document.createElement('div');
+                tile.className = 'poster-wall-tile';
+                const img = document.createElement('img');
+                img.src = posterSlice[i % posterSlice.length];
+                img.alt = '';
+                img.loading = 'eager';
+                tile.appendChild(img);
+                wall.appendChild(tile);
+            }
+            return wall;
+        };
+
+        const buildBackdropSlide = (url) => {
+            const slide = document.createElement('div');
+            slide.className = 'hero-slide backdrop-slide';
+            slide.style.backgroundImage = `url('${url}')`;
+            return slide;
+        };
+
+        let bIdx = 0;
+        for (let step = 0; step < 10; step++) {
+            if (step % 3 === 0 && posters.length >= 10) {
+                const start = (step * 6) % Math.max(1, posters.length - 18);
+                const slice = posters.slice(start, start + 18);
+                if (slice.length < 18) slice.push(...posters.slice(0, 18 - slice.length));
+                const wallEl = buildPosterWallSlide(slice);
+                slideshowContainer.appendChild(wallEl);
+                slideEls.push(wallEl);
+            } else if (bIdx < backdrops.length) {
+                const backEl = buildBackdropSlide(backdrops[bIdx++]);
+                slideshowContainer.appendChild(backEl);
+                slideEls.push(backEl);
+            }
+        }
+
+        if (!slideEls.length) return;
+        slideEls[0].classList.add('active');
+
+        let currentSlide = 0;
+        setInterval(() => {
+            if (!slideEls.length) return;
+            slideEls[currentSlide].classList.remove('active');
+            currentSlide = (currentSlide + 1) % slideEls.length;
+            slideEls[currentSlide].classList.add('active');
+        }, 4200);
+    } catch (e) {}
+}
+initHeroBannerSlideshow();
 
 const profileModal = document.getElementById('profileModal');
 const profileDisplayName = document.getElementById('profileDisplayName');
@@ -1528,7 +1712,7 @@ function renderEnlargedNovaView() {
         <div class="nova-view-container" style="display:flex; flex-direction:column; gap:22px;">
             <div class="nova-banner-clean">
                 <div style="display:flex; align-items:center; gap:20px;">
-                    <img src="nova.png" alt="Nova" class="nova-avatar-animated" onerror="this.src='CineMind-Logo.png'">
+                    <img src="nova.png" alt="Nova" class="nova-avatar-animated" onclick="this.classList.remove('nova-tilt-active'); void this.offsetWidth; this.classList.add('nova-tilt-active');" onerror="this.src='logo.png'">
                     <div>
                         <h2>Nova AI Intelligence Hub <span style="font-size:0.8rem; background:rgba(16,185,129,0.2); color:#10b981; padding:4px 10px; border-radius:12px; vertical-align:middle; margin-left:8px;">Contextual Memory Active</span></h2>
                         <p>Describe any plot, scene, twist, movie, or K-drama and Nova will identify & rank the best matches!</p>
@@ -1537,7 +1721,7 @@ function renderEnlargedNovaView() {
                 <button class="filter-pill" onclick="clearNovaMemory()"><i class="fa-solid fa-broom"></i> Clear Memory</button>
             </div>
             <div class="nova-chat-box-large glass-panel" style="border-radius: 28px; padding: 30px; display: flex; flex-direction: column; gap: 20px; background: var(--panel-bg); border: 1px solid var(--glass-border);">
-                <div class="nova-history-large" id="novaEnlargedHistory" style="height: 290px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; background: rgba(3, 1, 10, 0.7); padding: 22px; border-radius: 20px; border: 1px solid var(--glass-border);"></div>
+                <div class="nova-history-large" id="novaEnlargedHistory" style="height: 290px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; background: var(--chat-history-bg); padding: 22px; border-radius: 20px; border: 1px solid var(--glass-border);"></div>
                 <div class="quick-chips">
                     <span class="chip" onclick="sendEnlargedPrompt('i am looking for a movie where two girls were stuck from a really high pole')">🗼 "Two girls stuck on a high pole"</span>
                     <span class="chip" onclick="sendEnlargedPrompt('The movie about a poor family who infiltrates a rich household')">🕵️ "Poor family infiltrates rich house"</span>
@@ -1782,7 +1966,8 @@ document.getElementById('watchedBtn').onclick = () => {
     else if (currentView === 'discover' || currentView === 'series') initEndlessNetflixHome();
 };
 
-// ---------------- UNIFIED SUPER-NOVA CHAT ENGINE ----------------
+// ---------------- UNIFIED SUPER-NOVA CHAT ENGINE + MESSENGER DRAGGABLE CHATHEAD ----------------
+const chatWrapper = document.getElementById('chatWrapper');
 const chatToggle = document.getElementById('chatToggle');
 const chatModal = document.getElementById('chatModal');
 const closeChat = document.getElementById('closeChat');
@@ -1790,13 +1975,84 @@ const chatTooltip = document.getElementById('chatTooltip');
 const chatInput = document.getElementById('chatInput');
 const sendBtn = document.getElementById('sendBtn');
 
-chatToggle.onclick = () => {
+let isDraggingChat = false;
+let chatDragMoved = false;
+let dragStartX = 0, dragStartY = 0;
+let wrapperStartLeft = 0, wrapperStartTop = 0;
+
+function adjustChatModalPlacement() {
+    const rect = chatWrapper.getBoundingClientRect();
+    if (rect.left < window.innerWidth / 2) {
+        chatModal.style.right = 'auto';
+        chatModal.style.left = '0px';
+        chatWrapper.style.alignItems = 'flex-start';
+    } else {
+        chatModal.style.left = 'auto';
+        chatModal.style.right = '0px';
+        chatWrapper.style.alignItems = 'flex-end';
+    }
+    if (rect.top < 420) {
+        chatModal.style.bottom = 'auto';
+        chatModal.style.top = '90px';
+    } else {
+        chatModal.style.top = 'auto';
+        chatModal.style.bottom = '92px';
+    }
+}
+
+function toggleNovaChatModal() {
     playSciFiChime();
+    chatToggle.classList.add('tilted');
+    setTimeout(() => chatToggle.classList.remove('tilted'), 450);
+    adjustChatModalPlacement();
     chatModal.classList.toggle('active');
     chatTooltip.style.display = chatModal.classList.contains('active') ? 'none' : 'block';
     if (chatModal.classList.contains('active')) chatInput.focus();
-};
-chatTooltip.onclick = () => chatToggle.click();
+}
+
+chatToggle.addEventListener('pointerdown', (e) => {
+    isDraggingChat = true;
+    chatDragMoved = false;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    const rect = chatWrapper.getBoundingClientRect();
+    wrapperStartLeft = rect.left;
+    wrapperStartTop = rect.top;
+    chatToggle.setPointerCapture(e.pointerId);
+});
+
+chatToggle.addEventListener('pointermove', (e) => {
+    if (!isDraggingChat) return;
+    const dx = e.clientX - dragStartX;
+    const dy = e.clientY - dragStartY;
+    if (Math.hypot(dx, dy) > 6) {
+        chatDragMoved = true;
+        const maxLeft = window.innerWidth - chatWrapper.offsetWidth - 10;
+        const maxTop = window.innerHeight - chatWrapper.offsetHeight - 10;
+        const newLeft = Math.max(10, Math.min(maxLeft, wrapperStartLeft + dx));
+        const newTop = Math.max(10, Math.min(maxTop, wrapperStartTop + dy));
+        chatWrapper.style.left = `${newLeft}px`;
+        chatWrapper.style.top = `${newTop}px`;
+        chatWrapper.style.right = 'auto';
+        chatWrapper.style.bottom = 'auto';
+        adjustChatModalPlacement();
+    }
+});
+
+chatToggle.addEventListener('pointerup', (e) => {
+    if (!isDraggingChat) return;
+    isDraggingChat = false;
+    chatToggle.releasePointerCapture(e.pointerId);
+
+    if (!chatDragMoved) {
+        toggleNovaChatModal();
+    } else {
+        chatToggle.classList.add('tilted');
+        setTimeout(() => chatToggle.classList.remove('tilted'), 450);
+    }
+});
+
+chatTooltip.onclick = () => toggleNovaChatModal();
 closeChat.onclick = () => { chatModal.classList.remove('active'); chatTooltip.style.display = 'block'; };
 
 function appendBubbleToBothChats(text, sender, isHTML = false) {
@@ -1887,7 +2143,7 @@ async function sendToNovaEngine(message) {
 }
 
 async function handleChat(queryText) {
-    playSciFiChime();
+    playSciFiChime();ss
     const message = queryText || chatInput.value.trim();
     if (!message) return;
     if (!queryText) chatInput.value = '';
