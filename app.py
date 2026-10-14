@@ -12,8 +12,9 @@ CORS(app)
 TMDB_API_KEY = "3dc27f9ae386c422fdc5994e6fda6823"
 DB_NAME = "cinemind.db"
 
-raw_gemini = os.environ.get("GEMINI_API_KEY", "")
-GEMINI_API_KEY = raw_gemini.strip().strip('"').strip("'")
+# We check for a GROQ_API_KEY instead of Gemini
+raw_groq = os.environ.get("GROQ_API_KEY", "")
+GROQ_API_KEY = raw_groq.strip().strip('"').strip("'")
 
 def init_db():
     conn = sqlite3.connect(DB_NAME)
@@ -29,7 +30,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Light Engine Live", "version": "3000.0"})
+    return jsonify({"status": "CineMind Groq Engine Live", "version": "5000.0"})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -142,10 +143,10 @@ def chat():
     if not user_message:
         return jsonify({"reply": f"Hey {username}! Tell me what kind of movie you're looking for.", "movies": []})
 
-    ai_reply = f"Here are the precise cinematic matches for your request, {username}!"
+    ai_reply = f"Here are your neural matches for '{user_message}', {username}!"
     recommendations = []
 
-    if GEMINI_API_KEY:
+    if GROQ_API_KEY:
         try:
             prompt = f"""You are Nova, an expert AI movie recommender. 
             User request: "{user_message}"
@@ -161,20 +162,27 @@ def chat():
               ]
             }}"""
 
-            gemini_url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
-            headers = {"Content-Type": "application/json"}
-            payload = {"contents": [{"parts": [{"text": prompt}]}]}
+            groq_url = "https://api.groq.com/openai/v1/chat/completions"
+            headers = {
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "model": "llama-3.3-70b-versatile",
+                "messages": [{"role": "user", "content": prompt}],
+                "response_format": {"type": "json_object"}
+            }
             
-            res = requests.post(gemini_url, headers=headers, json=payload, timeout=15)
+            res = requests.post(groq_url, headers=headers, json=payload, timeout=10)
             if res.status_code == 200:
                 res_json = res.json()
-                raw_text = res_json["candidates"][0]["content"]["parts"][0]["text"]
+                raw_text = res_json["choices"][0]["message"]["content"]
                 clean_text = raw_text.replace("```json", "").replace("```", "").strip()
                 res_data = json.loads(clean_text)
                 ai_reply = res_data.get("reply", ai_reply)
                 recommendations = res_data.get("recommendations", [])
-        except Exception:
-            pass
+        except Exception as e:
+            print("Groq error:", e)
 
     movies = []
     if recommendations:
@@ -204,7 +212,7 @@ def chat():
             except Exception:
                 continue
 
-    # Guaranteed Smart Search Fallback: Matches what you type directly from TMDB so cards change per query
+    # Fallback search if needed
     if not movies:
         try:
             search_url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&query={requests.utils.quote(user_message)}"
@@ -221,12 +229,12 @@ def chat():
                         "overview": m.get("overview") or "No overview available.",
                         "match": 95,
                         "platforms": ["TMDB VOD Catalog"],
-                        "rationale": f"Optimal contextual alignment for '{user_message}'."
+                        "rationale": f"Direct contextual match for '{user_message}'."
                     })
         except Exception:
             pass
 
-    return jsonify({"reply": ai_reply, "movies": movies})
+    return jsonify({"reply": ai_reply, "movies": movies, "success": True})
 
 @app.route("/trends", methods=["GET"])
 def trends():
