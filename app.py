@@ -13,7 +13,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 CORS(app)
 
-# Correct environment variable lookups (Name first, fallback key second)
+# Environment variables with fallback keys
 TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "7c7e21b0fe58e5868e262c9bd6b8e7e9").strip().strip('"').strip("'")
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "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").strip().strip('"').strip("'")
 OMDB_API_KEY = os.environ.get("OMDB_API_KEY", "554ae239").strip().strip('"').strip("'")
@@ -50,7 +50,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Production Engine Live", "version": "11.0"})
+    return jsonify({"status": "CineMind Super-Nova Engine Live", "version": "12.0"})
 
 
 # ------------------------- AUTH -------------------------
@@ -182,7 +182,7 @@ def get_insights():
     })
 
 
-# ------------------------- OMDb (modal verification) -------------------------
+# ------------------------- OMDb (modal & enrichment) -------------------------
 @app.route("/api/omdb", methods=["GET"])
 def omdb_info():
     title = request.args.get("title", "")
@@ -200,7 +200,34 @@ def omdb_info():
     return jsonify({})
 
 
-# ------------------------- NOVA PIPELINE -------------------------
+# ------------------------- SUPER-NOVA AI PIPELINE -------------------------
+PARSE_PROMPT = f"""You are Nova, a super-intelligent, warm, and encyclopedic AI cinema expert.
+Analyze the user's latest message along with the conversation history and user profile.
+Return ONLY a valid JSON object with these exact keys:
+{{
+  "intent": "recommend" | "similar_to" | "plot_search" | "chitchat" | "question",
+  "plot_guesses": [{{"title": "Exact Movie Title", "year": 2019, "why": "1-sentence explanation of how this matches the plot/vibe"}}],
+  "genres": [list of matching genres from: {GENRE_LIST}],
+  "exclude_genres": [genres the user explicitly does NOT want],
+  "year_from": integer or null,
+  "year_to": integer or null,
+  "min_rating": number 0-10 or null,
+  "language": ISO 639-1 code like "ko", "ja", "tl", "es", "fr", "hi" or null,
+  "origin_country": ISO 3166-1 code like "KR", "PH", "JP", "US", "GB", "IN", "FR", "ES", "TH" or null,
+  "sort": "popularity" | "rating" | "newest",
+  "mood_keywords": [2-4 specific plot/theme keywords, e.g. "time loop", "class divide", "amnesia", "heist"],
+  "similar_to": [movie titles the user says they liked or wants similar to],
+  "exclude_titles": [movie titles the user has already seen, rejected, or wants to avoid],
+  "direct_reply": "Your natural, witty, intelligent conversational response. If intent is chitchat or question, answer fully here. If intent is plot_search, name your top guess enthusiastically and explain why!"
+}}
+
+CRITICAL RULES:
+1. If the user describes a plot, scene, twist, character, or says things like 'what's that movie where...', 'I forgot the name', 'movie about a guy who...', or gives a specific premise like 'a poor family who infiltrates a rich household', MUST use intent "plot_search". Put your best 4-6 guesses of the actual movie in "plot_guesses" (most likely first, e.g. Parasite (2019), with exact release year), and fill "mood_keywords" with 2-4 plot keywords (e.g. 'time loop', 'amnesia', 'heist').
+2. Even for "recommend" or "similar_to" intents (e.g. 'Korean romcom', 'sad movies that will make me cry', 'movies like Interstellar'), ALWAYS populate "plot_guesses" with 4-6 of the absolute best real-world movies that fit the exact request so our engine can verify them on TMDB alongside discovery filters!
+3. Use the conversation history to resolve follow-ups! If the user says 'something darker', 'more like the first one', 'only from the 90s', or 'no horror', update the filters and guesses based on earlier messages.
+"""
+
+
 def tmdb(path, **params):
     params["api_key"] = TMDB_API_KEY
     try:
@@ -210,7 +237,7 @@ def tmdb(path, **params):
         return {}
 
 
-def groq_json(system, user, timeout=10):
+def groq_json(system, user, temperature=0.25, timeout=12):
     if not GROQ_API_KEY:
         return None
     try:
@@ -221,7 +248,7 @@ def groq_json(system, user, timeout=10):
                 "model": "llama-3.3-70b-versatile",
                 "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
                 "response_format": {"type": "json_object"},
-                "temperature": 0.3,
+                "temperature": temperature,
             },
             timeout=timeout,
         )
@@ -232,26 +259,51 @@ def groq_json(system, user, timeout=10):
     return None
 
 
-def extract_intent(message, history):
-    system = (
-        "You extract movie preferences. Return ONLY a JSON object with these keys:\n"
-        '"intent": "recommend" | "similar_to" | "plot_search" | "chitchat" | "question",\n'
-        '"plot_guesses": [{"title": "...", "year": 1993}],\n'
-        f'"genres": list from [{GENRE_LIST}],\n'
-        '"exclude_genres": list of genres the user does NOT want,\n'
-        '"year_from": integer or null, "year_to": integer or null,\n'
-        '"min_rating": number 0-10 or null,\n'
-        '"language": ISO 639-1 code like "ko" or "ja" or "tl", or null,\n'
-        '"origin_country": ISO 3166-1 code like "KR", "PH", "JP", "US", or null,\n'
-        '"sort": "popularity" or "rating" or "newest",\n'
-        '"keywords": list of themes/plots (e.g. "time travel"),\n'
-        '"similar_to": list of movie titles the user says they like,\n'
-        '"exclude_titles": list of movie titles the user has seen or dislikes.\n'
-        "If the user describes a plot, scene, twist, character, or says things like 'what's that movie where...', "
-        "use intent plot_search and put 3-6 guesses in plot_guesses."
+def get_user_library_titles(username):
+    if not username or username == "Guest":
+        return [], []
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("SELECT title FROM favorites WHERE username=? LIMIT 10", (username.lower(),))
+    favs = [r[0] for r in c.fetchall()]
+    c.execute("SELECT title FROM watchlist WHERE username=? LIMIT 10", (username.lower(),))
+    watch = [r[0] for r in c.fetchall()]
+    conn.close()
+    return favs, watch
+
+
+def extract_intent(message, history, username="Guest", fav_genres=None, selected_country=None):
+    favs, watch = get_user_library_titles(username)
+    ctx_lines = []
+    for h in (history or [])[-10:]:
+        if isinstance(h, dict) and h.get("content"):
+            role = "User" if h.get("role") == "user" else "Nova"
+            ctx_lines.append(f"{role}: {h.get('content')}")
+    ctx = "\n".join(ctx_lines) if ctx_lines else "No prior messages in this session."
+
+    profile_note = (
+        f"User Name: {username}\n"
+        f"User's Calibrated Favorite Genres: {', '.join(fav_genres or []) or 'None specified'}\n"
+        f"User's Favorited Movies: {', '.join(favs) or 'None yet'}\n"
+        f"User's Watchlist: {', '.join(watch) or 'None yet'}\n"
+        f"Active Country Filter: {selected_country or 'All Countries'}"
     )
-    ctx = "\n".join(f'{h.get("role")}: {h.get("content")}' for h in (history or [])[-6:] if isinstance(h, dict))
-    return groq_json(system, f"Conversation so far:\n{ctx}\n\nLatest request: {message}") or {}
+
+    user_prompt = f"{profile_note}\n\nConversation Memory:\n{ctx}\n\nUser's Latest Message: {message}"
+    parsed = groq_json(PARSE_PROMPT, user_prompt, temperature=0.2) or {}
+
+    # Fallback heuristic if Groq key is rate-limited or unreachable
+    if not parsed:
+        lower_msg = message.lower()
+        looks_plot = len(message.split()) >= 5 or any(w in lower_msg for w in ["where", "about a", "forgot", "relives", "infiltrates", "family", "guy who", "girl who"])
+        parsed = {
+            "intent": "plot_search" if looks_plot else "recommend",
+            "plot_guesses": [],
+            "genres": [g for g in GENRES.keys() if g in lower_msg],
+            "mood_keywords": [message],
+            "direct_reply": f"Here are the top matches I found for '{message}', {username}!"
+        }
+    return parsed
 
 
 def find_movie_id(title):
@@ -261,7 +313,7 @@ def find_movie_id(title):
 
 def keyword_ids(words):
     ids = []
-    for w in (words or [])[:3]:
+    for w in (words or [])[:4]:
         r = tmdb("/search/keyword", query=w).get("results", [])
         if r:
             ids.append(str(r[0]["id"]))
@@ -270,8 +322,13 @@ def keyword_ids(words):
 
 def plot_search(p):
     results, seen = [], set()
-    for g in p.get("plot_guesses", [])[:6]:
-        title, year = g.get("title"), g.get("year")
+
+    # 1) Verify the LLM's exact guesses on TMDB (preserve order with decaying priority bonus)
+    guesses = p.get("plot_guesses") or []
+    for idx, g in enumerate(guesses[:6]):
+        title = g.get("title") if isinstance(g, dict) else str(g)
+        year = g.get("year") if isinstance(g, dict) else None
+        why = g.get("why") if isinstance(g, dict) else None
         if not title:
             continue
         params = {"query": title}
@@ -280,23 +337,44 @@ def plot_search(p):
         hits = tmdb("/search/movie", **params).get("results", [])
         if not hits and year:
             hits = tmdb("/search/movie", query=title).get("results", [])
-        if hits and hits[0]["id"] not in seen:
-            seen.add(hits[0]["id"])
-            results.append(hits[0])
+        if hits:
+            best_hit = hits[0]
+            if best_hit.get("id") and best_hit.get("poster_path") and best_hit["id"] not in seen:
+                seen.add(best_hit["id"])
+                # Massive bonus so #1 LLM guess stays #1!
+                best_hit["_bonus"] = 50.0 - (idx * 5.0)
+                best_hit["_is_guess"] = True
+                if why:
+                    best_hit["_guess_why"] = why
+                results.append(best_hit)
 
-    if len(results) < 4:
-        kws = keyword_ids(p.get("keywords", []))
-        if kws:
-            extra = tmdb("/discover/movie", with_keywords="|".join(kws),
-                         sort_by="popularity.desc", **{"vote_count.gte": 50}).get("results", [])
-            for m in extra:
-                if m["id"] not in seen:
-                    seen.add(m["id"])
-                    results.append(m)
+    # 2) Backup: match on mood_keywords / keywords
+    kws = keyword_ids(p.get("mood_keywords") or p.get("keywords") or [])
+    if len(results) < 8 and kws:
+        extra = tmdb("/discover/movie", with_keywords="|".join(kws),
+                     sort_by="popularity.desc", **{"vote_count.gte": 50}).get("results", [])
+        for m in extra:
+            if m.get("id") and m.get("poster_path") and m["id"] not in seen:
+                seen.add(m["id"])
+                m["_bonus"] = 5.0
+                results.append(m)
+
+    # 3) If still few results, pull TMDB recommendations from the #1 verified movie (e.g., movies similar to Parasite)
+    if results and len(results) < 8:
+        top_id = results[0]["id"]
+        sim = tmdb(f"/movie/{top_id}/recommendations").get("results", [])
+        for m in sim:
+            if m.get("id") and m.get("poster_path") and m["id"] not in seen:
+                seen.add(m["id"])
+                m["_bonus"] = 8.0
+                m["_guess_why"] = f"Thematically similar to {results[0].get('title')}."
+                results.append(m)
+
     return results
 
 
 def gather_candidates(intent, region=None):
+    # If it's a plot search, prioritize plot_search() directly
     if intent.get("intent") == "plot_search":
         found = plot_search(intent)
         if found:
@@ -304,16 +382,38 @@ def gather_candidates(intent, region=None):
 
     cands = {}
 
-    def add(movies, bonus=0):
+    def add(movies, bonus=0, why_note=None):
         for m in movies:
             if m.get("id") and m.get("poster_path"):
-                m["_bonus"] = max(m.get("_bonus", 0), bonus)
-                cands.setdefault(m["id"], m)
+                if m["id"] not in cands:
+                    m["_bonus"] = bonus
+                    if why_note:
+                        m["_guess_why"] = why_note
+                    cands[m["id"]] = m
+                else:
+                    cands[m["id"]]["_bonus"] = max(cands[m["id"]].get("_bonus", 0), bonus)
+
+    # Always verify Groq's specific title suggestions first so Nova's exact picks appear at the top!
+    for idx, g in enumerate((intent.get("plot_guesses") or [])[:6]):
+        title = g.get("title") if isinstance(g, dict) else str(g)
+        year = g.get("year") if isinstance(g, dict) else None
+        why = g.get("why") if isinstance(g, dict) else None
+        if not title:
+            continue
+        params = {"query": title}
+        if year:
+            params["year"] = year
+        hits = tmdb("/search/movie", **params).get("results", [])
+        if not hits and year:
+            hits = tmdb("/search/movie", query=title).get("results", [])
+        if hits:
+            add([hits[0]], bonus=25.0 - (idx * 2.0), why_note=why)
 
     for t in (intent.get("similar_to") or [])[:2]:
         mid = find_movie_id(t)
         if mid:
-            add(tmdb(f"/movie/{mid}/recommendations").get("results", []), bonus=1.0)
+            add(tmdb(f"/movie/{mid}/recommendations").get("results", []), bonus=10.0,
+                why_note=f"Recommended because you liked {t}.")
 
     p = {"include_adult": "false", "vote_count.gte": 80, "language": "en-US"}
     gids = [str(GENRES[g.lower()]) for g in intent.get("genres") or [] if g.lower() in GENRES]
@@ -328,7 +428,8 @@ def gather_candidates(intent, region=None):
         if intent.get("min_rating"): p["vote_average.gte"] = float(intent["min_rating"])
     except (ValueError, TypeError):
         pass
-    kws = keyword_ids(intent.get("keywords"))
+
+    kws = keyword_ids(intent.get("mood_keywords") or intent.get("keywords"))
     if kws: p["with_keywords"] = "|".join(kws)
 
     sort = {"rating": "vote_average.desc", "newest": "primary_release_date.desc"}.get(
@@ -339,18 +440,18 @@ def gather_candidates(intent, region=None):
     if sort == "primary_release_date.desc":
         p["primary_release_date.lte"] = p.get("primary_release_date.lte", date.today().isoformat())
 
-    if region and not intent.get("origin_country"):
+    if region and not intent.get("origin_country") and not intent.get("language"):
         rp = dict(p, watch_region=region, with_watch_monetization_types="flatrate")
         for page in (1, 2):
-            add(tmdb("/discover/movie", page=page, **rp).get("results", []), bonus=0.5)
+            add(tmdb("/discover/movie", page=page, **rp).get("results", []), bonus=1.5)
 
-    if len(cands) < 8:
-        for page in (1, 2):
-            add(tmdb("/discover/movie", page=page, **p).get("results", []))
+    for page in (1, 2):
+        add(tmdb("/discover/movie", page=page, **p).get("results", []))
 
-    if len(cands) < 6 and "with_keywords" in p:
+    if len(cands) < 8 and "with_keywords" in p:
         p.pop("with_keywords")
         add(tmdb("/discover/movie", **p).get("results", []))
+
     return list(cands.values())
 
 
@@ -374,35 +475,49 @@ def norm(t):
 
 
 def rank(cands, intent, seen_ids):
+    is_plot = intent.get("intent") == "plot_search"
     blocked = {norm(t) for t in (intent.get("exclude_titles") or [])}
-    blocked |= {norm(t) for t in (intent.get("similar_to") or [])}
+    if not is_plot:
+        blocked |= {norm(t) for t in (intent.get("similar_to") or [])}
+
     out = []
     for m in cands:
-        if m["id"] in seen_ids or norm(m.get("title")) in blocked:
-            continue
-        if (m.get("vote_count") or 0) < 20:
-            continue
+        # Never hide the movie the user is specifically trying to identify in plot_search!
+        if not is_plot and not m.get("_is_guess"):
+            if m["id"] in seen_ids or norm(m.get("title")) in blocked:
+                continue
+            if (m.get("vote_count") or 0) < 20:
+                continue
         pop = min((m.get("popularity") or 0) / 100, 1.0)
         m["_score"] = (m.get("vote_average") or 0) * 0.7 + pop * 1.5 + m.get("_bonus", 0)
         out.append(m)
+
     out.sort(key=lambda x: x["_score"], reverse=True)
     top = out[:12]
     if top:
-        best = top[0]["_score"] or 1
-        for m in top:
-            m["_match"] = max(75, min(99, int(75 + 24 * (m["_score"] / best) ** 2)))
+        for idx, m in enumerate(top):
+            if m.get("_bonus", 0) >= 45:
+                m["_match"] = 99
+            elif m.get("_bonus", 0) >= 20:
+                m["_match"] = max(92, 98 - idx)
+            else:
+                best = top[0]["_score"] or 1
+                m["_match"] = max(78, min(97, int(78 + 19 * (m["_score"] / best))))
     return top
 
 
-def explain(message, username, movies):
+def explain(message, username, movies, intent):
     listing = [{"id": m["id"], "title": m["title"], "year": (m.get("release_date") or "")[:4],
-                "overview": (m.get("overview") or "")[:200]} for m in movies]
+                "overview": (m.get("overview") or "")[:220]} for m in movies[:8]]
+    intent_type = intent.get("intent", "recommend")
     system = (
-        f"You are Nova, a friendly movie assistant talking to {username}. "
-        'Return ONLY JSON: {"reply": "1-2 warm sentences", "reasons": {"<id>": "one sentence why it fits"}}. '
+        f"You are Nova, a super-intelligent, warm, and witty AI cinema companion talking to {username}. "
+        f"The user's intent was '{intent_type}'. "
+        'Return ONLY JSON: {"reply": "2-3 engaging, specific sentences directly answering the user, naming the #1 movie match and explaining why it fits", '
+        '"reasons": {"<id>": "1 specific sentence explaining why this movie matches their exact request"}}. '
         "Only mention movies from the provided list. Never invent titles."
     )
-    return groq_json(system, f"Request: {message}\nMovies: {json.dumps(listing)}") or {}
+    return groq_json(system, f"User Request: {message}\nVerified Movies Found: {json.dumps(listing)}", temperature=0.35) or {}
 
 
 @app.route("/chat", methods=["POST"])
@@ -417,33 +532,44 @@ def chat():
     region = (data.get("region") or "").upper() or None
 
     if not message:
-        return jsonify({"reply": f"Hey {username}! Tell me what kind of movie you're looking for.", "movies": []})
+        return jsonify({"reply": f"Hey {username}! Tell me a plot, mood, or vibe you're craving.", "movies": []})
 
-    intent = extract_intent(message, history)
-    if not intent.get("genres") and fav_genres:
+    intent = extract_intent(message, history, username, fav_genres, selected_country)
+    intent_type = intent.get("intent", "recommend")
+
+    # Handle pure chitchat or general film questions gracefully
+    if intent_type in ("chitchat", "question") and not intent.get("plot_guesses") and not intent.get("genres"):
+        reply = intent.get("direct_reply") or f"I'm Nova, your neural cinema companion, {username}! Ask me to identify any movie from a vague plot or describe your mood for tailored recommendations."
+        return jsonify({"reply": reply, "movies": [], "intent": intent_type, "success": True})
+
+    # Blend user's calibrated genres only when they haven't specified a genre or plot search
+    if intent_type == "recommend" and not intent.get("genres") and not intent.get("plot_guesses") and fav_genres:
         intent["genres"] = [g.lower() for g in fav_genres[:3]]
-    if not intent.get("origin_country") and selected_country:
+    if not intent.get("origin_country") and selected_country and intent_type != "plot_search":
         intent["origin_country"] = selected_country
 
     cands = gather_candidates(intent, region)
 
-    if not cands or len(cands) < 4:
+    if not cands:
         search_res = tmdb("/search/movie", query=message).get("results", [])
         trending_res = tmdb("/trending/movie/week").get("results", [])
-        cands = search_res + trending_res
-        cands = [m for m in cands if m.get("poster_path")]
+        cands = [m for m in (search_res + trending_res) if m.get("poster_path")]
 
     top = rank(cands, intent, get_seen_ids(username))
     if not top and cands:
         top = cands[:12]
 
     if not top:
-        return jsonify({"reply": "I couldn't find anything matching that. Try loosening your filters!",
-                        "movies": [], "success": True})
+        return jsonify({
+            "reply": intent.get("direct_reply") or "I couldn't find an exact match for that filter combination. Try describing the plot or loosening a filter!",
+            "movies": [],
+            "intent": intent_type,
+            "success": True
+        })
 
-    ex = explain(message, username, top)
+    ex = explain(message, username, top, intent)
     reasons = ex.get("reasons", {}) if isinstance(ex.get("reasons"), dict) else {}
-    reply = ex.get("reply") or f"Here are some matches for '{message}', {username}!"
+    reply = ex.get("reply") or intent.get("direct_reply") or f"Here are my top neural matches for '{message}', {username}!"
 
     movies = [{
         "id": m["id"],
@@ -453,19 +579,19 @@ def chat():
         "vote_count": m.get("vote_count", 0),
         "release_date": m.get("release_date", ""),
         "overview": m.get("overview", ""),
-        "match": m.get("_match", 95),
+        "match": m.get("_match", 96),
         "platforms": [region or "Global"],
-        "rationale": reasons.get(str(m["id"])) or f"Dynamic neural match for '{message}'.",
+        "rationale": reasons.get(str(m["id"])) or m.get("_guess_why") or f"Curated by Nova AI for '{message}'.",
     } for m in top]
 
-    return jsonify({"reply": reply, "movies": movies, "success": True})
+    return jsonify({"reply": reply, "movies": movies, "intent": intent_type, "success": True})
 
 
 @app.route("/trends", methods=["GET"])
 def trends():
     return jsonify({
-        "ai_forecast": "Groq + TMDB + OMDb pipeline online.",
-        "trending_genres": ["Groq Intent Understanding", "TMDB Real-Movie Discovery", "CineHub Personal Ranking"]
+        "ai_forecast": "Super-Nova Multi-API Memory & Plot-Search Pipeline Online.",
+        "trending_genres": ["Groq Plot & Intent Recognition", "TMDB Candidate Verification", "OMDb Metadata Enrichment"]
     })
 
 
