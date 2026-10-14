@@ -72,9 +72,9 @@ z-index: -2; pointer-events: none;
 .search-btn-submit:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(56,189,248,0.6); }
  
 .filter-panel { display: flex; flex-direction: column; gap: 16px; background: var(--panel-bg); padding: 25px 32px; border-radius: 24px; border: 1px solid var(--glass-border); backdrop-filter: blur(20px); }
-.filter-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-.filter-label { font-size: 0.95rem; font-weight: 700; color: var(--secondary-glow); min-width: 120px; }
-.filter-pill { background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); padding: 10px 22px; border-radius: 24px; font-size: 0.9rem; font-weight: 600; cursor: pointer; color: var(--text-muted); transition: 0.25s; }
+.filter-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.filter-label { font-size: 0.92rem; font-weight: 700; color: var(--secondary-glow); min-width: 140px; display: flex; align-items: center; gap: 6px; }
+.filter-pill { background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); padding: 9px 20px; border-radius: 24px; font-size: 0.88rem; font-weight: 600; cursor: pointer; color: var(--text-muted); transition: 0.25s; }
 .filter-pill:hover, .filter-pill.active { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); color: white; border-color: transparent; box-shadow: 0 0 25px rgba(56,189,248,0.7); }
  
 .row-title { font-size: 1.5rem; font-weight: 800; color: white; display: flex; align-items: center; gap: 12px; }
@@ -228,8 +228,9 @@ z-index: -2; pointer-events: none;
 </div>
  
 <div class="filter-panel" id="filterPanel">
+<!-- 1. GENRE FILTER ROW -->
 <div class="filter-row">
-<span class="filter-label">Genres:</span>
+<span class="filter-label"><i class="fa-solid fa-film"></i> Genres:</span>
 <button class="filter-pill active" data-genre="">All</button>
 <button class="filter-pill" data-genre="28">Action</button>
 <button class="filter-pill" data-genre="12">Adventure</button>
@@ -244,8 +245,25 @@ z-index: -2; pointer-events: none;
 <button class="filter-pill" data-genre="878">Sci-Fi</button>
 <button class="filter-pill" data-genre="53">Thriller</button>
 </div>
+
+<!-- 2. ORIGIN COUNTRY FILTER ROW (FILTERS WHERE THE MOVIE WAS CREATED) -->
 <div class="filter-row">
-<span class="filter-label">Streaming Region:</span>
+<span class="filter-label"><i class="fa-solid fa-earth-asia"></i> Origin Country:</span>
+<button class="filter-pill active" data-country="">🌍 All Countries</button>
+<button class="filter-pill" data-country="KR">🇰🇷 South Korea</button>
+<button class="filter-pill" data-country="PH">🇵🇭 Philippines</button>
+<button class="filter-pill" data-country="US">🇺🇸 USA</button>
+<button class="filter-pill" data-country="JP">🇯🇵 Japan</button>
+<button class="filter-pill" data-country="GB">🇬🇧 UK</button>
+<button class="filter-pill" data-country="IN">🇮🇳 India</button>
+<button class="filter-pill" data-country="FR">🇫🇷 France</button>
+<button class="filter-pill" data-country="ES">🇪🇸 Spain</button>
+<button class="filter-pill" data-country="TH">🇹🇭 Thailand</button>
+</div>
+
+<!-- 3. STREAMING REGION FILTER ROW -->
+<div class="filter-row">
+<span class="filter-label"><i class="fa-solid fa-tv"></i> Streaming Region:</span>
 <button class="filter-pill active" data-region="PH">🇵🇭 Philippines</button>
 <button class="filter-pill" data-region="US">🇺🇸 USA</button>
 <button class="filter-pill" data-region="KR">🇰🇷 South Korea</button>
@@ -287,7 +305,7 @@ z-index: -2; pointer-events: none;
 </div>
 </div>
  
-<!-- YOUTUBE TRAILER MODAL (FIXED 403 WITH NOCOOKIE + REFERRERPOLICY + FALLBACK LINK) -->
+<!-- YOUTUBE TRAILER MODAL -->
 <div class="modal-overlay" id="videoModal">
 <div class="video-box" style="width: 820px; max-width: 100%; background: #0f0a28; border-radius: 24px; border: 1px solid var(--glass-border); overflow: hidden; display: flex; flex-direction: column;">
 <div style="padding: 16px 22px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--glass-border); gap: 12px; flex-wrap: wrap;">
@@ -343,7 +361,7 @@ z-index: -2; pointer-events: none;
 </div>
 
 <button class="btn-action btn-fav" id="continueGuestBtn" style="width:100%; justify-content:center; background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.35);">
-<i class="fa-solid fa-user-astronaut"></i> Continue as Guest (Logged Out)
+<i class="fa-solid fa-user-astronaut"></i> Continue as Guest (Apply Selected Genres)
 </button>
 
 <button id="logoutBtn" style="background:transparent; border:none; color:var(--accent-pink); font-size:0.85rem; cursor:pointer; display:none; margin-top:4px;"><i class="fa-solid fa-right-from-bracket"></i> Log out of current account</button>
@@ -393,6 +411,7 @@ let selectedRegion = localStorage.getItem('cinemind_region') || "PH";
 let conversationHistory = [];
 let currentView = "discover";
 let selectedGenre = "";
+let selectedCountry = "";
 let activeSearchQuery = "";
 let analyticsChartInstance = null;
  
@@ -403,22 +422,32 @@ let searchPage = 1;
 let searchTotalPages = 1;
 let isFetchingMore = false;
 
+const COUNTRY_NAMES = {
+    KR: "South Korea 🇰🇷",
+    PH: "Philippines 🇵🇭",
+    US: "USA 🇺🇸",
+    JP: "Japan 🇯🇵",
+    GB: "United Kingdom 🇬🇧",
+    IN: "India 🇮🇳",
+    FR: "France 🇫🇷",
+    ES: "Spain 🇪🇸",
+    TH: "Thailand 🇹🇭"
+};
+
 // 22+ Endless Netflix Row Definitions
 const ENDLESS_ROW_CATALOG = [
-    { title: "🔥 Trending Blockbusters Today", path: "/trending/movie/week", params: "page=1" },
+    { title: "🔥 Trending Blockbusters Today", path: "/discover/movie", params: "sort_by=popularity.desc&page=1" },
     { title: "🧠 Mind-Bending Sci-Fi & Portals", path: "/discover/movie", params: "with_genres=878&sort_by=popularity.desc&page=1" },
-    { title: "✨ Critically Acclaimed Masterpieces", path: "/discover/movie", params: "sort_by=vote_average.desc&vote_count.gte=1500&page=1" },
+    { title: "✨ Critically Acclaimed Masterpieces", path: "/discover/movie", params: "sort_by=vote_average.desc&vote_count.gte=500&page=1" },
     { title: "💥 High-Octane Action Thrillers", path: "/discover/movie", params: "with_genres=28,53&sort_by=popularity.desc&page=1" },
-    { title: "🇰🇷 K-Cinema & Korean Wave Hits", path: "/discover/movie", params: "with_original_language=ko&sort_by=popularity.desc&page=1" },
     { title: "💕 Heartfelt & Emotional Romances", path: "/discover/movie", params: "with_genres=10749&sort_by=popularity.desc&page=1" },
     { title: "👻 Spine-Chilling Supernatural Horror", path: "/discover/movie", params: "with_genres=27&sort_by=popularity.desc&page=1" },
     { title: "🎨 Anime & Visionary Animation", path: "/discover/movie", params: "with_genres=16&sort_by=popularity.desc&page=1" },
     { title: "🕵️‍♂️ Twisty Murder Mysteries & Crime", path: "/discover/movie", params: "with_genres=9648,80&sort_by=popularity.desc&page=1" },
     { title: "😂 Feel-Good Comedies", path: "/discover/movie", params: "with_genres=35&sort_by=popularity.desc&page=1" },
     { title: "🐉 Epic Fantasy Worlds", path: "/discover/movie", params: "with_genres=14,12&sort_by=popularity.desc&page=1" },
-    { title: "🇯🇵 Japanese Cinema & Anime Gems", path: "/discover/movie", params: "with_original_language=ja&sort_by=popularity.desc&page=1" },
-    { title: "🎭 Award-Winning Intense Dramas", path: "/discover/movie", params: "with_genres=18&sort_by=vote_average.desc&vote_count.gte=800&page=1" },
-    { title: "🚀 Space Exploration & Cyberpunk", path: "/discover/movie", params: "with_genres=878&sort_by=vote_average.desc&vote_count.gte=500&page=2" },
+    { title: "🎭 Award-Winning Intense Dramas", path: "/discover/movie", params: "with_genres=18&sort_by=vote_average.desc&vote_count.gte=300&page=1" },
+    { title: "🚀 Space Exploration & Cyberpunk", path: "/discover/movie", params: "with_genres=878&sort_by=vote_average.desc&vote_count.gte=200&page=2" },
     { title: "🔪 Edge-of-Your-Seat Psychological Thrillers", path: "/discover/movie", params: "with_genres=53&sort_by=popularity.desc&page=2" },
     { title: "👨‍👩‍👧‍👦 Family Movie Night Favorites", path: "/discover/movie", params: "with_genres=10751&sort_by=popularity.desc&page=1" },
     { title: "⚔️ Historical Epics & War Stories", path: "/discover/movie", params: "with_genres=36,10752&sort_by=popularity.desc&page=1" },
@@ -426,7 +455,7 @@ const ENDLESS_ROW_CATALOG = [
     { title: "🤠 Outlaws & Modern Westerns", path: "/discover/movie", params: "with_genres=37&sort_by=popularity.desc&page=1" },
     { title: "📽️ Fascinating Real-World Documentaries", path: "/discover/movie", params: "with_genres=99&sort_by=popularity.desc&page=1" },
     { title: "🔥 Global Box Office Titans", path: "/discover/movie", params: "sort_by=revenue.desc&page=1" },
-    { title: "💎 Hidden Indie Gems", path: "/discover/movie", params: "sort_by=vote_average.desc&vote_count.gte=200&vote_count.lte=1000&page=1" }
+    { title: "💎 Hidden Indie Gems", path: "/discover/movie", params: "sort_by=vote_average.desc&vote_count.gte=100&vote_count.lte=1000&page=1" }
 ];
  
 // ---------- Sign-up / Onboarding Genre Preferences (Minimum 3) ----------
@@ -519,7 +548,7 @@ function calculateSimilarityMatch(movie, queryText = "") {
     }
     if (userGenres.length && movie.genre_ids) {
         const overlap = movie.genre_ids.filter(g => userGenres.includes(String(g)));
-        if (overlap.length > 0) base += 5;
+        if (overlap.length > 0) base += 4 * overlap.length;
     }
     return Math.max(72, Math.min(99, base));
 }
@@ -558,7 +587,7 @@ async function syncCloudLibrary() {
     }
     
     profileDisplayName.innerText = currentUser;
-    profileSubText.innerText = "Cloud Synced";
+    profileSubText.innerText = userGenres.length ? `Synced • ${userGenres.length} Genres` : "Cloud Synced";
     welcomeName.innerText = currentUser;
     novaGreeting.innerHTML = `Hi ${currentUser}! 👽 I'm Nova. What are we watching today?`;
     logoutBtn.style.display = "block";
@@ -568,6 +597,10 @@ async function syncCloudLibrary() {
         const data = await res.json();
         watchlist = await repairSavedPosters(data.watchlist || []);
         favorites = await repairSavedPosters(data.favorites || []);
+        if (data.genres && data.genres.length >= 3 && userGenres.length === 0) {
+            userGenres = data.genres.map(String);
+            localStorage.setItem('cinemind_genres', JSON.stringify(userGenres));
+        }
     } catch (e) {}
 }
 syncCloudLibrary();
@@ -619,12 +652,14 @@ document.getElementById('loginBtn').onclick = async () => {
             localStorage.setItem('cinemind_auth_user', currentUser);
             if (signupGenres.size >= 3) {
                 userGenres = [...signupGenres];
-                localStorage.setItem(`cinemind_genres_${currentUser}`, JSON.stringify(userGenres));
-                localStorage.setItem('cinemind_genres', JSON.stringify(userGenres));
+            } else if (data.genres && data.genres.length) {
+                userGenres = data.genres.map(String);
             } else {
                 const savedG = localStorage.getItem(`cinemind_genres_${currentUser}`);
                 if (savedG) userGenres = JSON.parse(savedG);
             }
+            localStorage.setItem(`cinemind_genres_${currentUser}`, JSON.stringify(userGenres));
+            localStorage.setItem('cinemind_genres', JSON.stringify(userGenres));
             await syncCloudLibrary();
             profileModal.classList.remove('active');
             if (currentView === 'discover') initEndlessNetflixHome();
@@ -704,11 +739,14 @@ function createMovieCard(movie, isAI = false, searchContext = "") {
     return card;
 }
  
-// ---------------- ENDLESS NETFLIX ROWS ENGINE ----------------
+// ---------------- ENDLESS NETFLIX ROWS ENGINE (WITH COUNTRY + GENRE CUSTOMIZATION) ----------------
 async function appendNextNetflixRowBatch(count = 3) {
     if (isFetchingMore || currentView !== 'discover' || infiniteMode !== 'rows') return;
     isFetchingMore = true;
     infiniteSentinel.style.display = "flex";
+
+    const countryQuery = selectedCountry ? `&with_origin_country=${selectedCountry}` : "";
+    const countryBadge = selectedCountry ? ` • ${COUNTRY_NAMES[selectedCountry] || selectedCountry}` : "";
 
     const batchConfigs = [];
     for (let i = 0; i < count; i++) {
@@ -716,16 +754,16 @@ async function appendNextNetflixRowBatch(count = 3) {
         const pageOffset = Math.floor(nextRowIndex / ENDLESS_ROW_CATALOG.length) + 1;
         const template = ENDLESS_ROW_CATALOG[cycleIndex];
         
-        let url = `https://api.themoviedb.org/3${template.path}?api_key=${TMDB_API_KEY}&${template.params}`;
+        let url = `https://api.themoviedb.org/3${template.path}?api_key=${TMDB_API_KEY}&${template.params}${countryQuery}`;
         if (selectedGenre) {
-            url = `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&with_genres=${selectedGenre}&sort_by=popularity.desc&page=${nextRowIndex + 1}`;
+            url = `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&with_genres=${selectedGenre}${countryQuery}&sort_by=popularity.desc&page=${nextRowIndex + 1}`;
         } else if (pageOffset > 1) {
             url = url.replace(/page=\d+/, `page=${pageOffset}`);
         }
 
         const rowLabel = selectedGenre
-            ? `${GENRE_OPTIONS[selectedGenre] || 'Cinema'} Stream #${nextRowIndex + 1}`
-            : (pageOffset > 1 ? `${template.title} (Vol. ${pageOffset})` : template.title);
+            ? `${GENRE_OPTIONS[selectedGenre] || 'Cinema'}${countryBadge} Stream #${nextRowIndex + 1}`
+            : `${template.title}${countryBadge}${pageOffset > 1 ? ` (Vol. ${pageOffset})` : ''}`;
 
         batchConfigs.push({ title: rowLabel, url });
         nextRowIndex++;
@@ -749,7 +787,12 @@ async function appendNextNetflixRowBatch(count = 3) {
 
             const movieRow = document.createElement('div');
             movieRow.className = 'movie-row';
-            movies.forEach(m => movieRow.appendChild(createMovieCard(m)));
+            movies.forEach(m => {
+                if (selectedCountry) {
+                    m.rationale = `Authentic ${COUNTRY_NAMES[selectedCountry] || selectedCountry} production matched to your stream.`;
+                }
+                movieRow.appendChild(createMovieCard(m));
+            });
             rowSection.appendChild(movieRow);
             frag.appendChild(rowSection);
         });
@@ -765,40 +808,72 @@ async function initEndlessNetflixHome() {
     nextRowIndex = 0;
     mainContainer.innerHTML = '';
 
+    const countryQuery = selectedCountry ? `&with_origin_country=${selectedCountry}` : "";
+    const countryBadge = selectedCountry ? ` (${COUNTRY_NAMES[selectedCountry]})` : "";
+
+    // Deep per-genre customization from Sign-In / Guest Genre Picker
     if (userGenres.length && !selectedGenre) {
         try {
-            const gNames = userGenres.map(id => GENRE_OPTIONS[id]).filter(Boolean).join(', ');
-            const gUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&with_genres=${userGenres.join('|')}&sort_by=popularity.desc&page=1`;
-            const gData = await fetch(gUrl).then(r => r.json());
-            if (gData.results && gData.results.length) {
+            const gNames = userGenres.map(id => GENRE_OPTIONS[id]).filter(Boolean);
+            const comboUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&with_genres=${userGenres.join('|')}${countryQuery}&sort_by=popularity.desc&page=1`;
+            
+            const individualRequests = userGenres.map(gid => {
+                const name = GENRE_OPTIONS[gid] || 'Preferred';
+                return {
+                    title: `💜 Because You Love ${name}${countryBadge}`,
+                    genreName: name,
+                    url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&with_genres=${gid}${countryQuery}&sort_by=popularity.desc&page=1`
+                };
+            });
+
+            const allCustomRows = [
+                {
+                    title: `✨ Top Neural Matches For Your Taste (${gNames.join(' + ')})${countryBadge}`,
+                    genreName: gNames.join(' & '),
+                    url: comboUrl
+                },
+                ...individualRequests
+            ];
+
+            const responses = await Promise.all(
+                allCustomRows.map(r => fetch(r.url).then(res => res.json()).catch(() => ({ results: [] })))
+            );
+
+            responses.forEach((data, idx) => {
+                const movies = (data.results || []).filter(m => m.poster_path);
+                if (!movies.length) return;
+                const cfg = allCustomRows[idx];
                 const sec = document.createElement('div');
                 sec.className = 'row-section';
-                sec.innerHTML = `<h3 class="row-title"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary-glow);"></i> 💜 Picked For Your Taste (${gNames})</h3>`;
+                sec.innerHTML = `<h3 class="row-title"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary-glow);"></i> ${cfg.title}</h3>`;
                 const rDiv = document.createElement('div');
                 rDiv.className = 'movie-row';
-                gData.results.filter(m => m.poster_path).forEach(m => {
-                    m.rationale = `Matched directly to your chosen genres (${gNames}).`;
+                movies.forEach(m => {
+                    m.rationale = `Personalized for your ${cfg.genreName} preference profile${countryBadge}.`;
                     rDiv.appendChild(createMovieCard(m, true));
                 });
                 sec.appendChild(rDiv);
                 mainContainer.appendChild(sec);
-            }
+            });
         } catch (e) {}
     }
 
     await appendNextNetflixRowBatch(4);
 }
  
+// Filter Pill Click Handlers (Genres, Origin Country, Streaming Region)
 document.querySelectorAll('.filter-row').forEach(row => {
     row.querySelectorAll('.filter-pill').forEach(pill => {
         pill.onclick = (e) => {
             playSciFiChime();
+            const btn = e.currentTarget;
             row.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
-            e.target.classList.add('active');
+            btn.classList.add('active');
             
-            if (e.target.hasAttribute('data-genre')) selectedGenre = e.target.getAttribute('data-genre');
-            if (e.target.hasAttribute('data-region')) {
-                selectedRegion = e.target.getAttribute('data-region');
+            if (btn.hasAttribute('data-genre')) selectedGenre = btn.getAttribute('data-genre');
+            if (btn.hasAttribute('data-country')) selectedCountry = btn.getAttribute('data-country');
+            if (btn.hasAttribute('data-region')) {
+                selectedRegion = btn.getAttribute('data-region');
                 localStorage.setItem('cinemind_region', selectedRegion);
             }
             initEndlessNetflixHome();
@@ -865,7 +940,16 @@ async function performSearch() {
             const res = await fetch(`${BACKEND_URL}/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: query, profile: { name: currentUser || 'Guest' }, region: selectedRegion, history: conversationHistory })
+                body: JSON.stringify({
+                    message: query,
+                    profile: {
+                        name: currentUser || 'Guest',
+                        favorite_genres: userGenres.map(id => GENRE_OPTIONS[id]).filter(Boolean),
+                        origin_country: selectedCountry
+                    },
+                    region: selectedRegion,
+                    history: conversationHistory
+                })
             });
             const data = await res.json();
             initialMovies = data.movies || [];
@@ -918,7 +1002,8 @@ async function appendMoreSearchResults() {
         }
         if (moreMovies.length === 0) {
             const fallbackPage = (searchPage % 15) + 1;
-            const r = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=popularity.desc&page=${fallbackPage}`).then(res => res.json());
+            const countryParam = selectedCountry ? `&with_origin_country=${selectedCountry}` : '';
+            const r = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}${countryParam}&sort_by=popularity.desc&page=${fallbackPage}`).then(res => res.json());
             moreMovies = (r.results || []).filter(m => m.poster_path);
         }
         moreMovies.forEach(m => grid.appendChild(createMovieCard(m, false, activeSearchQuery)));
@@ -992,13 +1077,13 @@ navItems.forEach(item => {
     });
 });
  
-// ---------------- FIXED ANALYTICS HUB (DYNAMIC COUNTS + CONTAINED CHART) ----------------
+// ---------------- ANALYTICS HUB ----------------
 async function renderDataAnalyticsDashboard() {
     let insights = {
         total_recommendations_viewed: watchedMovies.length,
         total_liked: favorites.length,
         total_watchlist: watchlist.length,
-        dominant_mood: userGenres.length ? userGenres.slice(0, 2).map(id => GENRE_OPTIONS[id]).join(' & ') : "Multi-Condition Neural Match"
+        dominant_mood: userGenres.length ? userGenres.slice(0, 3).map(id => GENRE_OPTIONS[id]).join(' • ') : "Multi-Condition Neural Match"
     };
     if (currentUser) {
         try {
@@ -1043,7 +1128,7 @@ async function renderDataAnalyticsDashboard() {
                             </div>
                             <div class="analytics-stat-card">
                                 <h4><i class="fa-solid fa-brain"></i> Calibrated Taste</h4>
-                                <p style="font-size: 1.05rem;">${escapeHTML(insights.dominant_mood)}</p>
+                                <p style="font-size: 1.02rem;">${escapeHTML(insights.dominant_mood)}</p>
                             </div>
                         </div>
                         <div class="chart-box-wrapper">
@@ -1064,12 +1149,12 @@ async function renderDataAnalyticsDashboard() {
             datasets: [{
                 label: 'Neural Taste Weight (%)',
                 data: [
-                    userGenres.includes('878') ? 48 : 34,
-                    userGenres.includes('18') ? 45 : 30,
-                    userGenres.includes('10749') ? 44 : 26,
-                    userGenres.includes('28') ? 46 : 29,
-                    userGenres.includes('53') ? 42 : 24,
-                    userGenres.includes('35') ? 40 : 20
+                    userGenres.includes('878') ? 52 : 32,
+                    userGenres.includes('18') ? 48 : 28,
+                    userGenres.includes('10749') ? 49 : 25,
+                    userGenres.includes('28') ? 50 : 29,
+                    userGenres.includes('53') ? 46 : 24,
+                    userGenres.includes('35') ? 45 : 22
                 ],
                 backgroundColor: ['#38bdf8', '#c084fc', '#f43f5e', '#38bdf8', '#c084fc', '#10b981'],
                 borderRadius: 10,
@@ -1142,7 +1227,16 @@ function renderEnlargedNovaView() {
             const response = await fetch(`${BACKEND_URL}/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: msg, profile: {name: currentUser || 'Guest'}, region: selectedRegion, history: conversationHistory })
+                body: JSON.stringify({
+                    message: msg,
+                    profile: {
+                        name: currentUser || 'Guest',
+                        favorite_genres: userGenres.map(id => GENRE_OPTIONS[id]).filter(Boolean),
+                        origin_country: selectedCountry
+                    },
+                    region: selectedRegion,
+                    history: conversationHistory
+                })
             });
             const data = await response.json();
             typingInd.remove();
@@ -1169,7 +1263,7 @@ function renderEnlargedNovaView() {
     window.sendEnlargedPrompt = (p) => executeEnlargedChat(p);
 }
  
-// ---------------- MODAL DETAILS, TRAILER (403 FIXED), RATIONALE & LIBRARY ----------------
+// ---------------- MODAL DETAILS, TRAILER, RATIONALE & LIBRARY ----------------
 async function fetchAndOpenModal(title, fallbackPoster, customRationale, movieId, matchPct = 95) {
     try {
         let movie = null;
@@ -1384,7 +1478,16 @@ async function handleChat(queryText) {
         const response = await fetch(`${BACKEND_URL}/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: message, profile: {name: currentUser || 'Guest'}, region: selectedRegion, history: conversationHistory })
+            body: JSON.stringify({
+                message: message,
+                profile: {
+                    name: currentUser || 'Guest',
+                    favorite_genres: userGenres.map(id => GENRE_OPTIONS[id]).filter(Boolean),
+                    origin_country: selectedCountry
+                },
+                region: selectedRegion,
+                history: conversationHistory
+            })
         });
         const data = await response.json();
         typingIndicator.remove();
