@@ -14,9 +14,9 @@ app = Flask(__name__)
 CORS(app)
 
 # Set these in Render -> Environment (use NEW rotated keys)
-TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "").strip().strip('"').strip("'")
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "").strip().strip('"').strip("'")
-OMDB_API_KEY = os.environ.get("OMDB_API_KEY", "").strip().strip('"').strip("'")
+TMDB_API_KEY = os.environ.get("7c7e21b0fe58e5868e262c9bd6b8e7e9", "").strip().strip('"').strip("'")
+GROQ_API_KEY = os.environ.get("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", "").strip().strip('"').strip("'")
+OMDB_API_KEY = os.environ.get("554ae239", "").strip().strip('"').strip("'")
 
 DB_NAME = "cinemind.db"
 TMDB = "https://api.themoviedb.org/3"
