@@ -28,7 +28,34 @@ GENRES = {
 }
 GENRE_LIST = ", ".join(GENRES.keys())
 
+# Strict Porn / Erotic Content Blocklist (Requirement #4)
+PORN_BLOCK_WORDS = [
+    "porn", "porno", "xxx", "erotic", "erotica", "hentai", "jav", "av idol",
+    "sex tape", "playboy", "penthouse", "nude", "stripper", "prostitute",
+    "kama sutra", "bdsm", "fetish", "orgasm", "milf", "stepmom", "stepsister",
+    "softcore", "pink film", "vivamax", "brazzers", "onlyfans", "emmanuelle"
+]
+
+KNOWN_R18_TITLES = {
+    "deadpool", "deadpool 2", "deadpool & wolverine", "logan", "joker", "parasite",
+    "oldboy", "oppenheimer", "john wick", "saw", "hereditary", "midsommar",
+    "the wolf of wall street", "pulp fiction", "fight club", "gone girl",
+    "shutter island", "se7en", "american psycho", "saltburn", "the handmaiden"
+}
+
 KNOWN_PLOT_PATTERNS = [
+    {
+        "patterns": ["boxing in toy story", "toy story boxing", "why is there boxing in toy story", "rock em sock em", "rock 'em sock 'em"],
+        "must_have_any": ["toy story", "boxing"],
+        "reply": "In the Toy Story franchise (especially Toy Story 2), there is a memorable boxing scene featuring the classic 'Rock 'Em Sock 'Em Robots' (the Red Rocker and Blue Bomber) inside Al's Toy Barn—and Woody's arm also gets ripped before he's repaired! Plus, 'Real Steel' (2011) is the famous robot-boxing movie many people mix up with Toy Story.",
+        "guesses": [
+            {"title": "Toy Story", "year": 1995, "why": "The original Pixar classic introducing Woody, Buzz Lightyear, and Andy's bedroom toys."},
+            {"title": "Toy Story 2", "year": 1999, "why": "Features the famous Rock 'Em Sock 'Em Robots boxing match scene inside Al's office!"},
+            {"title": "Toy Story 3", "year": 2010, "why": "Woody, Buzz, and the gang face Sunnyside Daycare as Andy prepares for college."},
+            {"title": "Toy Story 4", "year": 2019, "why": "Woody and Buzz embark on a road trip with Forky and Duke Caboom."},
+            {"title": "Real Steel", "year": 2011, "why": "The hit robot-boxing movie often associated with fighting toy robots."}
+        ]
+    },
     {
         "patterns": ["high pole", "tv tower", "radio tower", "two girls", "2 girls", "stuck on top", "climbs a tower", "2000 feet", "ladder breaks", "stuck on a tower", "tall tower", "tall pole"],
         "must_have_any": ["pole", "tower", "stuck", "climb", "high", "top"],
@@ -78,6 +105,29 @@ CURATED_KOREAN_ROMCOMS = [
 ]
 
 
+def is_safe_non_porn(m):
+    if not m or m.get("adult") is True:
+        return False
+    text = f"{m.get('title') or ''} {m.get('name') or ''} {m.get('original_title') or ''} {m.get('overview') or ''}".lower()
+    for bad in PORN_BLOCK_WORDS:
+        if bad in text:
+            return False
+    if (m.get("vote_count") or 0) < 15 and re.search(r"\b(sex|seduc|affair|lust|desire|naked|intimate)\b", text):
+        return False
+    return True
+
+
+def is_genuine_r18(m):
+    title_l = (m.get("title") or m.get("name") or "").lower().strip()
+    if title_l in KNOWN_R18_TITLES:
+        return True
+    gids = m.get("genre_ids") or []
+    overview = (m.get("overview") or "").lower()
+    if (27 in gids or 80 in gids) and re.search(r"\b(murder|serial killer|brutal|blood|gore|cartel|massacre|psychopath|torture|slasher)\b", overview):
+        return True
+    return False
+
+
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
@@ -97,7 +147,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Super-Nova Galaxy Engine Live", "version": "15.0"})
+    return jsonify({"status": "CineMind Super-Nova Galaxy Engine Live", "version": "16.0"})
 
 
 @app.route("/api/signup", methods=["POST"])
@@ -259,18 +309,19 @@ Return ONLY a valid JSON object with these exact keys:
   "mood_keywords": [2-4 specific plot/theme keywords, e.g. "time loop", "radio tower", "amnesia", "heist"],
   "similar_to": [movie or series titles the user says they liked or wants similar to],
   "exclude_titles": [titles the user has already seen or wants to avoid],
-  "direct_reply": "Your natural, witty, intelligent conversational response. If intent is plot_search, name your #1 guess enthusiastically and explain why!"
+  "direct_reply": "Your natural, witty, intelligent conversational response. If the user asks a specific question about a movie (e.g. 'Why is there boxing in Toy Story?'), answer the question directly and accurately here, and put the relevant movie(s) in plot_guesses!"
 }}
 
-If the user describes a plot, scene, twist, character, or says things like 'what's that movie where...',
-'I forgot the name', 'i am looking for a movie where...', 'movie about a guy who...', use intent plot_search. Put your best 3-6 guesses of
+If the user describes a plot, scene, twist, character, asks a specific question about a scene in a movie, or says things like 'what's that movie where...',
+'I forgot the name', 'why is there...', 'i am looking for a movie where...', use intent plot_search. Put your best 3-6 guesses of
 the actual movie in plot_guesses (most likely first, with release year if you know it), and fill
-mood_keywords with 2-4 plot keywords (e.g. 'time loop', 'amnesia', 'heist').
+mood_keywords with 2-4 plot keywords.
 """
 
 
 def tmdb(path, **params):
     params["api_key"] = TMDB_API_KEY
+    params.setdefault("include_adult", "false")
     try:
         r = requests.get(f"{TMDB}{path}", params=params, timeout=6)
         return r.json() if r.status_code == 200 else {}
@@ -310,25 +361,29 @@ def deep_plot_detective(message):
                 return rule["guesses"], rule["reply"]
 
     guesses = []
+    wiki_snippet_answer = None
     try:
-        clean_q = re.sub(r"\b(i am|i'm|looking for a|looking for|what is the|what's that|whats that|movie where|movie about|film where|film about|series where|show where|a|an|the|were|was|from|really)\b", " ", lower)
+        clean_q = re.sub(r"\b(why|how|what|who|when|is|there|in|i am|i'm|looking for a|looking for|what is the|what's that|whats that|movie where|movie about|film where|film about|series where|show where|a|an|the|were|was|from|really)\b", " ", lower)
         clean_q = re.sub(r"\s+", " ", clean_q).strip()
-        if len(clean_q) >= 4:
+        if len(clean_q) >= 3:
             wiki_res = requests.get(
                 "https://en.wikipedia.org/w/api.php",
-                params={"action": "query", "list": "search", "srsearch": f'{clean_q} film plot', "srlimit": 8, "format": "json"},
+                params={"action": "query", "list": "search", "srsearch": f'{clean_q} film', "srlimit": 8, "format": "json"},
                 headers={"User-Agent": "CineMindCapstone/1.0"},
                 timeout=4
             ).json()
             for item in wiki_res.get("query", {}).get("search", []):
                 w_title = item.get("title", "")
+                snippet = re.sub(r"<[^>]+>", "", item.get("snippet", "")).strip()
                 if any(skip in w_title.lower() for skip in ["list of", "category:", "disambiguation", "awards", "filmography"]):
                     continue
+                if not wiki_snippet_answer and snippet:
+                    wiki_snippet_answer = snippet
                 m_year = re.search(r"\((\d{4})\s*[^\)]*film\)", w_title, re.I)
                 year = int(m_year.group(1)) if m_year else None
                 clean_title = re.sub(r"\s*\([^\)]*\)\s*", "", w_title).strip()
                 if clean_title and len(clean_title) < 60:
-                    guesses.append({"title": clean_title, "year": year, "why": f"Identified via plot match for '{clean_q}'."})
+                    guesses.append({"title": clean_title, "year": year, "why": snippet[:140] + "..." if snippet else f"Matched to '{clean_q}'."})
                 if len(guesses) >= 5:
                     break
     except Exception:
@@ -337,7 +392,10 @@ def deep_plot_detective(message):
     if guesses:
         top_name = guesses[0]["title"]
         top_yr = f" ({guesses[0]['year']})" if guesses[0].get("year") else ""
-        reply = f"Based on your plot description, the title you're looking for is likely '{top_name}'{top_yr}! Here are the closest plot matches:"
+        if wiki_snippet_answer and any(q_word in lower for q_word in ["why", "how", "what", "who", "explain"]):
+            reply = f"Regarding '{top_name}'{top_yr}: {wiki_snippet_answer}. Here are the matching titles and related films:"
+        else:
+            reply = f"Based on your query, the top match is '{top_name}'{top_yr}! Here are the closest matching titles:"
         return guesses, reply
     return [], None
 
@@ -353,12 +411,13 @@ def smart_local_nlp_parse(message, history, username="Guest"):
     intent = "recommend"
     direct_reply = None
 
-    looks_like_plot = (
-        len(lower.split()) >= 5
-        or any(p in lower for p in ["movie where", "movie about", "looking for a movie", "forgot the name", "what's that movie", "stuck", "trapped", "infiltrate", "relives"])
+    looks_like_plot_or_question = (
+        len(lower.split()) >= 4
+        or "?" in lower
+        or any(p in lower for p in ["why", "how", "what", "movie where", "movie about", "looking for a movie", "forgot the name", "what's that movie", "stuck", "trapped", "infiltrate", "relives", "boxing"])
     )
 
-    if looks_like_plot:
+    if looks_like_plot_or_question:
         det_guesses, det_reply = deep_plot_detective(message)
         if det_guesses:
             return {
@@ -398,7 +457,7 @@ def smart_local_nlp_parse(message, history, username="Guest"):
         if "thriller" not in genres: genres.append("thriller")
     if any(w in lower for w in ["scary", "horror", "ghost", "creepy", "haunted"]):
         if "horror" not in genres: genres.append("horror")
-    if any(w in lower for w in ["action", "explosive", "fight", "blockbuster"]):
+    if any(w in lower for w in ["action", "explosive", "fight", "blockbuster", "boxing"]):
         if "action" not in genres: genres.append("action")
 
     for g_name in GENRES.keys():
@@ -415,7 +474,7 @@ def smart_local_nlp_parse(message, history, username="Guest"):
         direct_reply = f"Here are the closest matches I found for {desc}, {username}!"
 
     return {
-        "intent": "plot_search" if looks_like_plot else intent,
+        "intent": "plot_search" if looks_like_plot_or_question else intent,
         "plot_guesses": guesses,
         "genres": genres,
         "origin_country": origin_country,
@@ -472,6 +531,7 @@ def plot_search(p):
         hits = tmdb("/search/movie", **params).get("results", [])
         if not hits and year:
             hits = tmdb("/search/movie", query=title).get("results", [])
+        hits = [h for h in hits if is_safe_non_porn(h)]
         chosen = next((h for h in hits if h.get("poster_path") and h.get("title", "").lower() == title.lower()), None)
         if not chosen and hits:
             chosen = next((h for h in hits if h.get("poster_path")), None)
@@ -488,7 +548,7 @@ def plot_search(p):
         if kws:
             extra = tmdb("/discover/movie", with_keywords="|".join(kws), sort_by="popularity.desc", **{"vote_count.gte": 50}).get("results", [])
             for m in extra:
-                if m.get("poster_path") and m["id"] not in seen:
+                if is_safe_non_porn(m) and m.get("poster_path") and m["id"] not in seen:
                     seen.add(m["id"])
                     m["_bonus"] = 10.0
                     results.append(m)
@@ -496,7 +556,7 @@ def plot_search(p):
     if results and len(results) < 8:
         top_id = results[0]["id"]
         for m in tmdb(f"/movie/{top_id}/recommendations").get("results", []):
-            if m.get("poster_path") and m["id"] not in seen:
+            if is_safe_non_porn(m) and m.get("poster_path") and m["id"] not in seen:
                 seen.add(m["id"])
                 m["_bonus"] = 8.0
                 m["_guess_why"] = f"Recommended because it shares key themes with {results[0].get('title')}."
@@ -516,6 +576,8 @@ def find_movies(intent):
 
     def add(movies, bonus=0, why_note=None, enforce_country=False):
         for m in movies:
+            if not is_safe_non_porn(m):
+                continue
             if not m.get("id") or not m.get("poster_path"):
                 continue
             if enforce_country and target_lang and m.get("original_language") != target_lang:
@@ -592,7 +654,13 @@ def rank(cands, intent, seen_ids):
     if not is_plot:
         blocked |= {norm(t) for t in (intent.get("similar_to") or [])}
     out = []
+    seen_unique = set()
     for m in cands:
+        if not is_safe_non_porn(m):
+            continue
+        if m["id"] in seen_unique:
+            continue
+        seen_unique.add(m["id"])
         if not is_plot and not m.get("_is_guess"):
             if m["id"] in seen_ids or norm(m.get("title") or m.get("name")) in blocked:
                 continue
@@ -635,13 +703,13 @@ def chat():
     region = (data.get("region") or "").upper() or None
 
     if not message:
-        return jsonify({"reply": f"Hey {username}! Tell me a plot, mood, or vibe you're craving.", "movies": []})
+        return jsonify({"reply": f"Hey {username}! Tell me a plot, question, or movie mood you're craving.", "movies": []})
 
     intent = extract_intent(message, history, username, fav_genres, selected_country)
     intent_type = intent.get("intent", "recommend")
 
     if intent_type in ("chitchat", "question") and not intent.get("plot_guesses") and not intent.get("genres"):
-        reply = intent.get("direct_reply") or f"I'm Nova, your AI cinema companion, {username}! Describe any movie plot or mood and I'll find it."
+        reply = intent.get("direct_reply") or f"I'm Nova, your AI cinema companion, {username}! Ask me any movie question or plot and I'll find it."
         return jsonify({"reply": reply, "movies": [], "intent": intent_type, "success": True})
 
     if intent_type == "recommend" and len(message.split()) <= 3 and not intent.get("genres") and not intent.get("plot_guesses") and fav_genres:
@@ -653,7 +721,7 @@ def chat():
     cands = find_movies(intent)
     if not cands:
         search_res = tmdb("/search/multi", query=message).get("results", [])
-        cands = [m for m in search_res if m.get("poster_path") and m.get("media_type") in ("movie", "tv")]
+        cands = [m for m in search_res if is_safe_non_porn(m) and m.get("poster_path") and m.get("media_type") in ("movie", "tv")]
 
     top = rank(cands, intent, get_seen_ids(username))
     if not top and cands:
@@ -661,7 +729,7 @@ def chat():
 
     if not top:
         return jsonify({
-            "reply": f"I couldn't find an exact match for '{message}', {username}. Try describing another detail or scene!",
+            "reply": intent.get("direct_reply") or f"I couldn't find an exact match for '{message}', {username}. Try describing another detail or scene!",
             "movies": [], "intent": intent_type, "success": True
         })
 
@@ -678,6 +746,8 @@ def chat():
         "vote_count": m.get("vote_count", 0),
         "release_date": m.get("release_date") or m.get("first_air_date") or "",
         "overview": m.get("overview", ""),
+        "genre_ids": m.get("genre_ids", []),
+        "r18": is_genuine_r18(m),
         "match": m.get("_match", 96),
         "platforms": [region or "Global"],
         "rationale": reasons.get(str(m["id"])) or m.get("_guess_why") or f"Identified via plot & thematic similarity to '{message}'.",
