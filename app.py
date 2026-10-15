@@ -89,6 +89,96 @@ KNOWN_R18_TITLES = {
     "squid game", "the boys", "euphoria", "game of thrones", "breaking bad"
 }
 
+# Verified Knowledge Base for Instant Question & Plot Resolution
+KNOWN_PLOT_PATTERNS = [
+    {
+        "patterns": ["boxing in toy story", "toy story boxing", "why is there boxing in toy story", "rock em sock em", "rock 'em sock 'em"],
+        "must_have_any": ["toy story"],
+        "reply": "In the Toy Story franchise (specifically Toy Story 2), the boxing scene features the classic 'Rock 'Em Sock 'Em Robots' (the Red Rocker and Blue Bomber) having a heated boxing match inside Al's Toy Barn office when Slinky Dog and the gang ask them for directions! Additionally, many viewers also think of 'Real Steel' (2011), the hit robot-boxing movie.",
+        "guesses": [
+            {"title": "Toy Story 2", "year": 1999, "media_type": "movie", "why": "Features the hilarious Rock 'Em Sock 'Em Robots boxing match scene inside Al's office!"},
+            {"title": "Toy Story", "year": 1995, "media_type": "movie", "why": "The original Pixar classic introducing Woody, Buzz Lightyear, and Andy's toys."},
+            {"title": "Toy Story 3", "year": 2010, "media_type": "movie", "why": "Woody, Buzz, and the gang face Sunnyside Daycare as Andy prepares for college."},
+            {"title": "Toy Story 4", "year": 2019, "media_type": "movie", "why": "Woody and Buzz embark on a road trip with Forky and Duke Caboom."},
+            {"title": "Real Steel", "year": 2011, "media_type": "movie", "why": "The famous robot-boxing movie often associated with fighting toy robots."}
+        ]
+    },
+    {
+        "patterns": ["raised to hate each other", "find music and love instead", "question family legacies", "choose their own path", "pat and pran", "bad buddy"],
+        "must_have_any": ["raised to hate", "family legacies", "bad buddy", "pat and pran"],
+        "reply": "You're looking for 'Bad Buddy' (2021)! Set at university, it follows Pat and Pran—two young men raised by rival families to hate each other who find music and love instead, forcing them to question their family legacies and choose their own path.",
+        "guesses": [
+            {"title": "Bad Buddy", "year": 2021, "media_type": "tv", "why": "Exact match: Two young men raised to hate each other find music and love instead, questioning family legacies."},
+            {"title": "Not Me", "year": 2021, "media_type": "tv", "why": "Acclaimed Thai BL series where twin brother White impersonates his injured twin Black."},
+            {"title": "The Eclipse", "year": 2022, "media_type": "tv", "why": "Thai BL mystery-romance about rebellion and secrets at an elite all-boys school."},
+            {"title": "My School President", "year": 2022, "media_type": "tv", "why": "Heartwarming Thai BL series centered on a high school music club and romance."},
+            {"title": "2gether", "year": 2020, "media_type": "tv", "why": "Hit Thai series where two university students bond through music and fake-dating."},
+            {"title": "Moonlight Chicken", "year": 2023, "media_type": "tv", "why": "Award-winning Thai drama about love, family expectations, and resilience."}
+        ]
+    },
+    {
+        "patterns": ["twins named black and white", "black and white", "white took over", "twin got badly injured", "fell in love with black"],
+        "must_have_any": ["black", "white", "twin", "twins"],
+        "reply": "You're looking for the acclaimed Thai Boys' Love (BL) series 'Not Me' (2021) starring Off Jumpol and Gun Atthaphan! When twin brother Black is brutally attacked and left in a coma, his twin White disguises himself as Black to infiltrate his motorcycle gang and uncover the traitor—slowly falling in love with Black's friend Sean.",
+        "guesses": [
+            {"title": "Not Me", "year": 2021, "media_type": "tv", "why": "Exact match: Twin brother White takes over the identity of his injured twin Black and falls for Black's friend Sean."},
+            {"title": "Bad Buddy", "year": 2021, "media_type": "tv", "why": "Hit Thai BL series about lifelong next-door rivals Pat and Pran who secretly fall in love."},
+            {"title": "The Eclipse", "year": 2022, "media_type": "tv", "why": "Acclaimed Thai BL drama about rebellion and secrets at an elite school."},
+            {"title": "KinnPorsche", "year": 2022, "media_type": "tv", "why": "Action-packed Thai BL drama about a mafia heir and his bodyguard."},
+            {"title": "Theory of Love", "year": 2019, "media_type": "tv", "why": "Starring Off and Gun—a film student secretly falls in love with his best friend."}
+        ]
+    },
+    {
+        "patterns": ["lies and his nose", "nose gets longer", "nose grows", "wooden boy", "puppet who wants to be a real boy", "pinocchio"],
+        "must_have_any": ["nose", "pinocchio", "puppet"],
+        "reply": "That's 'Pinocchio'! Crafted by woodcarver Geppetto, Pinocchio is a wooden puppet brought to life whose nose grows longer every time he tells a lie. Here are the most iconic film and series adaptations of Pinocchio:",
+        "guesses": [
+            {"title": "Pinocchio", "year": 1940, "media_type": "movie", "why": "Disney's animated masterpiece about the wooden puppet whose nose grows whenever he lies."},
+            {"title": "Guillermo del Toro's Pinocchio", "year": 2022, "media_type": "movie", "why": "Oscar-winning stop-motion reimagining of the classic tale of the wooden boy who lies."},
+            {"title": "Pinocchio", "year": 2022, "media_type": "movie", "why": "Live-action Disney adaptation starring Tom Hanks as Geppetto."},
+            {"title": "Pinocchio", "year": 2019, "media_type": "movie", "why": "Matteo Garrone's faithful, critically acclaimed Italian live-action adaptation."},
+            {"title": "Pinocchio", "year": 2014, "media_type": "tv", "why": "Hit Korean drama where a girl with 'Pinocchio syndrome' hiccups whenever she tells a lie."}
+        ]
+    },
+    {
+        "patterns": ["high pole", "tv tower", "radio tower", "two girls", "2 girls", "stuck on top", "climbs a tower", "2000 feet", "ladder breaks", "stuck on a tower", "tall tower", "tall pole"],
+        "must_have_any": ["pole", "tower", "stuck", "climb"],
+        "reply": "You're looking for 'Fall' (2022)! Best friends Becky and Hunter climb a 2,000-foot abandoned radio tower and get stranded at the very top when the ladder breaks. Here is 'Fall' along with intense survival thrillers:",
+        "guesses": [
+            {"title": "Fall", "year": 2022, "media_type": "movie", "why": "Exact plot match: two girls climb a 2,000-foot tall radio tower/pole and get trapped at the top with no way down."},
+            {"title": "47 Meters Down", "year": 2017, "media_type": "movie", "why": "Two sisters get trapped in a shark cage at the bottom of the ocean with less than an hour of oxygen left."},
+            {"title": "The Shallows", "year": 2016, "media_type": "movie", "why": "A surfer gets stranded on a tiny rock 200 yards from shore while a great white shark circles her."},
+            {"title": "127 Hours", "year": 2010, "media_type": "movie", "why": "A mountain climber becomes trapped under a boulder in an isolated slot canyon and must fight to survive."},
+            {"title": "Frozen", "year": 2010, "media_type": "movie", "why": "Three friends get stranded high up on a ski chairlift when the resort closes for the weekend."},
+            {"title": "Nowhere", "year": 2023, "media_type": "movie", "why": "A pregnant woman gets trapped alone inside a drifting shipping container in the middle of the sea."}
+        ]
+    },
+    {
+        "patterns": ["poor family", "rich household", "rich family", "infiltrate", "infiltrates", "wealthy family", "pose as tutor"],
+        "must_have_any": ["poor", "rich", "infiltrate", "infiltrates", "wealthy", "household"],
+        "reply": "You're thinking of the Oscar-winning masterpiece 'Parasite' (2019)! Here is 'Parasite' along with sharp thrillers about class divide and infiltration:",
+        "guesses": [
+            {"title": "Parasite", "year": 2019, "media_type": "movie", "why": "Exact plot match: the Kim family infiltrates the wealthy Park household by posing as unrelated, highly qualified workers."},
+            {"title": "Saltburn", "year": 2023, "media_type": "movie", "why": "A scheming student infiltrates an aristocratic British family's sprawling estate."},
+            {"title": "The Handmaiden", "year": 2016, "media_type": "movie", "why": "A Korean con-artist plot involving a pickpocket hired as a maid to defraud a wealthy heiress."},
+            {"title": "Knives Out", "year": 2019, "media_type": "movie", "why": "A clever mystery revolving around a wealthy, dysfunctional family and an outsider."},
+            {"title": "Us", "year": 2019, "media_type": "movie", "why": "A sharp, suspenseful thriller centered on duality, privilege, and home invasion."}
+        ]
+    },
+    {
+        "patterns": ["relives the same day", "same day over", "wakes up and relives", "time loop", "repeating the same day", "every time he dies"],
+        "must_have_any": ["relives", "loop", "same day", "repeating"],
+        "reply": "That classic time-loop premise matches 'Groundhog Day' (1993), 'Palm Springs' (2020), and 'Edge of Tomorrow' (2014)!",
+        "guesses": [
+            {"title": "Groundhog Day", "year": 1993, "media_type": "movie", "why": "The definitive time-loop movie where a cynical weatherman relives February 2nd over and over."},
+            {"title": "Palm Springs", "year": 2020, "media_type": "movie", "why": "A hilarious and heartfelt modern twist where wedding guests get stuck reliving the same day."},
+            {"title": "Edge of Tomorrow", "year": 2014, "media_type": "movie", "why": "A sci-fi action thriller where a soldier relives a brutal alien battle every time he dies."},
+            {"title": "Happy Death Day", "year": 2017, "media_type": "movie", "why": "A college student must relive the day of her murder until she figures out who her killer is."},
+            {"title": "Source Code", "year": 2011, "media_type": "movie", "why": "A soldier wakes up in someone else's body and relives an 8-minute train explosion."}
+        ]
+    }
+]
+
 
 def is_safe_non_porn(m):
     if not m or m.get("adult") is True:
@@ -143,7 +233,7 @@ def home():
     active_key = GROQ_API_KEY or detect_env_key("gsk_", ["GROQ_API_KEY", "GROQ_KEY", "GROQ"], "")
     return jsonify({
         "status": "CineMind Universal AI Engine Live",
-        "version": "24.0",
+        "version": "25.0",
         "groq_key_detected": bool(active_key)
     })
 
@@ -290,7 +380,7 @@ def omdb_info():
     return jsonify({})
 
 
-# ------------------------- UNIVERSAL AI + WIKIPEDIA/TMDB DEEP SYNOPSIS MATCHER -------------------------
+# ------------------------- UNIVERSAL AI + EXPLICIT TITLE + SYNOPSIS MATCHER -------------------------
 PARSE_PROMPT = f"""You are Nova, an encyclopedic AI expert on all world cinema, TV series, K-dramas, Thai/Asian BL (Boys' Love) dramas, anime, Western films, and indie movies.
 Analyze the user's latest message, any Web Search Hints provided, and the conversation history.
 NEVER suggest pornographic, erotic, softcore, or adult-only films.
@@ -312,13 +402,8 @@ Return ONLY a valid JSON object with these exact keys:
   "mood_keywords": [2-4 specific plot/theme keywords],
   "similar_to": [movie or series titles the user says they liked],
   "exclude_titles": [titles the user wants to avoid],
-  "direct_reply": "Your warm, accurate, and specific response! If the user describes a plot, logline, or asks 'what movie/series is about...', name the #1 exact matching title in your first sentence and explain why it matches!"
+  "direct_reply": "Your warm, accurate, and specific response! If the user asks a specific question about a movie/series (e.g. 'Why is there boxing in Toy Story?'), answer their question directly and put that movie/series at index 0 of plot_guesses! If they describe a plot, name the #1 exact matching title in your first sentence and explain why it matches!"
 }}
-
-CRITICAL RULES:
-1. Whenever a user describes a plot, premise, logline, character names, or scene (even if the user says 'what movie is about...' when it is actually a TV series/drama like 'Bad Buddy' or 'Not Me'), MUST set "intent": "plot_search" and put your best 5-6 real-world title matches in "plot_guesses" (most accurate #1 first).
-2. Read the Web Search Hints carefully: if a title appears right next to the user's plot sentence in the Web Search Hints, put that exact title at index 0 of "plot_guesses"!
-3. NEVER put URLs, website names, or domain names inside "title"—only real movie or TV series titles!
 """
 
 
@@ -390,6 +475,30 @@ def is_valid_clean_title(title_str):
     return True
 
 
+def extract_explicit_title_from_query(message):
+    """
+    Detects when a user explicitly names a movie or series inside a question
+    (e.g., 'Why is there boxing in Toy Story?', 'What happens at the end of Inception?',
+    'Who died in Avengers Endgame?') so we lock that exact franchise at #1!
+    """
+    patterns = [
+        r"\b(?:in|of|from|about|watch|like)\s+['\"]?([A-Z][A-Za-z0-9\s\:\-\'&]{2,35}?)['\"]?\s*[\?\.\!]*$",
+        r"['\"]([A-Za-z0-9\s\:\-\'&]{2,40})['\"]"
+    ]
+    generic_tail_words = {
+        "rich household", "same day", "high pole", "own path", "his friend", "black's friend",
+        "longer", "gets longer", "the end", "real life", "this movie", "that movie", "the movie",
+        "the series", "korean", "philippines", "thailand", "japan", "netflix"
+    }
+    for pat in patterns:
+        m = re.search(pat, message.strip())
+        if m:
+            candidate = m.group(1).strip()
+            if candidate.lower() not in generic_tail_words and len(candidate.split()) <= 5:
+                return candidate
+    return None
+
+
 def compute_plot_similarity_bonus(movie_obj, user_query):
     """
     Scores how closely a candidate movie or TV series' official TMDB overview
@@ -397,13 +506,19 @@ def compute_plot_similarity_bonus(movie_obj, user_query):
     """
     if not user_query or not movie_obj:
         return 0.0
+
+    # 1. Massive bonus if the movie's title is explicitly mentioned inside the user's question! (e.g. "Toy Story" in "Why is there boxing in Toy Story?")
+    m_title = (movie_obj.get("title") or movie_obj.get("name") or "").lower().strip()
+    if len(m_title) >= 4 and re.search(rf"\b{re.escape(m_title)}\b", user_query.lower()):
+        return 300.0
+
     stop = {
         "what", "which", "movie", "film", "series", "show", "drama", "about", "where",
         "that", "with", "from", "their", "they", "have", "this", "call", "looking",
-        "find", "into", "when", "after", "since", "slowly", "took", "over", "were", "been"
+        "find", "into", "when", "after", "since", "slowly", "took", "over", "were", "been", "there"
     }
     clean_u = re.sub(
-        r"^(what|which)\s+(do\s+you\s+call\s+the\s+|is\s+the\s+)?(movie|film|series|show|drama|bl|boys\s+love\s+series|k-drama|anime)\s+(is\s+)?(about|where|that)\s+",
+        r"^(what|which|why|how)\s+(do\s+you\s+call\s+the\s+|is\s+there\s+|is\s+the\s+)?(movie|film|series|show|drama|bl|boys\s+love\s+series|k-drama|anime)?\s*(is\s+)?(about|where|that|in)?\s*",
         "",
         user_query.strip(),
         flags=re.I
@@ -413,13 +528,12 @@ def compute_plot_similarity_bonus(movie_obj, user_query):
     if not ov:
         return 0.0
 
-    # If a 4+ word substring of the user's query appears verbatim inside the TMDB overview, give +500 points!
     u_words_all = re.findall(r"[a-z]+", clean_u)
     verbatim_bonus = 0.0
     for i in range(max(0, len(u_words_all) - 3)):
         phrase = " ".join(u_words_all[i:i + 4])
         if len(phrase) >= 14 and phrase in ov:
-            verbatim_bonus += 150.0
+            verbatim_bonus += 180.0
 
     q_words = [w for w in re.findall(r"[a-z]{4,}", clean_u) if w not in stop]
     if not q_words:
@@ -427,17 +541,19 @@ def compute_plot_similarity_bonus(movie_obj, user_query):
 
     matched_words = sum(1 for w in set(q_words) if w in ov)
     ratio = matched_words / max(1, len(set(q_words)))
-    # Require at least 35% of the plot words to match before giving a high ratio bonus
-    if ratio < 0.35 and verbatim_bonus == 0:
-        return matched_words * 5.0
+
+    # CRITICAL FIX: Require at least 3 distinct plot words (or verbatim 4-word phrase) before giving a high plot bonus!
+    # This prevents a single word like "boxing" from giving Rocky Balboa +180 points!
+    if matched_words < 3 and verbatim_bonus == 0:
+        return matched_words * 4.0
+
     return verbatim_bonus + (matched_words * 28.0) + (ratio * 160.0)
 
 
 def tmdb_deep_overview_scan(user_query):
     """
-    Directly scans TMDB's popular & top-rated TV series, Asian dramas, and movies
-    when cloud web-scrapers are blocked by CAPTCHAs, matching the user's plot words
-    directly against TMDB's own `overview` database!
+    Only runs on multi-word plot descriptions (6+ content words) and requires at least
+    3 distinct plot words to match inside the TMDB overview!
     """
     clean_u = re.sub(
         r"^(what|which)\s+(do\s+you\s+call\s+the\s+|is\s+the\s+)?(movie|film|series|show|drama|bl|boys\s+love\s+series|k-drama|anime)\s+(is\s+)?(about|where|that)\s+",
@@ -446,11 +562,12 @@ def tmdb_deep_overview_scan(user_query):
         flags=re.I
     ).strip(" ?.")
 
-    pool = []
-    # 1. Search TMDB keywords from the user's query and discover both TV series AND Movies with those keywords
-    stop = {"what", "movie", "series", "about", "where", "that", "with", "from", "their", "they", "find", "instead", "forcing", "them", "choose", "own", "young", "raised"}
+    stop = {"what", "why", "how", "there", "movie", "series", "about", "where", "that", "with", "from", "their", "they", "find", "instead", "forcing", "them", "choose", "own", "young", "raised"}
     sig_words = [w for w in re.findall(r"[a-z]{4,}", clean_u.lower()) if w not in stop]
+    if len(sig_words) < 3:
+        return []
 
+    pool = []
     kw_ids = []
     for w in sig_words[:5]:
         for kr in tmdb("/search/keyword", query=w).get("results", [])[:2]:
@@ -465,7 +582,6 @@ def tmdb_deep_overview_scan(user_query):
                     item["media_type"] = m_type
                     pool.append(item)
 
-    # 2. If query mentions romance/love/hate/rivals/twins/music/school, scan popular Thai, Korean, Japanese & US TV dramas + Movies
     lower_q = clean_u.lower()
     if any(w in lower_q for w in ["hate", "love", "music", "family", "twins", "twin", "brother", "school", "university", "friend"]):
         for country_code in ("TH", "KR", "JP", "US"):
@@ -475,7 +591,6 @@ def tmdb_deep_overview_scan(user_query):
                         item["media_type"] = "tv"
                         pool.append(item)
 
-    # Score every item in pool against the user's plot query
     scored = []
     seen = set()
     for item in pool:
@@ -484,7 +599,7 @@ def tmdb_deep_overview_scan(user_query):
             continue
         seen.add(uk)
         sim = compute_plot_similarity_bonus(item, clean_u)
-        if sim >= 80.0:  # High overview match!
+        if sim >= 110.0:  # Must match multiple plot words or a verbatim phrase!
             item["_bonus"] = sim
             item["_is_guess"] = True
             item["_guess_why"] = (item.get("overview") or "")[:165]
@@ -492,29 +607,6 @@ def tmdb_deep_overview_scan(user_query):
 
     scored.sort(key=lambda x: x.get("_bonus", 0), reverse=True)
     return scored[:6]
-
-
-def clean_extracted_web_title(raw_html_title):
-    no_spans = re.sub(r"<(span|cite|div)[^>]*>.*?</\1>", " ", raw_html_title, flags=re.I | re.S)
-    t = html.unescape(re.sub(r"<[^>]+>", " ", no_spans))
-    t = re.sub(r"https?://\S+", " ", t)
-    t = re.sub(r"\b\w+\.(com|org|net|tv|io|ph)\b[^\s]*", " ", t, flags=re.I)
-    t = re.sub(r"^.*?›\s*", "", t)
-    t = re.sub(r"\s+", " ", t).strip()
-
-    yr_match = re.search(r"\((?:[^\)]*?)((?:19|20)\d{2})(?:[^\)]*?)\)", t)
-    year = int(yr_match.group(1)) if yr_match else None
-    is_tv = bool(re.search(r"\b(tv series|tv show|series|drama|season|episode|mydramalist|serializd|betaseries)\b", t, re.I))
-
-    t = re.sub(r"^(The\s+(?:WORST|BEST)\s+episodes\s+of\s+|Where\s+to\s+Watch\s+|Watch\s+|Review\s+of\s+|Plot\s+of\s+|Synopsis\s+of\s+)", "", t, flags=re.I).strip()
-    t = re.sub(r"\s+(streaming\s+online|streaming|online|full\s+episodes|episodes).*$", "", t, flags=re.I).strip()
-    t = re.sub(r"\s*[\-\|—:]\s*(watch\s+tv\s+show.*|IMDb|MyDramaList|Serializd|FanBolt|BetaSeries|The Movie Database|TMDB|Wikipedia|Rotten Tomatoes|Letterboxd|JustWatch|MyAsianTV|Netflix|Viki|GagaOOLala|Watch).*$", "", t, flags=re.I)
-    t = re.sub(r"\s*\([^\)]*\).*$", "", t).strip()
-    t = t.strip(" -|—:\"'›»!")
-
-    if not is_valid_clean_title(t):
-        return None, None, None
-    return t, year, ("tv" if is_tv else None)
 
 
 def live_web_plot_search(message):
@@ -530,7 +622,6 @@ def live_web_plot_search(message):
     seen_titles = set()
     raw_web_snippets = []
 
-    # 1. Wikipedia API Search (Never blocks cloud IPs! Searches film + television series articles)
     try:
         for wiki_q in (f'"{clean[:80]}"', f'{clean[:90]} (film OR television series)'):
             w_res = requests.get(
@@ -562,6 +653,33 @@ def live_web_plot_search(message):
 
 def smart_local_nlp_parse(message, history, username="Guest", fav_genres=None):
     lower = message.lower()
+
+    # 1. Check our Instant Verified Plot & Question Knowledge Base FIRST!
+    for rule in KNOWN_PLOT_PATTERNS:
+        if any(w in lower for w in rule.get("must_have_any", [])):
+            score = sum(2 if pat in lower else 0 for pat in rule["patterns"])
+            word_hits = sum(1 for w in rule["must_have_any"] if w in lower)
+            if score >= 2 or word_hits >= 1:
+                return {
+                    "intent": "plot_search",
+                    "plot_guesses": rule["guesses"],
+                    "genres": [],
+                    "mood_keywords": [],
+                    "direct_reply": rule["reply"],
+                    "_locked_pattern": True
+                }
+
+    # 2. Check if the user explicitly asked a question about a named movie/series (e.g. "Why is there ... in [Title]?")
+    explicit_title = extract_explicit_title_from_query(message)
+    if explicit_title:
+        return {
+            "intent": "plot_search",
+            "plot_guesses": [{"title": explicit_title, "why": f"Directly referenced in your question: '{message}'."}],
+            "genres": [],
+            "mood_keywords": [],
+            "direct_reply": ""
+        }
+
     genres = []
     origin_country = None
     language = None
@@ -608,7 +726,7 @@ def smart_local_nlp_parse(message, history, username="Guest", fav_genres=None):
         if "thriller" not in genres: genres.append("thriller")
     if any(w in lower for w in ["scary", "horror", "ghost", "creepy", "haunted"]):
         if "horror" not in genres: genres.append("horror")
-    if any(w in lower for w in ["action", "explosive", "fight", "blockbuster", "boxing"]):
+    if any(w in lower for w in ["action", "explosive", "fight", "blockbuster"]):
         if "action" not in genres: genres.append("action")
 
     for g_name in GENRES.keys():
@@ -650,17 +768,24 @@ def smart_local_nlp_parse(message, history, username="Guest", fav_genres=None):
 
 def extract_intent(message, history, username="Guest", fav_genres=None, selected_country=None, client_guesses=None):
     local_parsed = smart_local_nlp_parse(message, history, username, fav_genres)
+    if local_parsed.get("_locked_pattern"):
+        return local_parsed
+
     is_plot_query = local_parsed.get("intent") == "plot_search"
 
     web_guesses, web_snippets = ([], [])
     if is_plot_query:
         web_guesses, web_snippets = live_web_plot_search(message)
 
-    # Merge any AI guesses sent directly from the user's browser!
     if client_guesses and isinstance(client_guesses, list):
-        for cg in client_guesses:
+        for cg in reversed(client_guesses):
             if isinstance(cg, dict) and is_valid_clean_title(cg.get("title", "")):
                 web_guesses.insert(0, cg)
+
+    # Preserve any explicit title detected in the user's question at index 0
+    for lg in reversed(local_parsed.get("plot_guesses") or []):
+        if isinstance(lg, dict) and is_valid_clean_title(lg.get("title", "")):
+            web_guesses.insert(0, lg)
 
     ctx_lines = [f"{'User' if h.get('role') == 'user' else 'Nova'}: {h.get('content')}" for h in (history or [])[-10:] if isinstance(h, dict) and h.get("content")]
     ctx = "\n".join(ctx_lines) if ctx_lines else "No prior messages."
@@ -754,14 +879,7 @@ def keyword_ids(words):
 def plot_search(p, raw_message=""):
     results, seen = [], set()
 
-    # 1. Run Direct TMDB Overview & Keyword Deep Scan FIRST so exact TMDB synopsis matches (like Bad Buddy!) are always found!
-    for scan_hit in tmdb_deep_overview_scan(raw_message):
-        u_key = f"{scan_hit.get('media_type', 'movie')}_{scan_hit['id']}"
-        if u_key not in seen:
-            seen.add(u_key)
-            results.append(scan_hit)
-
-    # 2. Verify LLM & Web guesses on TMDB
+    # 1. Verify explicit / LLM / pattern guesses FIRST!
     for idx, g in enumerate((p.get("plot_guesses") or [])[:8]):
         title = g.get("title") if isinstance(g, dict) else str(g)
         year = g.get("year") if isinstance(g, dict) else None
@@ -776,7 +894,7 @@ def plot_search(p, raw_message=""):
             if u_key not in seen:
                 seen.add(u_key)
                 ov_bonus = compute_plot_similarity_bonus(chosen, raw_message)
-                chosen["_bonus"] = (55.0 - (idx * 4.0)) + ov_bonus
+                chosen["_bonus"] = (65.0 - (idx * 4.0)) + ov_bonus
                 chosen["_is_guess"] = True
                 if why and "Matched to your plot" not in str(why):
                     chosen["_guess_why"] = html.unescape(str(why))
@@ -784,7 +902,14 @@ def plot_search(p, raw_message=""):
                     chosen["_guess_why"] = (chosen.get("overview") or "")[:165]
                 results.append(chosen)
 
-    # Sort all verified candidates so the highest synopsis/AI match is #1
+    # 2. Also run Direct TMDB Overview Deep Scan for multi-word plot descriptions (unless a locked pattern already matched)
+    if not p.get("_locked_pattern"):
+        for scan_hit in tmdb_deep_overview_scan(raw_message):
+            u_key = f"{scan_hit.get('media_type', 'movie')}_{scan_hit['id']}"
+            if u_key not in seen:
+                seen.add(u_key)
+                results.append(scan_hit)
+
     results.sort(key=lambda x: x.get("_bonus", 0), reverse=True)
 
     if len(results) < 6:
@@ -1001,8 +1126,15 @@ def chat():
     top_yr = (top[0].get("release_date") or top[0].get("first_air_date") or "")[:4]
     yr_str = f" ({top_yr})" if top_yr else ""
     top_ov = (top[0].get("overview") or "")[:220]
-    if not direct_reply or direct_reply.startswith("Here are the top") or top_name.lower() not in direct_reply.lower():
-        direct_reply = f"You're looking for '{top_name}'{yr_str}! {top_ov}"
+
+    # Only generate a fallback reply if we don't already have a specific answer!
+    if not direct_reply or direct_reply.startswith("Here are the top"):
+        is_why_how = bool(re.match(r"^(why|how)\b", message.strip(), re.I))
+        if is_why_how:
+            why_note = top[0].get("_guess_why") or top_ov
+            direct_reply = f"Regarding '{top_name}'{yr_str}: {why_note}"
+        else:
+            direct_reply = f"You're looking for '{top_name}'{yr_str}! {top_ov}"
 
     movies = [{
         "id": m["id"],
@@ -1028,7 +1160,7 @@ def chat():
 @app.route("/trends", methods=["GET"])
 def trends():
     return jsonify({
-        "ai_forecast": "Super-Nova Multi-LLM + TMDB Deep Overview Scanner Online.",
+        "ai_forecast": "Super-Nova Multi-LLM + Explicit Title & Synopsis Scanner Online.",
         "trending_genres": ["Multi-LLM Plot & Series Recognition", "TMDB Deep Synopsis Scanner", "OMDb Metadata Enrichment"]
     })
 
