@@ -187,7 +187,7 @@ html[data-theme="light"] .hero-slideshow-overlay {
 .search-btn-submit { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); border: none; padding: 0 26px; border-radius: 30px; color: #fff; font-weight: 700; cursor: pointer; transition: 0.25s; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .search-btn-submit:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0, 242, 254, 0.55); }
 
-/* ---- Filter Panel: Dropdowns Top, Format Middle (Right-Aligned), Genres Bottom ---- */
+/* ---- Filter Panel: Dropdowns Top, Format Middle (Left-Aligned), Genres Bottom ---- */
 .filter-panel { display: flex; flex-direction: column; gap: 16px; background: var(--panel-bg); padding: 22px 26px; border-radius: 24px; border: 1px solid var(--glass-border); backdrop-filter: blur(22px); box-shadow: var(--shadow-heavy); }
 .filter-dropdown-container { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; padding-bottom: 12px; border-bottom: 1px solid rgba(0, 242, 254, 0.14); }
 .filter-select-wrapper { display: flex; align-items: center; gap: 8px; flex: 1 1 220px; min-width: 190px; }
@@ -215,9 +215,8 @@ html[data-theme="light"] .hero-slideshow-overlay {
 html[data-theme="light"] .custom-select option { background: #ede9fe; color: #1e1b4b; }
 
 .filter-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; }
-/* Format row right-aligned in the middle */
-.filter-row-middle { justify-content: flex-end; text-align: right; padding: 4px 0 12px 0; border-bottom: 1px solid rgba(0, 242, 254, 0.14); }
-.filter-row-middle .filter-label { min-width: auto; margin-right: 6px; }
+/* Format row left-aligned in the middle */
+.filter-row-middle { justify-content: flex-start; text-align: left; padding: 4px 0 12px 0; border-bottom: 1px solid rgba(0, 242, 254, 0.14); }
 .filter-label { font-size: 0.85rem; font-weight: 700; color: var(--secondary-glow); min-width: 120px; display: flex; align-items: center; gap: 6px; }
 .filter-pill { background: rgba(124, 58, 237, 0.08); border: 1px solid var(--glass-border); padding: 7px 16px; border-radius: 20px; font-size: 0.82rem; font-weight: 600; cursor: pointer; color: var(--text-muted); transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; user-select: none; }
 .filter-pill:hover, .filter-pill.active { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); color: #fff; border-color: transparent; box-shadow: 0 0 18px rgba(0, 242, 254, 0.5); }
@@ -535,7 +534,7 @@ html[data-theme="light"] .chat-tooltip { background: linear-gradient(135deg, #ff
     .filter-dropdown-container { gap: 10px; }
     .filter-select-wrapper { flex: 1 1 100%; }
     .filter-row { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-    .filter-row-middle { justify-content: flex-end; }
+    .filter-row-middle { justify-content: flex-start; }
     .filter-label { min-width: auto; font-size: 0.8rem; margin-right: 4px; flex-shrink: 0; }
     .filter-pill { flex-shrink: 0; padding: 6px 13px; font-size: 0.78rem; }
 }
@@ -667,7 +666,7 @@ html[data-theme="light"] .chat-tooltip { background: linear-gradient(135deg, #ff
             </div>
         </div>
 
-        <!-- 2. MIDDLE: FORMAT SELECTION (RIGHT-ALIGNED) -->
+        <!-- 2. MIDDLE: FORMAT SELECTION (LEFT-ALIGNED) -->
         <div class="filter-row filter-row-middle" id="mediaFilterRow">
             <span class="filter-label"><i class="fa-solid fa-layer-group"></i> Format:</span>
             <button type="button" class="filter-pill active" data-media="all">🌌 All Formats</button>
@@ -1074,7 +1073,6 @@ function isSafeNonPorn(item) {
     for (const bad of PORN_BLOCK_WORDS) {
         if (title === bad || origTitle === bad || combined.includes(bad)) return false;
     }
-    // Block low-vote obscure romance/drama titles that describe explicit sexual/steamy plots
     if ((item.vote_count || 0) < 35 && /\b(sex|sexual|nude|naked|seduce|seduction|lust|affair|steamy|intimate|passion|forbidden desire|bed|pleasure)\b/i.test(combined)) {
         return false;
     }
@@ -1154,7 +1152,6 @@ async function verifyCardMetadataAsync(movie, cardEl, badgeContainerEl, countryB
         const d = await res.json();
         if (!d || !d.id) return;
 
-        // 1. Block & remove immediately if studio or TMDB keywords reveal pornographic/erotic/Vivamax content
         const companies = (d.production_companies || []).map(c => (c.name || '').toLowerCase()).join(' ');
         const kwList = (d.keywords && (d.keywords.keywords || d.keywords.results) || []).map(k => (k.name || '').toLowerCase()).join(' ');
         if (
@@ -1167,7 +1164,6 @@ async function verifyCardMetadataAsync(movie, cardEl, badgeContainerEl, countryB
             return;
         }
 
-        // 2. Update exact production country on the card
         let exactCountryCode = "";
         if (Array.isArray(d.origin_country) && d.origin_country.length > 0) {
             exactCountryCode = d.origin_country[0].toUpperCase();
@@ -1183,7 +1179,6 @@ async function verifyCardMetadataAsync(movie, cardEl, badgeContainerEl, countryB
             }
         }
 
-        // 3. Check genuine mainstream R-18 status
         let detectedR18 = isGenuineR18(d);
         if (/\b(gore|slasher|extreme violence|serial killer|massacre|torture)\b/i.test(kwList)) {
             detectedR18 = true;
