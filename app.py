@@ -17,7 +17,6 @@ CORS(app)
 
 
 def detect_env_key(prefix, default_names, fallback=""):
-    """Automatically finds your API key on Render even if named differently or pasted in the Key column."""
     for name in default_names:
         val = os.environ.get(name, "").strip().strip('"').strip("'")
         if val:
@@ -59,7 +58,6 @@ COUNTRY_DEFAULT_GENRES = {
     "US": ["action", "sci-fi", "comedy", "drama"]
 }
 
-# Strict Pornographic & Erotic Content Blocklist
 PORN_BLOCK_WORDS = [
     "porn", "porno", "pornographic", "xxx", "erotic", "erotica", "hentai", "jav",
     "av idol", "sex tape", "playboy", "penthouse", "nude", "nudity", "stripper",
@@ -145,30 +143,9 @@ def home():
     active_key = GROQ_API_KEY or detect_env_key("gsk_", ["GROQ_API_KEY", "GROQ_KEY", "GROQ"], "")
     return jsonify({
         "status": "CineMind Universal AI Engine Live",
-        "version": "23.0",
+        "version": "24.0",
         "groq_key_detected": bool(active_key)
     })
-
-
-@app.route("/api/debug-ai", methods=["GET"])
-def debug_ai():
-    active_key = GROQ_API_KEY or detect_env_key("gsk_", ["GROQ_API_KEY", "GROQ_KEY", "GROQ"], "")
-    if not active_key:
-        return jsonify({"groq_configured": False, "reason": "No gsk_ key found in Render Environment variables."})
-    try:
-        r = requests.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={"Authorization": f"Bearer {active_key}", "Content-Type": "application/json"},
-            json={
-                "model": "llama-3.3-70b-versatile",
-                "messages": [{"role": "user", "content": "Return JSON: {\"ok\": true}"}],
-                "response_format": {"type": "json_object"}
-            },
-            timeout=8
-        )
-        return jsonify({"groq_configured": True, "http_status": r.status_code, "response": r.json()})
-    except Exception as e:
-        return jsonify({"groq_configured": True, "error": str(e)})
 
 
 @app.route("/api/signup", methods=["POST"])
@@ -313,7 +290,7 @@ def omdb_info():
     return jsonify({})
 
 
-# ------------------------- UNIVERSAL AI + OVERVIEW-VERIFIED PLOT SEARCH ENGINE -------------------------
+# ------------------------- UNIVERSAL AI + WIKIPEDIA/TMDB DEEP SYNOPSIS MATCHER -------------------------
 PARSE_PROMPT = f"""You are Nova, an encyclopedic AI expert on all world cinema, TV series, K-dramas, Thai/Asian BL (Boys' Love) dramas, anime, Western films, and indie movies.
 Analyze the user's latest message, any Web Search Hints provided, and the conversation history.
 NEVER suggest pornographic, erotic, softcore, or adult-only films.
@@ -413,8 +390,111 @@ def is_valid_clean_title(title_str):
     return True
 
 
+def compute_plot_similarity_bonus(movie_obj, user_query):
+    """
+    Scores how closely a candidate movie or TV series' official TMDB overview
+    matches the words and phrases in the user's plot query!
+    """
+    if not user_query or not movie_obj:
+        return 0.0
+    stop = {
+        "what", "which", "movie", "film", "series", "show", "drama", "about", "where",
+        "that", "with", "from", "their", "they", "have", "this", "call", "looking",
+        "find", "into", "when", "after", "since", "slowly", "took", "over", "were", "been"
+    }
+    clean_u = re.sub(
+        r"^(what|which)\s+(do\s+you\s+call\s+the\s+|is\s+the\s+)?(movie|film|series|show|drama|bl|boys\s+love\s+series|k-drama|anime)\s+(is\s+)?(about|where|that)\s+",
+        "",
+        user_query.strip(),
+        flags=re.I
+    ).lower().strip(" ?.")
+
+    ov = (movie_obj.get("overview") or "").lower()
+    if not ov:
+        return 0.0
+
+    # If a 4+ word substring of the user's query appears verbatim inside the TMDB overview, give +500 points!
+    u_words_all = re.findall(r"[a-z]+", clean_u)
+    verbatim_bonus = 0.0
+    for i in range(max(0, len(u_words_all) - 3)):
+        phrase = " ".join(u_words_all[i:i + 4])
+        if len(phrase) >= 14 and phrase in ov:
+            verbatim_bonus += 150.0
+
+    q_words = [w for w in re.findall(r"[a-z]{4,}", clean_u) if w not in stop]
+    if not q_words:
+        return verbatim_bonus
+
+    matched_words = sum(1 for w in set(q_words) if w in ov)
+    ratio = matched_words / max(1, len(set(q_words)))
+    # Require at least 35% of the plot words to match before giving a high ratio bonus
+    if ratio < 0.35 and verbatim_bonus == 0:
+        return matched_words * 5.0
+    return verbatim_bonus + (matched_words * 28.0) + (ratio * 160.0)
+
+
+def tmdb_deep_overview_scan(user_query):
+    """
+    Directly scans TMDB's popular & top-rated TV series, Asian dramas, and movies
+    when cloud web-scrapers are blocked by CAPTCHAs, matching the user's plot words
+    directly against TMDB's own `overview` database!
+    """
+    clean_u = re.sub(
+        r"^(what|which)\s+(do\s+you\s+call\s+the\s+|is\s+the\s+)?(movie|film|series|show|drama|bl|boys\s+love\s+series|k-drama|anime)\s+(is\s+)?(about|where|that)\s+",
+        "",
+        user_query.strip(),
+        flags=re.I
+    ).strip(" ?.")
+
+    pool = []
+    # 1. Search TMDB keywords from the user's query and discover both TV series AND Movies with those keywords
+    stop = {"what", "movie", "series", "about", "where", "that", "with", "from", "their", "they", "find", "instead", "forcing", "them", "choose", "own", "young", "raised"}
+    sig_words = [w for w in re.findall(r"[a-z]{4,}", clean_u.lower()) if w not in stop]
+
+    kw_ids = []
+    for w in sig_words[:5]:
+        for kr in tmdb("/search/keyword", query=w).get("results", [])[:2]:
+            if kr.get("id"):
+                kw_ids.append(str(kr["id"]))
+
+    if kw_ids:
+        kw_pipe = "|".join(kw_ids[:6])
+        for ep, m_type in (("/discover/tv", "tv"), ("/discover/movie", "movie")):
+            for item in tmdb(ep, with_keywords=kw_pipe, sort_by="popularity.desc").get("results", []):
+                if is_safe_non_porn(item) and item.get("poster_path"):
+                    item["media_type"] = m_type
+                    pool.append(item)
+
+    # 2. If query mentions romance/love/hate/rivals/twins/music/school, scan popular Thai, Korean, Japanese & US TV dramas + Movies
+    lower_q = clean_u.lower()
+    if any(w in lower_q for w in ["hate", "love", "music", "family", "twins", "twin", "brother", "school", "university", "friend"]):
+        for country_code in ("TH", "KR", "JP", "US"):
+            for page_n in (1, 2):
+                for item in tmdb("/discover/tv", with_origin_country=country_code, with_genres="18", sort_by="popularity.desc", page=page_n).get("results", []):
+                    if is_safe_non_porn(item) and item.get("poster_path"):
+                        item["media_type"] = "tv"
+                        pool.append(item)
+
+    # Score every item in pool against the user's plot query
+    scored = []
+    seen = set()
+    for item in pool:
+        uk = f"{item.get('media_type', 'movie')}_{item['id']}"
+        if uk in seen:
+            continue
+        seen.add(uk)
+        sim = compute_plot_similarity_bonus(item, clean_u)
+        if sim >= 80.0:  # High overview match!
+            item["_bonus"] = sim
+            item["_is_guess"] = True
+            item["_guess_why"] = (item.get("overview") or "")[:165]
+            scored.append(item)
+
+    scored.sort(key=lambda x: x.get("_bonus", 0), reverse=True)
+    return scored[:6]
+
+
 def clean_extracted_web_title(raw_html_title):
-    """Strips nested breadcrumb spans and website suffixes to extract the clean movie/series title."""
     no_spans = re.sub(r"<(span|cite|div)[^>]*>.*?</\1>", " ", raw_html_title, flags=re.I | re.S)
     t = html.unescape(re.sub(r"<[^>]+>", " ", no_spans))
     t = re.sub(r"https?://\S+", " ", t)
@@ -426,7 +506,6 @@ def clean_extracted_web_title(raw_html_title):
     year = int(yr_match.group(1)) if yr_match else None
     is_tv = bool(re.search(r"\b(tv series|tv show|series|drama|season|episode|mydramalist|serializd|betaseries)\b", t, re.I))
 
-    # Handle "The WORST episodes of Bad Buddy" or "Watch Bad Buddy streaming"
     t = re.sub(r"^(The\s+(?:WORST|BEST)\s+episodes\s+of\s+|Where\s+to\s+Watch\s+|Watch\s+|Review\s+of\s+|Plot\s+of\s+|Synopsis\s+of\s+)", "", t, flags=re.I).strip()
     t = re.sub(r"\s+(streaming\s+online|streaming|online|full\s+episodes|episodes).*$", "", t, flags=re.I).strip()
     t = re.sub(r"\s*[\-\|—:]\s*(watch\s+tv\s+show.*|IMDb|MyDramaList|Serializd|FanBolt|BetaSeries|The Movie Database|TMDB|Wikipedia|Rotten Tomatoes|Letterboxd|JustWatch|MyAsianTV|Netflix|Viki|GagaOOLala|Watch).*$", "", t, flags=re.I)
@@ -439,10 +518,6 @@ def clean_extracted_web_title(raw_html_title):
 
 
 def live_web_plot_search(message):
-    """
-    Searches the live web for any plot/synopsis and extracts ONLY the main result titles & snippets
-    (never random sidebar widgets!).
-    """
     clean = re.sub(
         r"^(what|which)\s+(do\s+you\s+call\s+the\s+|is\s+the\s+)?(movie|film|series|show|drama|bl|boys\s+love\s+series|k-drama|anime)\s+(is\s+)?(about|where|that)\s+",
         "",
@@ -451,85 +526,36 @@ def live_web_plot_search(message):
     ).strip(" ?.")
 
     is_tv_hint = bool(re.search(r"\b(series|show|drama|bl|boys love|k-drama|kdrama|episodes|season)\b", message, re.I))
-    queries_to_try = [
-        f'"{clean}"' if len(clean.split()) >= 6 else f'{clean} movie OR series plot',
-        f'{clean} movie OR tv series'
-    ]
-
     guesses = []
     seen_titles = set()
     raw_web_snippets = []
 
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-        "Accept-Language": "en-US,en;q=0.9"
-    }
-
-    for q_str in queries_to_try:
-        if len(guesses) >= 5:
-            break
-
-        # 1. Try DuckDuckGo HTML
-        try:
-            resp = requests.post(
-                "https://html.duckduckgo.com/html/",
-                data={"q": q_str},
-                headers={**headers, "Content-Type": "application/x-www-form-urlencoded"},
-                timeout=5
-            )
-            if resp.status_code == 200:
-                r_titles = re.findall(r'<a[^>]*class="result__a"[^>]*>(.*?)</a>', resp.text, flags=re.I | re.S)
-                r_snips = re.findall(r'<a[^>]*class="result__snippet"[^>]*>(.*?)</a>', resp.text, flags=re.I | re.S)
-                for idx, rt in enumerate(r_titles[:8]):
-                    snip = html.unescape(re.sub(r"<[^>]+>", "", r_snips[idx])).strip() if idx < len(r_snips) else ""
-                    t_clean, yr, m_type = clean_extracted_web_title(rt)
-                    if not t_clean:
-                        continue
-                    if snip:
-                        raw_web_snippets.append(f"Title: {t_clean} | Plot Snippet: {snip}")
-                    if t_clean.lower() not in seen_titles:
-                        seen_titles.add(t_clean.lower())
-                        guesses.append({
-                            "title": t_clean,
-                            "year": yr,
-                            "media_type": m_type or ("tv" if is_tv_hint else None),
-                            "why": snip[:165] if snip else f"Matched to your plot description."
-                        })
-        except Exception:
-            pass
-
-        # 2. Try Yahoo Web Search (Main result headings only)
-        if len(guesses) < 3:
-            try:
-                y_url = f"https://search.yahoo.com/search?p={urllib.parse.quote(q_str)}"
-                y_resp = requests.get(y_url, headers=headers, timeout=5)
-                if y_resp.status_code == 200:
-                    y_blocks = re.findall(r'<div[^>]*class="[^"]*dd\s+algo[^"]*"[^>]*>(.*?)</div>\s*</div>', y_resp.text, flags=re.I | re.S)
-                    if not y_blocks:
-                        y_titles = re.findall(r'<h3[^>]*class="[^"]*title[^"]*"[^>]*>.*?<a[^>]*>(.*?)</a>', y_resp.text, flags=re.I | re.S)
-                        y_blocks = [f"<h3><a>{t}</a></h3>" for t in y_titles[:8]]
-
-                    for blk in y_blocks[:8]:
-                        m_h3 = re.search(r'<h3[^>]*>.*?<a[^>]*>(.*?)</a>', blk, flags=re.I | re.S)
-                        if not m_h3:
-                            continue
-                        m_snip = re.search(r'<div[^>]*class="[^"]*compText[^"]*"[^>]*>(.*?)</div>', blk, flags=re.I | re.S)
-                        snip = html.unescape(re.sub(r"<[^>]+>", " ", m_snip.group(1))).strip() if m_snip else ""
-                        t_clean, yr, m_type = clean_extracted_web_title(m_h3.group(1))
-                        if not t_clean:
-                            continue
-                        if snip:
-                            raw_web_snippets.append(f"Title: {t_clean} | Plot Snippet: {snip}")
-                        if t_clean.lower() not in seen_titles:
-                            seen_titles.add(t_clean.lower())
-                            guesses.append({
-                                "title": t_clean,
-                                "year": yr,
-                                "media_type": m_type or ("tv" if is_tv_hint else None),
-                                "why": snip[:165] if snip else f"Matched to your plot description."
-                            })
-            except Exception:
-                pass
+    # 1. Wikipedia API Search (Never blocks cloud IPs! Searches film + television series articles)
+    try:
+        for wiki_q in (f'"{clean[:80]}"', f'{clean[:90]} (film OR television series)'):
+            w_res = requests.get(
+                "https://en.wikipedia.org/w/api.php",
+                params={"action": "query", "list": "search", "srsearch": wiki_q, "srlimit": 6, "format": "json"},
+                headers={"User-Agent": "CineMindCapstone/3.0"},
+                timeout=4
+            ).json()
+            for item in w_res.get("query", {}).get("search", []):
+                w_title = html.unescape(item.get("title", ""))
+                snip = html.unescape(re.sub(r"<[^>]+>", "", item.get("snippet", ""))).strip()
+                if any(skip in w_title.lower() for skip in ["list of", "category:", "disambiguation", "awards", "filmography", "discography"]):
+                    continue
+                m_yr = re.search(r"\((\d{4})\s*[^\)]*(?:film|series|tv)", w_title, re.I)
+                yr = int(m_yr.group(1)) if m_yr else None
+                m_type = "tv" if ("series" in w_title.lower() or "tv" in w_title.lower() or is_tv_hint) else None
+                c_title = re.sub(r"\s*\([^\)]*\)\s*", "", w_title).strip()
+                if is_valid_clean_title(c_title) and c_title.lower() not in seen_titles:
+                    seen_titles.add(c_title.lower())
+                    raw_web_snippets.append(f"Title: {c_title} | Snippet: {snip}")
+                    guesses.append({"title": c_title, "year": yr, "media_type": m_type, "why": snip[:165]})
+            if guesses:
+                break
+    except Exception:
+        pass
 
     return guesses, raw_web_snippets
 
@@ -622,13 +648,19 @@ def smart_local_nlp_parse(message, history, username="Guest", fav_genres=None):
     }
 
 
-def extract_intent(message, history, username="Guest", fav_genres=None, selected_country=None):
+def extract_intent(message, history, username="Guest", fav_genres=None, selected_country=None, client_guesses=None):
     local_parsed = smart_local_nlp_parse(message, history, username, fav_genres)
     is_plot_query = local_parsed.get("intent") == "plot_search"
 
     web_guesses, web_snippets = ([], [])
     if is_plot_query:
         web_guesses, web_snippets = live_web_plot_search(message)
+
+    # Merge any AI guesses sent directly from the user's browser!
+    if client_guesses and isinstance(client_guesses, list):
+        for cg in client_guesses:
+            if isinstance(cg, dict) and is_valid_clean_title(cg.get("title", "")):
+                web_guesses.insert(0, cg)
 
     ctx_lines = [f"{'User' if h.get('role') == 'user' else 'Nova'}: {h.get('content')}" for h in (history or [])[-10:] if isinstance(h, dict) and h.get("content")]
     ctx = "\n".join(ctx_lines) if ctx_lines else "No prior messages."
@@ -667,31 +699,6 @@ def extract_intent(message, history, username="Guest", fav_genres=None, selected
         local_parsed["direct_reply"] = ""
 
     return local_parsed
-
-
-def compute_plot_similarity_bonus(movie_obj, user_query):
-    """
-    Directly compares the user's plot query against the candidate's official TMDB overview!
-    If a candidate's TMDB overview matches the user's plot words (like 'Bad Buddy'), it gets up to +250 points!
-    If an unrelated false positive (like 'Night Watch') has 0 matching plot words, it gets 0 bonus.
-    """
-    if not user_query or not movie_obj:
-        return 0.0
-    stop = {
-        "what", "which", "movie", "film", "series", "show", "drama", "about", "where",
-        "that", "with", "from", "their", "they", "have", "this", "call", "looking",
-        "find", "into", "when", "after", "since", "slowly", "took", "over", "were", "been"
-    }
-    q_words = [w for w in re.findall(r"[a-z]{4,}", user_query.lower()) if w not in stop]
-    if not q_words:
-        return 0.0
-    ov = (movie_obj.get("overview") or "").lower()
-    if not ov:
-        return 0.0
-    matched_words = sum(1 for w in set(q_words) if w in ov)
-    ratio = matched_words / max(1, len(set(q_words)))
-    # Huge bonus for high overview overlap!
-    return (matched_words * 22.0) + (ratio * 120.0)
 
 
 def search_tmdb_title(title, year=None, media_hint=None, user_query=""):
@@ -746,6 +753,15 @@ def keyword_ids(words):
 
 def plot_search(p, raw_message=""):
     results, seen = [], set()
+
+    # 1. Run Direct TMDB Overview & Keyword Deep Scan FIRST so exact TMDB synopsis matches (like Bad Buddy!) are always found!
+    for scan_hit in tmdb_deep_overview_scan(raw_message):
+        u_key = f"{scan_hit.get('media_type', 'movie')}_{scan_hit['id']}"
+        if u_key not in seen:
+            seen.add(u_key)
+            results.append(scan_hit)
+
+    # 2. Verify LLM & Web guesses on TMDB
     for idx, g in enumerate((p.get("plot_guesses") or [])[:8]):
         title = g.get("title") if isinstance(g, dict) else str(g)
         year = g.get("year") if isinstance(g, dict) else None
@@ -759,9 +775,8 @@ def plot_search(p, raw_message=""):
             u_key = f"{chosen.get('media_type', 'movie')}_{chosen['id']}"
             if u_key not in seen:
                 seen.add(u_key)
-                # Combine LLM/web guess order with actual TMDB overview verification score!
                 ov_bonus = compute_plot_similarity_bonus(chosen, raw_message)
-                chosen["_bonus"] = (45.0 - (idx * 4.0)) + ov_bonus
+                chosen["_bonus"] = (55.0 - (idx * 4.0)) + ov_bonus
                 chosen["_is_guess"] = True
                 if why and "Matched to your plot" not in str(why):
                     chosen["_guess_why"] = html.unescape(str(why))
@@ -769,7 +784,7 @@ def plot_search(p, raw_message=""):
                     chosen["_guess_why"] = (chosen.get("overview") or "")[:165]
                 results.append(chosen)
 
-    # Sort verified guesses so the candidate whose TMDB overview actually matches the user's plot is #1!
+    # Sort all verified candidates so the highest synopsis/AI match is #1
     results.sort(key=lambda x: x.get("_bonus", 0), reverse=True)
 
     if len(results) < 6:
@@ -936,13 +951,14 @@ def chat():
     username = profile.get("name", "Guest")
     fav_genres = profile.get("favorite_genres") or []
     selected_country = (profile.get("origin_country") or "").strip().upper()
+    client_guesses = data.get("client_guesses") or []
     history = data.get("history") or []
     region = (data.get("region") or "").upper() or None
 
     if not message:
         return jsonify({"reply": f"Hey {username}! Tell me any movie or series plot, question, or mood you're craving.", "movies": []})
 
-    intent = extract_intent(message, history, username, fav_genres, selected_country)
+    intent = extract_intent(message, history, username, fav_genres, selected_country, client_guesses=client_guesses)
     intent_type = intent.get("intent", "recommend")
 
     if intent_type in ("chitchat", "question") and not intent.get("plot_guesses") and not intent.get("genres"):
@@ -981,7 +997,6 @@ def chat():
         if ex.get("reply"):
             direct_reply = html.unescape(ex.get("reply"))
 
-    # Guarantee the reply always names the #1 overview-verified TMDB match!
     top_name = top[0].get("title") or top[0].get("name")
     top_yr = (top[0].get("release_date") or top[0].get("first_air_date") or "")[:4]
     yr_str = f" ({top_yr})" if top_yr else ""
@@ -1013,8 +1028,8 @@ def chat():
 @app.route("/trends", methods=["GET"])
 def trends():
     return jsonify({
-        "ai_forecast": "Super-Nova Multi-LLM + Overview-Verified Plot-Search Pipeline Online.",
-        "trending_genres": ["Multi-LLM Plot & Series Recognition", "TMDB Overview Verification Scoring", "OMDb Metadata Enrichment"]
+        "ai_forecast": "Super-Nova Multi-LLM + TMDB Deep Overview Scanner Online.",
+        "trending_genres": ["Multi-LLM Plot & Series Recognition", "TMDB Deep Synopsis Scanner", "OMDb Metadata Enrichment"]
     })
 
 
