@@ -187,7 +187,7 @@ html[data-theme="light"] .hero-slideshow-overlay {
 .search-btn-submit { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); border: none; padding: 0 26px; border-radius: 30px; color: #fff; font-weight: 700; cursor: pointer; transition: 0.25s; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .search-btn-submit:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0, 242, 254, 0.55); }
 
-/* ---- Filter Panel: Dropdowns Top, Format Middle, Genres Bottom ---- */
+/* ---- Filter Panel: Dropdowns Top, Format Middle (Right-Aligned), Genres Bottom ---- */
 .filter-panel { display: flex; flex-direction: column; gap: 16px; background: var(--panel-bg); padding: 22px 26px; border-radius: 24px; border: 1px solid var(--glass-border); backdrop-filter: blur(22px); box-shadow: var(--shadow-heavy); }
 .filter-dropdown-container { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; padding-bottom: 12px; border-bottom: 1px solid rgba(0, 242, 254, 0.14); }
 .filter-select-wrapper { display: flex; align-items: center; gap: 8px; flex: 1 1 220px; min-width: 190px; }
@@ -214,8 +214,10 @@ html[data-theme="light"] .hero-slideshow-overlay {
 .custom-select option { background: #120935; color: #fff; }
 html[data-theme="light"] .custom-select option { background: #ede9fe; color: #1e1b4b; }
 
-.filter-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.filter-row-middle { justify-content: center; padding: 4px 0 12px 0; border-bottom: 1px solid rgba(0, 242, 254, 0.14); }
+.filter-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; }
+/* Format row right-aligned in the middle */
+.filter-row-middle { justify-content: flex-end; text-align: right; padding: 4px 0 12px 0; border-bottom: 1px solid rgba(0, 242, 254, 0.14); }
+.filter-row-middle .filter-label { min-width: auto; margin-right: 6px; }
 .filter-label { font-size: 0.85rem; font-weight: 700; color: var(--secondary-glow); min-width: 120px; display: flex; align-items: center; gap: 6px; }
 .filter-pill { background: rgba(124, 58, 237, 0.08); border: 1px solid var(--glass-border); padding: 7px 16px; border-radius: 20px; font-size: 0.82rem; font-weight: 600; cursor: pointer; color: var(--text-muted); transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; user-select: none; }
 .filter-pill:hover, .filter-pill.active { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); color: #fff; border-color: transparent; box-shadow: 0 0 18px rgba(0, 242, 254, 0.5); }
@@ -533,7 +535,7 @@ html[data-theme="light"] .chat-tooltip { background: linear-gradient(135deg, #ff
     .filter-dropdown-container { gap: 10px; }
     .filter-select-wrapper { flex: 1 1 100%; }
     .filter-row { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-    .filter-row-middle { justify-content: flex-start; }
+    .filter-row-middle { justify-content: flex-end; }
     .filter-label { min-width: auto; font-size: 0.8rem; margin-right: 4px; flex-shrink: 0; }
     .filter-pill { flex-shrink: 0; padding: 6px 13px; font-size: 0.78rem; }
 }
@@ -665,7 +667,7 @@ html[data-theme="light"] .chat-tooltip { background: linear-gradient(135deg, #ff
             </div>
         </div>
 
-        <!-- 2. MIDDLE: FORMAT SELECTION -->
+        <!-- 2. MIDDLE: FORMAT SELECTION (RIGHT-ALIGNED) -->
         <div class="filter-row filter-row-middle" id="mediaFilterRow">
             <span class="filter-label"><i class="fa-solid fa-layer-group"></i> Format:</span>
             <button type="button" class="filter-pill active" data-media="all">🌌 All Formats</button>
@@ -930,7 +932,6 @@ const COUNTRY_NAMES = {
     MX: "Mexico 🇲🇽", CA: "Canada 🇨🇦", AU: "Australia 🇦🇺", BR: "Brazil 🇧🇷"
 };
 
-// Map ISO 639-1 original_language to Country Code so every movie card immediately knows its origin country
 const LANG_TO_COUNTRY = {
     tl: "PH", fil: "PH", ko: "KR", th: "TH", ja: "JP",
     hi: "IN", ta: "IN", te: "IN", fr: "FR", es: "ES",
@@ -1040,50 +1041,69 @@ const MOVIE_TO_TV_GENRE = {
     "878": "10765", "53": "9648"
 };
 
-const PORN_BLOCK_WORDS = ["brazzers", "onlyfans leak", "sex tape leak"];
+// ---------------- STRICT PORNOGRAPHIC & EROTIC FILM BLOCKER ----------------
+const PORN_BLOCK_WORDS = [
+    "porn", "porno", "pornographic", "xxx", "erotic", "erotica", "hentai", "jav",
+    "av idol", "sex tape", "playboy", "penthouse", "nude", "nudity", "stripper",
+    "prostitute", "prostitution", "brothel", "kama sutra", "bdsm", "fetish",
+    "orgasm", "milf", "stepmom", "stepsister", "softcore", "pink film", "vivamax",
+    "brazzers", "onlyfans", "emmanuelle", "nymphomaniac", "caligula",
+    "365 days", "fifty shades", "scorpio nights", "silip", "uhaw", "laman",
+    "boso", "sikretong malupit", "macho dancer", "tubero", "pamasahe",
+    "selina's gold", "us x her", "bela luna", "kiskisan", "salitan",
+    "lampas langit", "virgin forest", "kaliwaan", "purgatoryo", "doblado",
+    "paupahan", "ang babaeng nawawala sa sarili", "kinsenas, katapusan",
+    "boy bastos", "palitan", "tag-init", "balinsasayaw", "sugar baby",
+    "tayuan", "haslers", "dilig", "kaluskos", "unli life", "totnak", "kantot",
+    "libog", "malibog", "pokpok", "parausan", "halinghing", "pagnanasa",
+    "angeli khang", "azi acosta", "aj raval", "robb guinto", "christine bermas",
+    "ayanna misola", "cara gonzales", "yen durano", "apple dy", "denise esteban"
+];
 
-const KNOWN_R18_TITLES = new Set([
-    "deadpool", "deadpool 2", "deadpool & wolverine", "logan", "joker", "parasite",
-    "oldboy", "oppenheimer", "john wick", "saw", "hereditary", "midsommar",
-    "the wolf of wall street", "pulp fiction", "fight club", "gone girl",
-    "shutter island", "se7en", "american psycho", "saltburn", "the handmaiden",
-    "squid game", "the boys", "euphoria", "game of thrones", "breaking bad",
-    "it", "the conjuring", "evil dead rise", "terrifier", "smile", "don't breathe",
-    "fifty shades of grey", "fifty shades darker", "fifty shades freed", "365 days",
-    "eyes wide shut", "basic instinct", "nymphomaniac", "blue is the warmest color",
-    "love", "lust, caution", "sex, lies, and videotape", "wild things", "chloe",
-    "body double", "fatal attraction", "unfaithful", "a serbian film", "hostel",
-    "the human centipede", "cannibal holocaust", "martyrs", "the substance",
-    "house of the dragon", "dexter", "spartacus", "caligula", "antichrist",
-    "scorpio nights", "scorpio nights 2", "scorpio nights 3", "silip", "isla",
-    "tuhog", "uhaw", "init", "laman", "boso", "sikretong malupit", "anak ng macho dancer",
-    "macho dancer", "tubero", "pamasahe", "selina's gold", "us x her", "bela luna",
-    "kiskisan", "salitan", "taya", "hugot", "lampas langit", "secrets", "virgin forest",
-    "kaliwaan", "purgatoryo", "reroute", "doblado", "paupahan", "ang babaeng nawawala sa sarili",
-    "kinsenas, katapusan", "boy bastos", "palitan", "tag-init", "balinsasayaw", "sugar baby",
-    "walk with me", "tayuan", "kabayo", "haslers", "karera", "dilig", "kaluskos", "unli life"
-]);
+const PORN_BLOCK_REGEX = /\b(porn|porno|xxx|erotic|erotica|hentai|jav|sex tape|playboy|penthouse|nudity|stripper|prostitute|brothel|bdsm|fetish|orgasm|milf|softcore|pink film|vivamax|brazzers|onlyfans|nymphomaniac|threesome|foreplay|voyeur|voyeurism|adultery|mistress|seductress|lustful|kinky|sexploitation|bomba film|bold star)\b/i;
 
 function isSafeNonPorn(item) {
     if (!item) return false;
-    const text = `${item.title || ''} ${item.name || ''} ${item.original_title || ''} ${item.overview || ''}`.toLowerCase();
+    if (item.adult === true) return false;
+    const title = (item.title || item.name || "").toLowerCase().trim();
+    const origTitle = (item.original_title || item.original_name || "").toLowerCase().trim();
+    const overview = (item.overview || "").toLowerCase();
+    const combined = `${title} ${origTitle} ${overview}`;
+
+    if (PORN_BLOCK_REGEX.test(combined)) return false;
     for (const bad of PORN_BLOCK_WORDS) {
-        if (text.includes(bad)) return false;
+        if (title === bad || origTitle === bad || combined.includes(bad)) return false;
+    }
+    // Block low-vote obscure romance/drama titles that describe explicit sexual/steamy plots
+    if ((item.vote_count || 0) < 35 && /\b(sex|sexual|nude|naked|seduce|seduction|lust|affair|steamy|intimate|passion|forbidden desire|bed|pleasure)\b/i.test(combined)) {
+        return false;
     }
     return true;
 }
 
+// Genuine Mainstream R-18 Titles (Action, Thriller, Horror, Crime, Drama — NOT porn)
+const KNOWN_R18_TITLES = new Set([
+    "deadpool", "deadpool 2", "deadpool & wolverine", "logan", "joker", "parasite",
+    "oldboy", "oppenheimer", "john wick", "john wick: chapter 2", "john wick: chapter 3 - parabellum", "john wick: chapter 4",
+    "saw", "hereditary", "midsommar", "the wolf of wall street", "pulp fiction",
+    "fight club", "gone girl", "shutter island", "se7en", "american psycho",
+    "saltburn", "the handmaiden", "squid game", "the boys", "euphoria",
+    "game of thrones", "house of the dragon", "breaking bad", "dexter",
+    "it", "the conjuring", "evil dead rise", "terrifier", "smile", "don't breathe",
+    "the substance", "a quiet place", "train to busan", "i saw the devil", "the chaser"
+]);
+
 function isGenuineR18(item) {
-    if (!item) return false;
+    if (!item || !isSafeNonPorn(item)) return false;
     const key = `${item.media_type || 'movie'}_${item.id}`;
     if (r18Cache.has(key)) return r18Cache.get(key);
-    if (item._isR18 === true || item.r18 === true || item.adult === true) {
+    if (item._isR18 === true || item.r18 === true) {
         r18Cache.set(key, true);
         return true;
     }
 
     const cert = (item.certification || "").toUpperCase().trim();
-    if (["R", "NC-17", "R-18", "R18", "R-16", "18", "18+", "TV-MA", "X"].includes(cert)) {
+    if (["R", "R-18", "R18", "R-16", "18", "18+", "TV-MA"].includes(cert)) {
         r18Cache.set(key, true);
         return true;
     }
@@ -1099,33 +1119,7 @@ function isGenuineR18(item) {
     const overview = (item.overview || "").toLowerCase();
     const combinedText = `${titleLower} ${origTitleLower} ${overview}`;
 
-    const explicitSexRegex = /\b(erotic|erotica|sexuality|sexual|sexually|sex|explicit|nude|nudity|naked|intercourse|seduce|seduction|seductive|affair|infidelity|sensual|orgasm|lust|lustful|kinky|fetish|bdsm|voyeur|voyeurism|adultery|mistress|prostitute|prostitution|stripper|escort|brothel|threesome|foreplay|intimate|intimacy|passion|passionate|temptation|forbidden love|one night stand|steamy|provocative|pleasure|desire|sugar daddy|sugar baby|vivamax|softcore|pink film|jav|hentai)\b/i;
-    if (explicitSexRegex.test(combinedText)) {
-        r18Cache.set(key, true);
-        return true;
-    }
-
-    const filipinoSexyRegex = /\b(uhaw|init|mainit|laman|katawan|kama|tukso|kalabit|halik|hubad|bawal|kabit|kerida|parausan|ligaya|sarap|masarap|dilag|kwarto|halinghing|pagnanasa|silip|boso|pantasya|malandi|kiri|kalaguyo|angkin|tuhog|kiskisan|salitan|lampas langit|tubero|paupahan|masahista|masahe|totnak|kantot|libog|malibog|pokpok|bayaran|aliw|macho dancer|bold|bomba|vivamax|katas|dilig|sagad|basa|hiyas|bulaklak|angeli khang|azi acosta|aj raval|robb guinto|christine bermas|ayanna misola|cara gonzales|yen durano|apple dy|denise esteban)\b/i;
-    if (filipinoSexyRegex.test(combinedText)) {
-        r18Cache.set(key, true);
-        return true;
-    }
-
-    const isPH = item.original_language === 'tl'
-        || (Array.isArray(item.origin_country) && item.origin_country.includes('PH'))
-        || selectedCountry === 'PH';
-    if (isPH) {
-        const phAdultPlotCues = /\b(woman|husband|wife|lover|neighbor|maid|boarder|landlord|resort|island|secret|obsession|revenge|betrayal|night|room|bed|couple|stranger|widow|bachelor|professor|student|driver|plumber|carpenter|guard|boss|secretary|nurse|sin|flesh|body|touch|kiss|embrace|craving|hunger|thirst)\b/i;
-        const releaseYear = parseInt((item.release_date || item.first_air_date || "0").slice(0, 4), 10);
-        if (phAdultPlotCues.test(combinedText) && (gids.includes(18) || gids.includes(10749) || gids.includes(53) || gids.length === 0)) {
-            if (releaseYear >= 2020 && (item.vote_count || 0) < 120) {
-                r18Cache.set(key, true);
-                return true;
-            }
-        }
-    }
-
-    const disturbingHorrorKeywords = /\b(serial killer|gore|bloody|massacre|brutal|decapitation|mutilation|torture|psychopath|disturbing|slasher|cannibal|gruesome|autopsy|dismember|visceral|blood bath|terrifier|sadistic|demon|possession|exorcism)\b/i;
+    const disturbingHorrorKeywords = /\b(serial killer|gore|bloody|massacre|brutal|decapitation|mutilation|torture|psychopath|disturbing|slasher|cannibal|gruesome|autopsy|dismember|visceral|terrifier|sadistic|demon|possession|exorcism|cartel)\b/i;
     if ((gids.includes(27) || gids.includes(80) || gids.includes(53)) && disturbingHorrorKeywords.test(combinedText)) {
         r18Cache.set(key, true);
         return true;
@@ -1134,13 +1128,17 @@ function isGenuineR18(item) {
     return false;
 }
 
-// Asynchronous TMDB Deep Check for R-18 & Exact Origin Country on card
-async function verifyCardMetadataAsync(movie, badgeContainerEl, countryBadgeEl) {
+// Asynchronous TMDB Deep Check: Removes card if it turns out to be porn/erotic/Vivamax, updates Origin Country, and syncs genuine R-18 badge
+async function verifyCardMetadataAsync(movie, cardEl, badgeContainerEl, countryBadgeEl) {
     if (!movie || !movie.id) return;
     const mType = movie.media_type === 'tv' ? 'tv' : 'movie';
     const key = `${mType}_${movie.id}`;
 
     if (r18Cache.has(key) && originCountryCache.has(key)) {
+        if (r18Cache.get(key) === "BLOCKED_PORN") {
+            if (cardEl) cardEl.remove();
+            return;
+        }
         if (r18Cache.get(key) === true && badgeContainerEl && !badgeContainerEl.querySelector('.r18-badge')) {
             badgeContainerEl.insertAdjacentHTML('afterbegin', `<span class="r18-badge">R-18</span>`);
         }
@@ -1156,7 +1154,20 @@ async function verifyCardMetadataAsync(movie, badgeContainerEl, countryBadgeEl) 
         const d = await res.json();
         if (!d || !d.id) return;
 
-        // 1. Update exact production country on the card
+        // 1. Block & remove immediately if studio or TMDB keywords reveal pornographic/erotic/Vivamax content
+        const companies = (d.production_companies || []).map(c => (c.name || '').toLowerCase()).join(' ');
+        const kwList = (d.keywords && (d.keywords.keywords || d.keywords.results) || []).map(k => (k.name || '').toLowerCase()).join(' ');
+        if (
+            d.adult === true
+            || companies.includes('vivamax')
+            || /\b(porn|porno|erotic|erotica|softcore|pink film|sexploitation|bdsm|hentai|jav|av idol|female nudity|male nudity|full frontal nudity|explicit sex|prostitution|brothel|stripper)\b/i.test(kwList)
+        ) {
+            r18Cache.set(key, "BLOCKED_PORN");
+            if (cardEl) cardEl.remove();
+            return;
+        }
+
+        // 2. Update exact production country on the card
         let exactCountryCode = "";
         if (Array.isArray(d.origin_country) && d.origin_country.length > 0) {
             exactCountryCode = d.origin_country[0].toUpperCase();
@@ -1172,13 +1183,9 @@ async function verifyCardMetadataAsync(movie, badgeContainerEl, countryBadgeEl) 
             }
         }
 
-        // 2. Check R-18 status
+        // 3. Check genuine mainstream R-18 status
         let detectedR18 = isGenuineR18(d);
-        const companies = (d.production_companies || []).map(c => (c.name || '').toLowerCase()).join(' ');
-        if (companies.includes('vivamax')) detectedR18 = true;
-
-        const kwList = (d.keywords && (d.keywords.keywords || d.keywords.results) || []).map(k => (k.name || '').toLowerCase()).join(' ');
-        if (/\b(erotic|sex|nudity|female nudity|male nudity|sexual|softcore|bdsm|adultery|infidelity|seductress|lust|prostitute|stripper|gore|slasher|extreme violence|vivamax|pink film)\b/i.test(kwList)) {
+        if (/\b(gore|slasher|extreme violence|serial killer|massacre|torture)\b/i.test(kwList)) {
             detectedR18 = true;
         }
 
@@ -1186,7 +1193,12 @@ async function verifyCardMetadataAsync(movie, badgeContainerEl, countryBadgeEl) 
             for (const cEntry of d.release_dates.results) {
                 for (const rd of (cEntry.release_dates || [])) {
                     const cert = (rd.certification || '').toUpperCase().trim();
-                    if (['R', 'NC-17', 'R-18', 'R18', 'R-16', '18', '18+', 'X', 'RESTRICTED'].includes(cert)) {
+                    if (['NC-17', 'X'].includes(cert)) {
+                        r18Cache.set(key, "BLOCKED_PORN");
+                        if (cardEl) cardEl.remove();
+                        return;
+                    }
+                    if (['R', 'R-18', 'R18', 'R-16', '18', '18+'].includes(cert)) {
                         detectedR18 = true;
                     }
                 }
@@ -1448,7 +1460,6 @@ async function repairSavedPosters(list) {
     }));
 }
 
-// Updates the Profile Modal so logged-in users see their Account Info + Logout instead of Login/Signup inputs
 function updateProfileModalView() {
     const heading = document.getElementById('profileModalHeading');
     const msg = document.getElementById('authMsg');
@@ -1627,7 +1638,7 @@ logoutBtn.onclick = () => {
     initEndlessNetflixHome();
 };
 
-// Card Builder with Origin Country Badge + Synced R-18 Badge
+// Card Builder with Origin Country Badge + Synced R-18 Badge + Porn Blocker
 function createMovieCard(movie, isAI = false, searchContext = "", rankNum = null) {
     const poster = (movie.poster && movie.poster.startsWith('http'))
         ? movie.poster
@@ -1676,7 +1687,7 @@ function createMovieCard(movie, isAI = false, searchContext = "", rankNum = null
         `;
         const bCont = card.querySelector('.badges-container');
         const cBadge = card.querySelector('.origin-country-badge');
-        verifyCardMetadataAsync(movie, bCont, cBadge);
+        verifyCardMetadataAsync(movie, card, bCont, cBadge);
         return card;
     }
 
@@ -1698,7 +1709,7 @@ function createMovieCard(movie, isAI = false, searchContext = "", rankNum = null
     `;
     const bCont = card.querySelector('.badges-container');
     const cBadge = card.querySelector('.origin-country-badge');
-    verifyCardMetadataAsync(movie, bCont, cBadge);
+    verifyCardMetadataAsync(movie, card, bCont, cBadge);
     return card;
 }
 
@@ -1732,7 +1743,7 @@ function buildRowElement(titleHTML, movies, isAI = false, isTop10 = false) {
 }
 
 function getActiveFilterQueryParams(mediaType = "movie") {
-    let q = "&include_adult=true";
+    let q = "&include_adult=false";
     if (selectedGenres.size > 0) {
         const gArr = [...selectedGenres].map(gid => mediaType === "tv" ? (MOVIE_TO_TV_GENRE[gid] || gid) : gid);
         q += `&with_genres=${[...new Set(gArr)].join(',')}`;
@@ -1764,7 +1775,6 @@ async function appendNextNetflixRowBatch(count = 3) {
         const endpoint = mType === "tv" ? "/discover/tv" : "/discover/movie";
         const filterStr = getActiveFilterQueryParams(mType);
 
-        // When user has specific genres or country selected, paginate directly without conflicting preset genres
         let baseParams = selectedGenres.size > 0 || selectedCountry
             ? `sort_by=popularity.desc&page=${nextRowIndex + 2}`
             : template.params;
@@ -1803,7 +1813,6 @@ async function appendNextNetflixRowBatch(count = 3) {
         mainContainer.appendChild(frag);
     }
 
-    // Stop infinite spinner if no more unique movies exist for the selected genres/filters
     if (addedRowsCount === 0) {
         emptyBatchStreak++;
         if (emptyBatchStreak >= 2 || displayedMovieIds.size === 0) {
@@ -1918,7 +1927,7 @@ async function initEndlessNetflixHome() {
             },
             {
                 title: `<i class="fa-solid fa-bolt" style="color: var(--secondary-glow);"></i> 🆕 Brand New Releases`,
-                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=true&sort_by=primary_release_date.desc&primary_release_date.lte=2026-10-15&vote_count.gte=15&page=1`,
+                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&sort_by=primary_release_date.desc&primary_release_date.lte=2026-10-15&vote_count.gte=15&page=1`,
                 mType: 'movie',
                 customRationale: "Freshly released title."
             },
@@ -1936,7 +1945,7 @@ async function initEndlessNetflixHome() {
         const cParam = selectedCountry ? `&with_origin_country=${selectedCountry}` : "";
         specialRows.push({
             title: `<i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary-glow);"></i> 💜 Picked For Your Genre Taste (${gNames.join(' + ')})${appBadge}${countryBadge}`,
-            url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=true&with_genres=${userGenres.join('|')}${cParam}&sort_by=popularity.desc&page=1`,
+            url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=${userGenres.join('|')}${cParam}&sort_by=popularity.desc&page=1`,
             mType: 'movie',
             isAI: true,
             customRationale: `Matched to your calibrated genres (${gNames.join(', ')}).`
@@ -2044,7 +2053,6 @@ async function performSearch() {
 
         if (countryContext) {
             const originCode = countryContext.code;
-            // Match specific genres mentioned in the search, OR user's calibrated genres, OR the country's signature genres
             const targetGenreIds = queryGenres.length > 0
                 ? queryGenres
                 : (selectedGenres.size > 0
@@ -2054,9 +2062,9 @@ async function performSearch() {
             const genreNamesText = targetGenreIds.map(id => GENRE_OPTIONS[id]).filter(Boolean).join(', ');
 
             const [cMovies1, cMovies2, cTV] = await Promise.all([
-                fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=true&with_origin_country=${originCode}&with_genres=${genresPipe}&sort_by=popularity.desc&page=1`).then(r => r.json()).catch(() => ({ results: [] })),
-                fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=true&with_origin_country=${originCode}&sort_by=popularity.desc&page=1`).then(r => r.json()).catch(() => ({ results: [] })),
-                fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=true&with_origin_country=${originCode}&sort_by=popularity.desc&page=1`).then(r => r.json()).catch(() => ({ results: [] }))
+                fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_origin_country=${originCode}&with_genres=${genresPipe}&sort_by=popularity.desc&page=1`).then(r => r.json()).catch(() => ({ results: [] })),
+                fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_origin_country=${originCode}&sort_by=popularity.desc&page=1`).then(r => r.json()).catch(() => ({ results: [] })),
+                fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_origin_country=${originCode}&sort_by=popularity.desc&page=1`).then(r => r.json()).catch(() => ({ results: [] }))
             ]);
 
             const mappedMovies = [...(cMovies1.results || []), ...(cMovies2.results || [])].map(m => ({
@@ -2095,8 +2103,8 @@ async function performSearch() {
 
         if (!countryContext && (!isQuestionOrPlot || initialMovies.length === 0)) {
             const [r1, r2] = await Promise.all([
-                fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&include_adult=true&query=${encodeURIComponent(query)}&page=1`).then(r => r.json()).catch(() => ({})),
-                fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&include_adult=true&query=${encodeURIComponent(query)}&page=2`).then(r => r.json()).catch(() => ({}))
+                fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&include_adult=false&query=${encodeURIComponent(query)}&page=1`).then(r => r.json()).catch(() => ({})),
+                fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&include_adult=false&query=${encodeURIComponent(query)}&page=2`).then(r => r.json()).catch(() => ({}))
             ]);
             searchTotalPages = r1.total_pages || 1;
             searchPage = 2;
@@ -2171,10 +2179,10 @@ async function appendMoreSearchResults() {
         const queryGenres = detectGenresInQuery(activeSearchQuery);
         if (countryContext) {
             const gParam = queryGenres.length ? `&with_genres=${queryGenres.join('|')}` : '';
-            const r = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=true&with_origin_country=${countryContext.code}${gParam}&sort_by=popularity.desc&page=${searchPage}`).then(res => res.json());
+            const r = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_origin_country=${countryContext.code}${gParam}&sort_by=popularity.desc&page=${searchPage}`).then(res => res.json());
             more = (r.results || []).filter(m => m.poster_path && isSafeNonPorn(m)).map(m => ({ ...m, media_type: 'movie', origin_country: [countryContext.code] }));
         } else if (searchPage <= searchTotalPages) {
-            const r = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&include_adult=true&query=${encodeURIComponent(activeSearchQuery)}&page=${searchPage}`).then(res => res.json());
+            const r = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&include_adult=false&query=${encodeURIComponent(activeSearchQuery)}&page=${searchPage}`).then(res => res.json());
             more = (r.results || []).filter(m => (m.media_type === 'movie' || m.media_type === 'tv') && m.poster_path && isSafeNonPorn(m));
         }
 
@@ -2267,7 +2275,7 @@ navItems.forEach(item => {
             grid.className = 'movie-grid';
             const targetArr = currentView === 'watchlist' ? watchlist : (currentView === 'favorites' ? favorites : watchedMovies);
             if (targetArr.length > 0) {
-                targetArr.forEach(movie => grid.appendChild(createMovieCard(movie)));
+                targetArr.filter(isSafeNonPorn).forEach(movie => grid.appendChild(createMovieCard(movie)));
             } else {
                 grid.innerHTML = `<p style="color: var(--text-muted); font-weight:500;">No titles saved here yet. Click any movie or series card to add it!</p>`;
             }
@@ -2462,11 +2470,11 @@ async function fetchAndOpenModal(title, fallbackPoster, customRationale, movieId
             if (d && d.id) item = d;
         }
         if (!item) {
-            const r = await fetch(`https://api.themoviedb.org/3/search/${mType}?api_key=${TMDB_API_KEY}&include_adult=true&query=${encodeURIComponent(title)}`);
+            const r = await fetch(`https://api.themoviedb.org/3/search/${mType}?api_key=${TMDB_API_KEY}&include_adult=false&query=${encodeURIComponent(title)}`);
             const d = await r.json();
             item = d.results && d.results[0];
         }
-        if (!item) return;
+        if (!item || !isSafeNonPorn(item)) return;
 
         const key = `${mType}_${item.id}`;
         let certR18 = (originMovie && originMovie._isR18 === true)
@@ -2474,18 +2482,15 @@ async function fetchAndOpenModal(title, fallbackPoster, customRationale, movieId
             || isGenuineR18(item);
 
         try {
-            const companies = (item.production_companies || []).map(c => (c.name || '').toLowerCase()).join(' ');
-            if (companies.includes('vivamax')) certR18 = true;
-
             const kwList = (item.keywords && (item.keywords.keywords || item.keywords.results) || []).map(k => (k.name || '').toLowerCase()).join(' ');
-            if (/\b(erotic|sex|nudity|female nudity|male nudity|sexual|softcore|bdsm|adultery|infidelity|lust|prostitute|gore|slasher|vivamax)\b/i.test(kwList)) {
+            if (/\b(gore|slasher|extreme violence|serial killer|massacre|torture)\b/i.test(kwList)) {
                 certR18 = true;
             }
 
             if (mType === 'movie' && item.release_dates && item.release_dates.results) {
                 for (const countryEntry of item.release_dates.results) {
                     for (const rd of (countryEntry.release_dates || [])) {
-                        if (['R', 'NC-17', 'R-18', 'R18', 'R-16', '18', '18+', 'X'].includes((rd.certification || '').toUpperCase())) {
+                        if (['R', 'R-18', 'R18', 'R-16', '18', '18+'].includes((rd.certification || '').toUpperCase())) {
                             certR18 = true;
                         }
                     }
