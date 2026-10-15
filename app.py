@@ -28,55 +28,26 @@ GENRES = {
 }
 GENRE_LIST = ", ".join(GENRES.keys())
 
-COUNTRY_DEFAULT_GENRES = {
-    "PH": ["drama", "romance", "comedy", "horror"],
-    "KR": ["drama", "thriller", "romance", "action"],
-    "TH": ["horror", "romance", "action", "comedy"],
-    "JP": ["animation", "fantasy", "sci-fi", "drama"],
-    "IN": ["action", "drama", "romance", "comedy"],
-    "ES": ["thriller", "crime", "drama"],
-    "FR": ["drama", "romance", "comedy"],
-    "GB": ["drama", "crime", "mystery"],
-    "US": ["action", "sci-fi", "comedy", "drama"]
-}
-
-# Strict Pornographic & Erotic Content Blocklist
+# Strict Porn / Erotic Content Blocklist (Requirement #4)
 PORN_BLOCK_WORDS = [
-    "porn", "porno", "pornographic", "xxx", "erotic", "erotica", "hentai", "jav",
-    "av idol", "sex tape", "playboy", "penthouse", "nude", "nudity", "stripper",
-    "prostitute", "prostitution", "brothel", "kama sutra", "bdsm", "fetish",
-    "orgasm", "milf", "stepmom", "stepsister", "softcore", "pink film", "vivamax",
-    "brazzers", "onlyfans", "emmanuelle", "nymphomaniac", "caligula",
-    "365 days", "fifty shades", "scorpio nights", "silip", "uhaw", "laman",
-    "boso", "sikretong malupit", "macho dancer", "tubero", "pamasahe",
-    "selina's gold", "us x her", "bela luna", "kiskisan", "salitan",
-    "lampas langit", "virgin forest", "kaliwaan", "purgatoryo", "doblado",
-    "paupahan", "ang babaeng nawawala sa sarili", "kinsenas, katapusan",
-    "boy bastos", "palitan", "tag-init", "balinsasayaw", "sugar baby",
-    "tayuan", "haslers", "dilig", "kaluskos", "unli life", "totnak", "kantot",
-    "libog", "malibog", "pokpok", "parausan", "halinghing", "pagnanasa",
-    "angeli khang", "azi acosta", "aj raval", "robb guinto", "christine bermas",
-    "ayanna misola", "cara gonzales", "yen durano", "apple dy", "denise esteban"
+    "porn", "porno", "xxx", "erotic", "erotica", "hentai", "jav", "av idol",
+    "sex tape", "playboy", "penthouse", "nude", "stripper", "prostitute",
+    "kama sutra", "bdsm", "fetish", "orgasm", "milf", "stepmom", "stepsister",
+    "softcore", "pink film", "vivamax", "brazzers", "onlyfans", "emmanuelle"
 ]
-
-PORN_BLOCK_REGEX = re.compile(
-    r"\b(porn|porno|xxx|erotic|erotica|hentai|jav|sex tape|playboy|penthouse|nudity|stripper|prostitute|brothel|bdsm|fetish|orgasm|milf|softcore|pink film|vivamax|brazzers|onlyfans|nymphomaniac|threesome|foreplay|voyeur|voyeurism|adultery|mistress|seductress|lustful|kinky|sexploitation|bomba film|bold star)\b",
-    re.I
-)
 
 KNOWN_R18_TITLES = {
     "deadpool", "deadpool 2", "deadpool & wolverine", "logan", "joker", "parasite",
     "oldboy", "oppenheimer", "john wick", "saw", "hereditary", "midsommar",
     "the wolf of wall street", "pulp fiction", "fight club", "gone girl",
-    "shutter island", "se7en", "american psycho", "saltburn", "the handmaiden",
-    "squid game", "the boys", "euphoria", "game of thrones", "breaking bad"
+    "shutter island", "se7en", "american psycho", "saltburn", "the handmaiden"
 }
 
 KNOWN_PLOT_PATTERNS = [
     {
         "patterns": ["boxing in toy story", "toy story boxing", "why is there boxing in toy story", "rock em sock em", "rock 'em sock 'em"],
         "must_have_any": ["toy story", "boxing"],
-        "reply": "In the Toy Story franchise (especially Toy Story 2), there is a memorable boxing scene featuring the classic 'Rock 'Em Sock 'Em Robots' (the Red Rocker and Blue Bomber) inside Al's Toy Barn! Plus, 'Real Steel' (2011) is the famous robot-boxing movie many people associate with fighting robots.",
+        "reply": "In the Toy Story franchise (especially Toy Story 2), there is a memorable boxing scene featuring the classic 'Rock 'Em Sock 'Em Robots' (the Red Rocker and Blue Bomber) inside Al's Toy Barn—and Woody's arm also gets ripped before he's repaired! Plus, 'Real Steel' (2011) is the famous robot-boxing movie many people mix up with Toy Story.",
         "guesses": [
             {"title": "Toy Story", "year": 1995, "why": "The original Pixar classic introducing Woody, Buzz Lightyear, and Andy's bedroom toys."},
             {"title": "Toy Story 2", "year": 1999, "why": "Features the famous Rock 'Em Sock 'Em Robots boxing match scene inside Al's office!"},
@@ -137,30 +108,22 @@ CURATED_KOREAN_ROMCOMS = [
 def is_safe_non_porn(m):
     if not m or m.get("adult") is True:
         return False
-    title = (m.get("title") or m.get("name") or "").lower().strip()
-    orig_title = (m.get("original_title") or m.get("original_name") or "").lower().strip()
-    overview = (m.get("overview") or "").lower()
-    text = f"{title} {orig_title} {overview}"
-
-    if PORN_BLOCK_REGEX.search(text):
-        return False
+    text = f"{m.get('title') or ''} {m.get('name') or ''} {m.get('original_title') or ''} {m.get('overview') or ''}".lower()
     for bad in PORN_BLOCK_WORDS:
-        if title == bad or orig_title == bad or bad in text:
+        if bad in text:
             return False
-    if (m.get("vote_count") or 0) < 35 and re.search(r"\b(sex|sexual|nude|naked|seduce|seduction|lust|affair|steamy|intimate|passion|forbidden desire|pleasure)\b", text):
+    if (m.get("vote_count") or 0) < 15 and re.search(r"\b(sex|seduc|affair|lust|desire|naked|intimate)\b", text):
         return False
     return True
 
 
 def is_genuine_r18(m):
-    if not m or not is_safe_non_porn(m):
-        return False
     title_l = (m.get("title") or m.get("name") or "").lower().strip()
     if title_l in KNOWN_R18_TITLES:
         return True
     gids = m.get("genre_ids") or []
     overview = (m.get("overview") or "").lower()
-    if (27 in gids or 80 in gids or 53 in gids) and re.search(r"\b(murder|serial killer|brutal|blood|gore|cartel|massacre|psychopath|torture|slasher)\b", overview):
+    if (27 in gids or 80 in gids) and re.search(r"\b(murder|serial killer|brutal|blood|gore|cartel|massacre|psychopath|torture|slasher)\b", overview):
         return True
     return False
 
@@ -184,7 +147,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Super-Nova Galaxy Engine Live", "version": "18.0"})
+    return jsonify({"status": "CineMind Super-Nova Galaxy Engine Live", "version": "16.0"})
 
 
 @app.route("/api/signup", methods=["POST"])
@@ -331,7 +294,6 @@ def omdb_info():
 
 PARSE_PROMPT = f"""You are Nova, a super-intelligent, warm, and encyclopedic AI cinema & TV series expert.
 Analyze the user's latest message along with the conversation history and user profile.
-NEVER suggest pornographic, erotic, softcore, or adult-only films.
 Return ONLY a valid JSON object with these exact keys:
 {{
   "intent": "recommend" | "similar_to" | "plot_search" | "chitchat" | "question",
@@ -341,20 +303,25 @@ Return ONLY a valid JSON object with these exact keys:
   "year_from": integer or null,
   "year_to": integer or null,
   "min_rating": number 0-10 or null,
-  "language": ISO 639-1 code like "ko", "ja", "tl", "th", "es", "fr", "hi" or null,
-  "origin_country": ISO 3166-1 code like "KR", "PH", "JP", "TH", "US", "GB", "IN", "FR", "ES" or null,
+  "language": ISO 639-1 code like "ko", "ja", "tl", "es", "fr", "hi" or null,
+  "origin_country": ISO 3166-1 code like "KR", "PH", "JP", "US", "GB", "IN", "FR", "ES", "TH" or null,
   "sort": "popularity" | "rating" | "newest",
   "mood_keywords": [2-4 specific plot/theme keywords, e.g. "time loop", "radio tower", "amnesia", "heist"],
   "similar_to": [movie or series titles the user says they liked or wants similar to],
   "exclude_titles": [titles the user has already seen or wants to avoid],
   "direct_reply": "Your natural, witty, intelligent conversational response. If the user asks a specific question about a movie (e.g. 'Why is there boxing in Toy Story?'), answer the question directly and accurately here, and put the relevant movie(s) in plot_guesses!"
 }}
+
+If the user describes a plot, scene, twist, character, asks a specific question about a scene in a movie, or says things like 'what's that movie where...',
+'I forgot the name', 'why is there...', 'i am looking for a movie where...', use intent plot_search. Put your best 3-6 guesses of
+the actual movie in plot_guesses (most likely first, with release year if you know it), and fill
+mood_keywords with 2-4 plot keywords.
 """
 
 
 def tmdb(path, **params):
     params["api_key"] = TMDB_API_KEY
-    params["include_adult"] = "false"
+    params.setdefault("include_adult", "false")
     try:
         r = requests.get(f"{TMDB}{path}", params=params, timeout=6)
         return r.json() if r.status_code == 200 else {}
@@ -433,7 +400,7 @@ def deep_plot_detective(message):
     return [], None
 
 
-def smart_local_nlp_parse(message, history, username="Guest", fav_genres=None):
+def smart_local_nlp_parse(message, history, username="Guest"):
     lower = message.lower()
     genres = []
     origin_country = None
@@ -444,18 +411,29 @@ def smart_local_nlp_parse(message, history, username="Guest", fav_genres=None):
     intent = "recommend"
     direct_reply = None
 
+    looks_like_plot_or_question = (
+        len(lower.split()) >= 4
+        or "?" in lower
+        or any(p in lower for p in ["why", "how", "what", "movie where", "movie about", "looking for a movie", "forgot the name", "what's that movie", "stuck", "trapped", "infiltrate", "relives", "boxing"])
+    )
+
+    if looks_like_plot_or_question:
+        det_guesses, det_reply = deep_plot_detective(message)
+        if det_guesses:
+            return {
+                "intent": "plot_search",
+                "plot_guesses": det_guesses,
+                "genres": [],
+                "mood_keywords": [],
+                "direct_reply": det_reply
+            }
+
     country_map = {
         "korean": ("KR", "ko", "South Korean"), "korea": ("KR", "ko", "South Korean"),
         "k-drama": ("KR", "ko", "South Korean"), "kdrama": ("KR", "ko", "South Korean"),
         "japanese": ("JP", "ja", "Japanese"), "japan": ("JP", "ja", "Japanese"), "anime": ("JP", "ja", "Japanese"),
-        "filipino": ("PH", "tl", "Filipino"), "pinoy": ("PH", "tl", "Filipino"),
-        "philippine": ("PH", "tl", "Philippine"), "philippines": ("PH", "tl", "Philippine"),
-        "tagalog": ("PH", "tl", "Filipino"),
-        "thai": ("TH", "th", "Thai"), "thailand": ("TH", "th", "Thai"),
-        "indian": ("IN", "hi", "Indian"), "india": ("IN", "hi", "Indian"), "bollywood": ("IN", "hi", "Indian"),
-        "french": ("FR", "fr", "French"), "france": ("FR", "fr", "French"),
-        "spanish": ("ES", "es", "Spanish"), "spain": ("ES", "es", "Spanish"),
-        "british": ("GB", "en", "British"), "uk": ("GB", "en", "British"),
+        "filipino": ("PH", "tl", "Filipino"), "pinoy": ("PH", "tl", "Filipino"), "philippine": ("PH", "tl", "Filipino"),
+        "thai": ("TH", "th", "Thai"), "indian": ("IN", "hi", "Indian"), "french": ("FR", "fr", "French"), "spanish": ("ES", "es", "Spanish"),
     }
     country_label = ""
     for kw, (cc, lang, label) in country_map.items():
@@ -486,39 +464,14 @@ def smart_local_nlp_parse(message, history, username="Guest", fav_genres=None):
         if re.search(rf"\b{re.escape(g_name)}\b", lower) and g_name not in genres:
             genres.append(g_name)
 
-    if origin_country and not genres:
-        if fav_genres:
-            genres = [g.lower() for g in fav_genres if g.lower() in GENRES][:3]
-        if not genres:
-            genres = COUNTRY_DEFAULT_GENRES.get(origin_country, ["drama", "romance"])
-
-    looks_like_plot_or_question = (
-        not origin_country and (
-            len(lower.split()) >= 4
-            or "?" in lower
-            or any(p in lower for p in ["why", "how", "what", "movie where", "movie about", "looking for a movie", "forgot the name", "what's that movie", "stuck", "trapped", "infiltrate", "relives", "boxing"])
-        )
-    )
-
-    if looks_like_plot_or_question:
-        det_guesses, det_reply = deep_plot_detective(message)
-        if det_guesses:
-            return {
-                "intent": "plot_search",
-                "plot_guesses": det_guesses,
-                "genres": genres,
-                "mood_keywords": [],
-                "direct_reply": det_reply
-            }
-
     if origin_country == "KR" and "romance" in genres:
         guesses = CURATED_KOREAN_ROMCOMS
         direct_reply = f"I've curated the sweetest, funniest Korean romantic comedies for you, {username}—starting with 'Love Reset', '20th Century Girl', and 'My Sassy Girl'!"
 
     if not direct_reply:
-        desc_parts = [p for p in [country_label, "/".join(genres[:3]).title()] if p]
+        desc_parts = [p for p in [country_label, "/".join(genres[:2]).title()] if p]
         desc = " ".join(desc_parts) if desc_parts else f"'{message}'"
-        direct_reply = f"Here are the top {desc} recommendations matched to your genre preferences, {username}!"
+        direct_reply = f"Here are the closest matches I found for {desc}, {username}!"
 
     return {
         "intent": "plot_search" if looks_like_plot_or_question else intent,
@@ -533,7 +486,7 @@ def smart_local_nlp_parse(message, history, username="Guest", fav_genres=None):
 
 
 def extract_intent(message, history, username="Guest", fav_genres=None, selected_country=None):
-    local_parsed = smart_local_nlp_parse(message, history, username, fav_genres)
+    local_parsed = smart_local_nlp_parse(message, history, username)
     ctx_lines = [f"{'User' if h.get('role') == 'user' else 'Nova'}: {h.get('content')}" for h in (history or [])[-10:] if isinstance(h, dict) and h.get("content")]
     ctx = "\n".join(ctx_lines) if ctx_lines else "No prior messages."
     user_prompt = f"User: {username}\nFavorite Genres: {', '.join(fav_genres or [])}\nHistory:\n{ctx}\n\nLatest Request: {message}"
@@ -629,8 +582,6 @@ def find_movies(intent):
                 continue
             if enforce_country and target_lang and m.get("original_language") != target_lang:
                 continue
-            if target_country and not m.get("origin_country"):
-                m["origin_country"] = [target_country]
             if m["id"] not in cands:
                 m["_bonus"] = bonus
                 if why_note:
@@ -662,9 +613,9 @@ def find_movies(intent):
     gids = [str(GENRES[g.lower()]) for g in (intent.get("genres") or []) if g.lower() in GENRES]
     xids = [str(GENRES[g.lower()]) for g in intent.get("exclude_genres") or [] if g.lower() in GENRES]
 
-    min_votes = 15 if (target_country or target_lang) else 100
+    min_votes = 25 if (target_country or target_lang) else 120
     p = {"include_adult": "false", "vote_count.gte": min_votes, "language": "en-US", "sort_by": "popularity.desc"}
-    if gids: p["with_genres"] = "|".join(gids[:3]) if target_country else ",".join(gids[:2])
+    if gids: p["with_genres"] = ",".join(gids[:2])
     if xids: p["without_genres"] = ",".join(xids)
     if target_lang: p["with_original_language"] = target_lang
     if target_country: p["with_origin_country"] = target_country
@@ -752,7 +703,7 @@ def chat():
     region = (data.get("region") or "").upper() or None
 
     if not message:
-        return jsonify({"reply": f"Hey {username}! Tell me a plot, country, question, or movie mood you're craving.", "movies": []})
+        return jsonify({"reply": f"Hey {username}! Tell me a plot, question, or movie mood you're craving.", "movies": []})
 
     intent = extract_intent(message, history, username, fav_genres, selected_country)
     intent_type = intent.get("intent", "recommend")
@@ -761,11 +712,8 @@ def chat():
         reply = intent.get("direct_reply") or f"I'm Nova, your AI cinema companion, {username}! Ask me any movie question or plot and I'll find it."
         return jsonify({"reply": reply, "movies": [], "intent": intent_type, "success": True})
 
-    if intent_type == "recommend" and not intent.get("genres") and not intent.get("plot_guesses"):
-        if fav_genres:
-            intent["genres"] = [g.lower() for g in fav_genres[:3]]
-        elif intent.get("origin_country"):
-            intent["genres"] = COUNTRY_DEFAULT_GENRES.get(intent["origin_country"], ["drama", "romance"])
+    if intent_type == "recommend" and len(message.split()) <= 3 and not intent.get("genres") and not intent.get("plot_guesses") and fav_genres:
+        intent["genres"] = [g.lower() for g in fav_genres[:3]]
 
     if not intent.get("origin_country") and selected_country and intent_type != "plot_search":
         intent["origin_country"] = selected_country
@@ -799,12 +747,10 @@ def chat():
         "release_date": m.get("release_date") or m.get("first_air_date") or "",
         "overview": m.get("overview", ""),
         "genre_ids": m.get("genre_ids", []),
-        "origin_country": m.get("origin_country") or ([intent["origin_country"]] if intent.get("origin_country") else []),
-        "original_language": m.get("original_language", ""),
         "r18": is_genuine_r18(m),
         "match": m.get("_match", 96),
         "platforms": [region or "Global"],
-        "rationale": reasons.get(str(m["id"])) or m.get("_guess_why") or f"Matched to your '{message}' request and genre preferences.",
+        "rationale": reasons.get(str(m["id"])) or m.get("_guess_why") or f"Identified via plot & thematic similarity to '{message}'.",
     } for m in top]
 
     return jsonify({"reply": reply, "movies": movies, "intent": intent_type, "success": True})
