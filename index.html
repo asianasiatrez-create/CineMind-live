@@ -215,7 +215,6 @@ html[data-theme="light"] .hero-slideshow-overlay {
 html[data-theme="light"] .custom-select option { background: #ede9fe; color: #1e1b4b; }
 
 .filter-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; }
-/* Format row left-aligned in the middle */
 .filter-row-middle { justify-content: flex-start; text-align: left; padding: 4px 0 12px 0; border-bottom: 1px solid rgba(0, 242, 254, 0.14); }
 .filter-label { font-size: 0.85rem; font-weight: 700; color: var(--secondary-glow); min-width: 120px; display: flex; align-items: center; gap: 6px; }
 .filter-pill { background: rgba(124, 58, 237, 0.08); border: 1px solid var(--glass-border); padding: 7px 16px; border-radius: 20px; font-size: 0.82rem; font-weight: 600; cursor: pointer; color: var(--text-muted); transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; user-select: none; }
@@ -278,7 +277,6 @@ html[data-theme="light"] .custom-select option { background: #ede9fe; color: #1e
     pointer-events: none;
 }
 
-/* Top-Right Badge Container: R18 right beside Movie/Series */
 .badges-container {
     position: absolute;
     top: 10px;
@@ -313,7 +311,6 @@ html[data-theme="light"] .custom-select option { background: #ede9fe; color: #1e
     white-space: nowrap;
 }
 
-/* Bottom-Left Movie Origin Country Badge on Poster */
 .origin-country-badge {
     position: absolute;
     bottom: 8px;
@@ -387,7 +384,6 @@ html[data-theme="light"] .top10-rank-num {
 .rating-badge { color: #fbbf24; display: flex; align-items: center; gap: 4px; }
 .card-rationale-preview { font-size: 0.72rem; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.32; }
 
-/* ---- Equal-Size Search Results & Library Grid ---- */
 .movie-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(205px, 1fr));
@@ -763,7 +759,7 @@ html[data-theme="light"] .chat-tooltip { background: linear-gradient(135deg, #ff
         </div>
     </div>
 
-    <!-- VIEW A: LOGGED-IN USER ACCOUNT INFORMATION CARD (Shown ONLY when user is logged in) -->
+    <!-- VIEW A: LOGGED-IN USER ACCOUNT INFORMATION CARD -->
     <div id="loggedInAccountView" class="user-info-card" style="display:none;">
         <div style="display:flex; align-items:center; gap:14px;">
             <div style="width:54px; height:54px; border-radius:50%; background:linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); display:flex; align-items:center; justify-content:center; font-size:1.4rem; font-weight:800; color:#fff; flex-shrink:0;" id="accountAvatarInitial">U</div>
@@ -806,7 +802,7 @@ html[data-theme="light"] .chat-tooltip { background: linear-gradient(135deg, #ff
         <div id="genrePicker" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
     </div>
 
-    <!-- GUEST AUTH ACTION BUTTONS (Hidden when logged in) -->
+    <!-- GUEST AUTH ACTION BUTTONS -->
     <div id="guestAuthButtons" style="display: flex; flex-direction: column; gap: 12px;">
         <div style="display: flex; gap: 10px;">
             <button type="button" class="btn-action" id="loginBtn" style="flex:1; justify-content:center;"><i class="fa-solid fa-right-to-bracket"></i> Log In</button>
@@ -822,7 +818,7 @@ html[data-theme="light"] .chat-tooltip { background: linear-gradient(135deg, #ff
         </button>
     </div>
 
-    <!-- LOGGED-IN ACTION BUTTONS (Shown ONLY when logged in) -->
+    <!-- LOGGED-IN ACTION BUTTONS -->
     <div id="loggedInActionButtons" style="display:none; flex-direction:column; gap:10px;">
         <button type="button" class="btn-action" id="saveUserGenresBtn" style="width:100%; justify-content:center;">
             <i class="fa-solid fa-floppy-disk"></i> Save Updated Genre Preferences
@@ -872,7 +868,8 @@ const BACKEND_URL = "https://cinemind-live.onrender.com";
 
 const NO_POSTER = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='500' height='750'><rect width='100%' height='100%' fill='%23160f38'/><text x='50%' y='50%' fill='%2394a3b8' font-size='28' text-anchor='middle' font-family='sans-serif'>CineMind Poster</text></svg>`;
 
-const LOGO_CANDIDATES = ['CineMind-Logo.jpg', 'CineMind-Logo.png', 'logo.jpg', 'logo.png', 'CineMind-Logo.jpeg'];
+const FALLBACK_LOGO_SVG = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><defs><radialGradient id='g' cx='50%' cy='50%' r='50%'><stop offset='0%' stop-color='%2300f2fe'/><stop offset='60%' stop-color='%23d946ef'/><stop offset='100%' stop-color='%23190a42'/></radialGradient></defs><circle cx='60' cy='60' r='54' fill='url(%23g)' stroke='%2300f2fe' stroke-width='3'/><text x='50%' y='56%' fill='%23ffffff' font-size='44' text-anchor='middle' dominant-baseline='middle' font-family='sans-serif'>🧠</text></svg>`;
+const LOGO_CANDIDATES = ['CineMind-Logo.jpg', 'CineMind-Logo.png', 'logo.png', 'logo.jpg', 'assets/CineMind-Logo.jpg', 'assets/logo.png', FALLBACK_LOGO_SVG];
 let logoTryIdx = 0;
 const mainBrandLogo = document.getElementById('mainBrandLogo');
 mainBrandLogo.onerror = function() {
@@ -1079,7 +1076,6 @@ function isSafeNonPorn(item) {
     return true;
 }
 
-// Genuine Mainstream R-18 Titles (Action, Thriller, Horror, Crime, Drama — NOT porn)
 const KNOWN_R18_TITLES = new Set([
     "deadpool", "deadpool 2", "deadpool & wolverine", "logan", "joker", "parasite",
     "oldboy", "oppenheimer", "john wick", "john wick: chapter 2", "john wick: chapter 3 - parabellum", "john wick: chapter 4",
@@ -1088,20 +1084,20 @@ const KNOWN_R18_TITLES = new Set([
     "saltburn", "the handmaiden", "squid game", "the boys", "euphoria",
     "game of thrones", "house of the dragon", "breaking bad", "dexter",
     "it", "the conjuring", "evil dead rise", "terrifier", "smile", "don't breathe",
-    "the substance", "a quiet place", "train to busan", "i saw the devil", "the chaser"
+    "the substance", "i saw the devil", "the chaser"
 ]);
 
 function isGenuineR18(item) {
     if (!item || !isSafeNonPorn(item)) return false;
     const key = `${item.media_type || 'movie'}_${item.id}`;
-    if (r18Cache.has(key)) return r18Cache.get(key);
+    if (r18Cache.has(key)) return r18Cache.get(key) === true;
     if (item._isR18 === true || item.r18 === true) {
         r18Cache.set(key, true);
         return true;
     }
 
     const cert = (item.certification || "").toUpperCase().trim();
-    if (["R", "R-18", "R18", "R-16", "18", "18+", "TV-MA"].includes(cert)) {
+    if (["R-18", "R18", "TV-MA"].includes(cert)) {
         r18Cache.set(key, true);
         return true;
     }
@@ -1126,7 +1122,6 @@ function isGenuineR18(item) {
     return false;
 }
 
-// Asynchronous TMDB Deep Check: Removes card if it turns out to be porn/erotic/Vivamax, updates Origin Country, and syncs genuine R-18 badge
 async function verifyCardMetadataAsync(movie, cardEl, badgeContainerEl, countryBadgeEl) {
     if (!movie || !movie.id) return;
     const mType = movie.media_type === 'tv' ? 'tv' : 'movie';
@@ -1186,6 +1181,8 @@ async function verifyCardMetadataAsync(movie, cardEl, badgeContainerEl, countryB
 
         if (mType === 'movie' && d.release_dates && d.release_dates.results) {
             for (const cEntry of d.release_dates.results) {
+                const iso = (cEntry.iso_3166_1 || '').toUpperCase();
+                if (!['US', 'PH'].includes(iso)) continue;
                 for (const rd of (cEntry.release_dates || [])) {
                     const cert = (rd.certification || '').toUpperCase().trim();
                     if (['NC-17', 'X'].includes(cert)) {
@@ -1193,15 +1190,17 @@ async function verifyCardMetadataAsync(movie, cardEl, badgeContainerEl, countryB
                         if (cardEl) cardEl.remove();
                         return;
                     }
-                    if (['R', 'R-18', 'R18', 'R-16', '18', '18+'].includes(cert)) {
+                    if ((iso === 'PH' && ['R-18', 'R18'].includes(cert)) || (iso === 'US' && cert === 'R' && isGenuineR18(d))) {
                         detectedR18 = true;
                     }
                 }
             }
         } else if (mType === 'tv' && d.content_ratings && d.content_ratings.results) {
             for (const cr of d.content_ratings.results) {
+                const iso = (cr.iso_3166_1 || '').toUpperCase();
+                if (!['US', 'PH', 'KR', 'TH'].includes(iso)) continue;
                 const rating = (cr.rating || '').toUpperCase().trim();
-                if (['TV-MA', '18', '18+', 'R-18', 'R18', '19'].includes(rating)) {
+                if (['TV-MA', 'R-18', 'R18', '19'].includes(rating)) {
                     detectedR18 = true;
                 }
             }
@@ -1214,6 +1213,41 @@ async function verifyCardMetadataAsync(movie, cardEl, badgeContainerEl, countryB
             badgeContainerEl.insertAdjacentHTML('afterbegin', `<span class="r18-badge">R-18</span>`);
         }
     } catch (e) {}
+}
+
+// ---------------- CLIENT-SIDE AI + TMDB SYNOPSIS PLOT ASSIST ----------------
+async function clientSidePlotAssist(userQuery) {
+    const guesses = [];
+    // 1. Ask Free Browser-Accessible AI (Runs on user's residential IP so it is never datacenter-blocked!)
+    try {
+        const sys = `Return ONLY a JSON array of 5 objects: [{"title":"Exact Movie or TV Series Title","year":2021,"media_type":"tv"|"movie","why":"1 sentence how it matches"}]. Identify the exact movie, TV series, BL drama, K-drama, or anime described by the user.`;
+        const aiRes = await fetch("https://text.pollinations.ai/openai", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                model: "openai",
+                messages: [
+                    { role: "system", content: sys },
+                    { role: "user", content: userQuery }
+                ],
+                temperature: 0.1
+            })
+        });
+        if (aiRes.ok) {
+            const raw = await aiRes.text();
+            const m = raw.match(/\[[\s\S]*\]/);
+            if (m) {
+                const parsed = JSON.parse(m[0]);
+                if (Array.isArray(parsed)) {
+                    parsed.forEach(g => {
+                        if (g && g.title) guesses.push(g);
+                    });
+                }
+            }
+        }
+    } catch (e) {}
+
+    return guesses;
 }
 
 // Light / Dark Theme Toggle
@@ -1238,7 +1272,7 @@ const ENDLESS_ROW_CATALOG = [
     { title: "🔥 Blockbuster Movies Trending", media: "movie", path: "/discover/movie", params: "sort_by=popularity.desc&page=1" },
     { title: "📺 Binge-Worthy TV Series & K-Dramas", media: "tv", path: "/discover/tv", params: "sort_by=popularity.desc&page=1" },
     { title: "🇵🇭 Hit Filipino Dramas & Movies", media: "movie", path: "/discover/movie", params: "with_origin_country=PH&sort_by=popularity.desc&page=1" },
-    { title: "🇹🇭 Trending Thai Cinema & Horror", media: "movie", path: "/discover/movie", params: "with_origin_country=TH&sort_by=popularity.desc&page=1" },
+    { title: "🇹🇭 Trending Thai Cinema & Series", media: "tv", path: "/discover/tv", params: "with_origin_country=TH&sort_by=popularity.desc&page=1" },
     { title: "🧠 Mind-Bending Sci-Fi & Portals", media: "movie", path: "/discover/movie", params: "with_genres=878&sort_by=popularity.desc&page=1" },
     { title: "🇰🇷 Hit Korean Dramas & Series", media: "tv", path: "/discover/tv", params: "with_origin_country=KR&sort_by=popularity.desc&page=1" },
     { title: "✨ Critically Acclaimed Masterpieces", media: "movie", path: "/discover/movie", params: "sort_by=vote_average.desc&vote_count.gte=500&page=1" },
@@ -1394,7 +1428,7 @@ function saveNovaMemory() {
 
 function renderChatHistoryInto(container) {
     if (!container) return;
-    container.innerHTML = `<div class="chat-bubble ai-bubble">Hi ${escapeHTML(currentUser || 'Guest')}! 👽 I'm Nova. Ask me any movie question (like <em>"Why is there boxing in Toy Story?"</em>), describe a plot, or search a country + genre like <em>"Philippines horror"</em>!</div>`;
+    container.innerHTML = `<div class="chat-bubble ai-bubble">Hi ${escapeHTML(currentUser || 'Guest')}! 👽 I'm Nova. Ask me any movie question (like <em>"Why is there boxing in Toy Story?"</em>), describe any movie or series plot, or search a country + genre!</div>`;
     conversationHistory.forEach(turn => {
         if (!turn || !turn.content) return;
         const div = document.createElement('div');
@@ -1633,7 +1667,6 @@ logoutBtn.onclick = () => {
     initEndlessNetflixHome();
 };
 
-// Card Builder with Origin Country Badge + Synced R-18 Badge + Porn Blocker
 function createMovieCard(movie, isAI = false, searchContext = "", rankNum = null) {
     const poster = (movie.poster && movie.poster.startsWith('http'))
         ? movie.poster
@@ -2080,10 +2113,12 @@ async function performSearch() {
             isAISearch = true;
         } else if (isQuestionOrPlot) {
             try {
+                const clientGuesses = await clientSidePlotAssist(query);
                 const res = await fetch(`${BACKEND_URL}/chat`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         message: query,
+                        client_guesses: clientGuesses,
                         profile: { name: currentUser || 'Guest', favorite_genres: userGenres.map(id => GENRE_OPTIONS[id]).filter(Boolean), origin_country: selectedCountry },
                         region: selectedRegion,
                         history: conversationHistory
@@ -2484,15 +2519,20 @@ async function fetchAndOpenModal(title, fallbackPoster, customRationale, movieId
 
             if (mType === 'movie' && item.release_dates && item.release_dates.results) {
                 for (const countryEntry of item.release_dates.results) {
+                    const iso = (countryEntry.iso_3166_1 || '').toUpperCase();
+                    if (!['US', 'PH'].includes(iso)) continue;
                     for (const rd of (countryEntry.release_dates || [])) {
-                        if (['R', 'R-18', 'R18', 'R-16', '18', '18+'].includes((rd.certification || '').toUpperCase())) {
+                        const cert = (rd.certification || '').toUpperCase().trim();
+                        if ((iso === 'PH' && ['R-18', 'R18'].includes(cert)) || (iso === 'US' && cert === 'R' && isGenuineR18(item))) {
                             certR18 = true;
                         }
                     }
                 }
             } else if (mType === 'tv' && item.content_ratings && item.content_ratings.results) {
                 for (const cr of item.content_ratings.results) {
-                    if (['TV-MA', '18', '18+', 'R-18', 'R18', '19'].includes((cr.rating || '').toUpperCase())) {
+                    const iso = (cr.iso_3166_1 || '').toUpperCase();
+                    if (!['US', 'PH', 'KR', 'TH'].includes(iso)) continue;
+                    if (['TV-MA', 'R-18', 'R18', '19'].includes((cr.rating || '').toUpperCase())) {
                         certR18 = true;
                     }
                 }
@@ -2773,11 +2813,15 @@ async function sendToNovaEngine(message) {
         const activeFilterGenres = [...selectedGenres].map(id => GENRE_OPTIONS[id]).filter(Boolean);
         const prefGenres = activeFilterGenres.length ? activeFilterGenres : userGenres.map(id => GENRE_OPTIONS[id]).filter(Boolean);
 
+        // Run browser-side AI plot assist in parallel so Render always has exact candidate titles!
+        const clientGuesses = await clientSidePlotAssist(message);
+
         const response = await fetch(`${BACKEND_URL}/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 message: message,
+                client_guesses: clientGuesses,
                 profile: {
                     name: currentUser || 'Guest',
                     favorite_genres: prefGenres,
