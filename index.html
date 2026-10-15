@@ -187,16 +187,17 @@ html[data-theme="light"] .hero-slideshow-overlay {
 .search-btn-submit { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); border: none; padding: 0 26px; border-radius: 30px; color: #fff; font-weight: 700; cursor: pointer; transition: 0.25s; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .search-btn-submit:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0, 242, 254, 0.55); }
 
-/* ---- Filter Panel & Netflix-Style Dropdowns ---- */
+/* ---- Filter Panel: Top Dropdowns, Middle Left-Aligned Format & Quick Categories, Bottom Genres ---- */
 .filter-panel { position: relative; z-index: 35; display: flex; flex-direction: column; gap: 14px; background: var(--panel-bg); padding: 20px 24px; border-radius: 24px; border: 1px solid var(--glass-border); backdrop-filter: blur(22px); box-shadow: var(--shadow-heavy); }
 .filter-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; }
 .filter-row-middle { justify-content: flex-start; text-align: left; padding: 4px 0 12px 0; border-bottom: 1px solid rgba(0, 242, 254, 0.14); }
-.filter-label { font-size: 0.85rem; font-weight: 700; color: var(--secondary-glow); min-width: 110px; display: flex; align-items: center; gap: 6px; }
+.filter-label { font-size: 0.85rem; font-weight: 700; color: var(--secondary-glow); min-width: 115px; display: flex; align-items: center; gap: 6px; }
 .filter-pill { background: rgba(124, 58, 237, 0.08); border: 1px solid var(--glass-border); padding: 7px 15px; border-radius: 20px; font-size: 0.81rem; font-weight: 600; cursor: pointer; color: var(--text-muted); transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; user-select: none; }
 .filter-pill:hover, .filter-pill.active { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); color: #fff; border-color: transparent; box-shadow: 0 0 18px rgba(0, 242, 254, 0.5); }
 .filter-pill.active i, .filter-pill:hover i { color: #fff !important; }
 .filter-divider { width: 1.5px; height: 22px; background: var(--glass-border); margin: 0 4px; flex-shrink: 0; }
 
+/* Netflix-Style Custom Dropdown Menus (Top Row) */
 .filter-dropdown-container {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -241,7 +242,7 @@ html[data-theme="light"] .hero-slideshow-overlay {
     min-width: 0;
     background: rgba(5, 3, 18, 0.92);
     border: 1px solid rgba(255, 255, 255, 0.82);
-    border-radius: 4px;
+    border-radius: 8px;
     padding: 9px 12px;
     color: #ffffff;
     font-weight: 700;
@@ -300,6 +301,7 @@ html[data-theme="light"] .netflix-dropdown.open .netflix-dropdown-trigger {
     background: rgba(6, 4, 20, 0.98);
     border: 1px solid rgba(255, 255, 255, 0.24);
     border-top: 2px solid #ffffff;
+    border-radius: 8px;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.95), 0 0 25px rgba(0, 242, 254, 0.25);
     backdrop-filter: blur(22px);
     padding: 12px 16px;
@@ -352,7 +354,7 @@ html[data-theme="light"] .netflix-dropdown.open .netflix-dropdown-trigger {
     font-weight: 600;
     color: #d1d5db !important;
     cursor: pointer;
-    border-radius: 3px;
+    border-radius: 4px;
     transition: color 0.15s ease, background 0.15s ease, transform 0.15s ease;
     display: flex;
     align-items: center;
@@ -468,7 +470,7 @@ html[data-theme="light"] .netflix-dropdown.open .netflix-dropdown-trigger {
 }
 .card-not-interested-btn:hover i { color: #fff !important; }
 
-/* Top-Right Badge Container: R-18 beside Movie/Series */
+/* Top-Right Badge Container: R18 right beside Movie/Series */
 .badges-container {
     position: absolute;
     top: 10px;
@@ -503,7 +505,7 @@ html[data-theme="light"] .netflix-dropdown.open .netflix-dropdown-trigger {
     white-space: nowrap;
 }
 
-/* Bottom-Left Origin Country Badge on Movie Card */
+/* Bottom-Left Movie Origin Country Badge on Poster */
 .origin-country-badge {
     position: absolute;
     bottom: 8px;
@@ -651,7 +653,7 @@ html[data-theme="light"] .chat-tooltip { background: linear-gradient(135deg, #ff
 .nova-banner-clean { background: linear-gradient(135deg, rgba(217, 70, 239, 0.22), rgba(0, 242, 254, 0.22)); border: 1px solid var(--secondary-glow); border-radius: 24px; padding: 24px 28px; display: flex; align-items: center; justify-content: space-between; gap: 18px; backdrop-filter: blur(20px); flex-wrap: wrap; }
 .nova-banner-clean img { width: 66px; height: 66px; object-fit: contain; }
 
-/* ---- Modals, Logged-In User Info Card & Complete Cast/Crew/Genre Details ---- */
+/* ---- Modals, Complete Cast/Crew/Genre Details & Logged-In User Info Card ---- */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(8, 3, 24, 0.88); z-index: 200; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; backdrop-filter: blur(22px); padding: 16px; }
 .modal-overlay.active { opacity: 1; pointer-events: auto; }
 .modal-content { display: flex; gap: 24px; width: 960px; max-width: 100%; max-height: 90vh; background: var(--modal-bg); padding: 28px; border-radius: 26px; position: relative; border: 1px solid var(--glass-border-hover); box-shadow: var(--shadow-heavy); overflow-y: auto; }
@@ -747,7 +749,6 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
 .btn-not-interested { background: rgba(244, 63, 94, 0.14); border: 1px solid rgba(244, 63, 94, 0.55); color: #fda4af; }
 .btn-not-interested:hover { background: linear-gradient(135deg, #e11d48, #9f1239); color: #fff; border-color: transparent; box-shadow: 0 6px 20px rgba(244, 63, 94, 0.55); }
 
-/* Logged-In User Info Card */
 .user-info-card { background: rgba(124, 58, 237, 0.12); border: 1px solid var(--glass-border); border-radius: 18px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
 .user-stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center; }
 .user-stat-pill { background: rgba(0, 242, 254, 0.08); border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px 6px; display: flex; flex-direction: column; gap: 2px; }
@@ -914,14 +915,14 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
         <div class="hero-search-box">
             <div class="search-input-wrap">
                 <i class="fa-solid fa-brain"></i>
-                <input type="text" id="searchInput" placeholder="Search movies, countries + genres (e.g. 'Philippines horror'), Anime, Sports, Docs, Kids & Family, BL/GL, or ask Nova...">
+                <input type="text" id="searchInput" placeholder="Search movies, series, Anime, Sports, Documentaries, Kids & Family, BL/GL, countries, or ask Nova...">
             </div>
             <button class="search-btn-submit" id="searchSubmitBtn" type="button"><i class="fa-solid fa-search"></i> Search</button>
         </div>
     </div>
 
     <div class="filter-panel" id="filterPanel">
-        <!-- 1. TOP: NETFLIX-STYLE DROPDOWN SELECTORS: GENRES (MULTI) + STREAMING APP + ORIGIN COUNTRY + STREAMING REGION -->
+        <!-- 1. TOP: NETFLIX-STYLE DROPDOWN SELECTORS (GENRES MULTI + STREAMING APP + ORIGIN COUNTRY + STREAMING REGION) -->
         <div class="filter-dropdown-container">
             <div class="filter-select-wrapper">
                 <label><i class="fa-solid fa-film"></i> Genres (Multi):</label>
@@ -981,9 +982,9 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
             </div>
         </div>
 
-        <!-- 2. MIDDLE: FORMAT SELECTION & QUICK CONTENT CATEGORY HUB (Anime, Kids & Family, Documentaries, Sports, BL, GL) -->
+        <!-- 2. MIDDLE (LEFT-ALIGNED): FORMAT SELECTION + QUICK CONTENT CATEGORIES -->
         <div class="filter-row filter-row-middle" id="mediaFilterRow">
-            <span class="filter-label"><i class="fa-solid fa-layer-group"></i> Browse:</span>
+            <span class="filter-label"><i class="fa-solid fa-layer-group"></i> Format:</span>
             <button type="button" class="filter-pill active" data-media="all">🌌 All Formats</button>
             <button type="button" class="filter-pill" data-media="movie">🎬 Movies Only</button>
             <button type="button" class="filter-pill" data-media="tv">📺 TV Series, Shows & K-Dramas</button>
@@ -996,7 +997,7 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
             <button type="button" class="filter-pill quick-cat-pill" data-quick-cat="GL">💖 GL</button>
         </div>
 
-        <!-- 3. BOTTOM: MULTI-GENRE FILTER PILL ROW -->
+        <!-- 3. BOTTOM: MULTI-GENRE PILL ROW (SYNCED WITH DROPDOWN) -->
         <div class="filter-row" id="genreFilterRow">
             <span class="filter-label"><i class="fa-solid fa-film"></i> Genres (Multi):</span>
             <button type="button" class="filter-pill active" data-genre="">All</button>
@@ -1083,7 +1084,7 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
 </div>
 </div>
 
-<!-- SMART PROFILE / AUTH / 3+ GENRE CALIBRATION MODAL (Shows User Account Card if Logged In, or Login/Signup if Guest) -->
+<!-- SMART PROFILE / AUTH MODAL (Shows User Account Card if Logged In, or Login/Signup if Guest) -->
 <div class="modal-overlay" id="profileModal">
 <div class="profile-box" style="width: 480px; max-width: 100%; max-height: 92vh; overflow-y: auto; background: var(--modal-bg); padding: 30px; border-radius: 26px; border: 1px solid var(--glass-border-hover); box-shadow: var(--shadow-heavy); display: flex; flex-direction: column; gap: 16px; position: relative;">
     <i class="fa-solid fa-xmark close-modal" id="closeProfileModal" style="top:20px; right:22px;"></i>
@@ -1186,7 +1187,6 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
             <span class="chip" onclick="sendQuickPrompt('Why is there boxing in Toy Story?')">🥊 Boxing in Toy Story?</span>
             <span class="chip" onclick="sendQuickPrompt('Philippines horror movies')">🇵🇭 PH Horror</span>
             <span class="chip" onclick="sendQuickPrompt('Two girls stuck on a really high pole')">🗼 Two Girls High Pole</span>
-            <span class="chip" onclick="sendQuickPrompt('Poor family infiltrates a rich household')">🕵️ Poor Family / Rich House</span>
             <span class="chip" onclick="sendQuickPrompt('Korean romcom that is super funny and sweet')">🇰🇷 Korean Romcom</span>
         </div>
         <div class="chat-footer">
@@ -1204,6 +1204,7 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
     <i class="fa-solid fa-brain" style="color: var(--secondary-glow);"></i>
     <span id="cinemindToastText">Neural preference updated.</span>
 </div>
+
 <script>
 const TMDB_API_KEY = "7c7e21b0fe58e5868e262c9bd6b8e7e9";
 const BACKEND_URL = "https://cinemind-live.onrender.com";
@@ -1360,7 +1361,6 @@ const PICKER_GENRES = {
     GL: "💖 Girls' Love (GL)"
 };
 
-// Exact TMDB Keyword IDs for Special Categories
 const BL_TMDB_KEYWORDS = "289844|250606|10180|240377|316421|293198";
 const GL_TMDB_KEYWORDS = "264386|9840|240455|193681|290527|315999";
 const ANIME_TMDB_KEYWORDS = "210024|287501|293016|222243|13141|9914|310008|279876";
@@ -1411,7 +1411,6 @@ function detectGenresInQuery(text = "") {
         16: ["animation", "animated", "anime", "cartoon"],
         35: ["comedy", "funny", "hilarious", "romcom", "rom-com"],
         80: ["crime", "heist", "detective", "mafia", "gangster"],
-        99: ["documentary", "documentaries", "docuseries"],
         18: ["drama", "emotional", "sad", "tearjerker", "family"],
         14: ["fantasy", "magic", "dragon"],
         27: ["horror", "scary", "ghost", "creepy", "haunted", "slasher", "zombie"],
@@ -1479,10 +1478,9 @@ const KNOWN_R18_TITLES = new Set([
     "saltburn", "the handmaiden", "squid game", "the boys", "euphoria",
     "game of thrones", "house of the dragon", "breaking bad", "dexter",
     "it", "the conjuring", "evil dead rise", "terrifier", "smile", "don't breathe",
-    "the substance", "i saw the devil", "the chaser", "spartacus", "antichrist",
-    "a serbian film", "hostel", "the human centipede", "cannibal holocaust", "martyrs",
-    "sausage party", "berserk", "devilman crybaby", "cyberpunk: edgerunners", "invincible",
-    "hazbin hotel", "helluva boss", "castlevania", "chainsaw man", "attack on titan", "rick and morty"
+    "the substance", "i saw the devil", "the chaser", "sausage party", "berserk",
+    "devilman crybaby", "cyberpunk: edgerunners", "invincible", "hazbin hotel",
+    "helluva boss", "castlevania"
 ]);
 
 function isGenuineR18(item) {
@@ -1495,7 +1493,7 @@ function isGenuineR18(item) {
     }
 
     const cert = (item.certification || "").toUpperCase().trim();
-    if (["R", "NC-17", "R-18", "R18", "R-16", "18", "18+", "TV-MA", "X"].includes(cert)) {
+    if (["R-18", "R18", "TV-MA"].includes(cert)) {
         r18Cache.set(key, true);
         return true;
     }
@@ -1511,7 +1509,7 @@ function isGenuineR18(item) {
     const overview = (item.overview || "").toLowerCase();
     const combinedText = `${titleLower} ${origTitleLower} ${overview}`;
 
-    const disturbingHorrorKeywords = /\b(serial killer|gore|bloody|massacre|brutal|decapitation|mutilation|torture|psychopath|disturbing|slasher|cannibal|gruesome|autopsy|dismember|visceral|blood bath|terrifier|sadistic|demon|possession|exorcism|cartel)\b/i;
+    const disturbingHorrorKeywords = /\b(serial killer|gore|bloody|massacre|brutal|decapitation|mutilation|torture|psychopath|disturbing|slasher|cannibal|gruesome|autopsy|dismember|visceral|terrifier|sadistic|demon|possession|exorcism|cartel)\b/i;
     if ((gids.includes(27) || gids.includes(80) || gids.includes(53)) && disturbingHorrorKeywords.test(combinedText)) {
         r18Cache.set(key, true);
         return true;
@@ -1520,7 +1518,7 @@ function isGenuineR18(item) {
     return false;
 }
 
-// ---------------- MULTI-GENRE & CONTENT-AWARE CLASSIFIERS (ANIME, KIDS & FAMILY, SPORTS, DOCS, BL, GL) ----------------
+// ---------------- MULTI-GENRE & CONTENT-AWARE CLASSIFIER (ANIME vs ANIMATION vs KIDS & FAMILY vs SPORTS) ----------------
 function isAnimeContent(item) {
     if (!item) return false;
     const gids = (item.genre_ids || (item.genres || []).map(g => g.id) || []).map(Number);
@@ -1537,7 +1535,7 @@ function isAnimeContent(item) {
     if (hasAnimation && (lang === 'zh' || lang === 'ko' || countries.includes('CN') || countries.includes('KR')) && /\b(anime|donghua|manhwa|webtoon|cultivation|immortal|martial|demon|hunter|leveling|isekai|shinobi|ghoul|alchemist|titan|jujutsu|avatar|spirit|sect|realm)\b/i.test(text)) {
         return true;
     }
-    if (hasAnimation && /\b(anime|shonen|shounen|seinen|shojo|shoujo|isekai|manga|light novel|donghua|webtoon|manhwa|castlevania|arcane|blue eye samurai|avatar: the last airbender|korra|rwby|scott pilgrim|cyberpunk: edgerunners|solo leveling|tower of god|god of high school|lookism|link click|heaven official's blessing|mo dao zu shi|scumbag system|daily life of the immortal king)\b/i.test(text)) {
+    if (hasAnimation && /\b(anime|shonen|shounen|seinen|shojo|shoujo|isekai|manga|light novel|donghua|webtoon|manhwa|castlevania|arcane|blue eye samurai|avatar: the last airbender|korra|rwby|scott pilgrim|cyberpunk: edgerunners|solo leveling|tower of god|god of high school|lookism|link click|heaven official's blessing|mo dao zu shi)\b/i.test(text)) {
         return true;
     }
     return false;
@@ -1549,7 +1547,7 @@ function isAdultOrTeenAnimation(item) {
     const gids = (item.genre_ids || (item.genres || []).map(g => g.id) || []).map(Number);
     if (gids.includes(27) || gids.includes(80) || gids.includes(53) || gids.includes(10752) || gids.includes(10768)) return true;
     const text = `${item.title || item.name || ''} ${item.overview || ''}`.toLowerCase();
-    if /\b(demon|blood|murder|assassin|serial killer|survival game|zombie|apocalypse|gore|hell|chainsaw|jujutsu|titan|death note|berserk|cyberpunk|rick and morty|bojack|south park|family guy|american dad|futurama|archer|invincible|castlevania|hellsing|tokyo ghoul|parasyte|goblin slayer|vinland saga|akira|perfect blue|paprika|monster|psycho-pass|elfen lied|devilman|ergo proxy|black lagoon|helluva boss|hazbin hotel|pantheon|scavengers reign|arcane|blue eye samurai|vox machina|sausage party|harley quinn)\b/i.test(text)) {
+    if (/\b(demon|blood|murder|assassin|serial killer|survival game|zombie|apocalypse|gore|hell|chainsaw|jujutsu|titan|death note|berserk|cyberpunk|rick and morty|bojack|south park|family guy|american dad|futurama|archer|invincible|castlevania|hellsing|tokyo ghoul|parasyte|goblin slayer|vinland saga|akira|perfect blue|paprika|monster|psycho-pass|devilman|black lagoon|helluva boss|hazbin hotel|pantheon|scavengers reign|arcane|blue eye samurai|vox machina|sausage party|harley quinn)\b/i.test(text)) {
         return true;
     }
     return false;
@@ -1761,7 +1759,7 @@ window.markMovieNotInterested = function(movie, cardEl = null, closeOpenModal = 
     showToast(`Marked "${entry.title}" as Not Interested. Similar concepts & themes will be avoided.`);
 };
 
-// Asynchronous TMDB Deep Check: Verifies Origin Country, R-18 Certification, and Porn Blocker on every rendered card
+// Asynchronous TMDB Deep Check: Removes card if porn/Vivamax, updates Origin Country, and syncs genuine R-18 badge
 async function verifyCardMetadataAsync(movie, cardEl, badgeContainerEl, countryBadgeEl) {
     if (!movie || !movie.id) return;
     const mType = movie.media_type === 'tv' ? 'tv' : 'movie';
@@ -1885,6 +1883,7 @@ async function clientSidePlotAssist(userQuery) {
             }
         }
     } catch (e) {}
+
     return guesses;
 }
 
@@ -2003,10 +2002,6 @@ document.addEventListener('click', (e) => {
     }
 });
 
-function escapeHTML(str) {
-    return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
-}
-
 function initNetflixStyledSelectDropdowns() {
     document.querySelectorAll('.netflix-dropdown[data-sync-select]').forEach(container => {
         const selectId = container.getAttribute('data-sync-select');
@@ -2084,25 +2079,21 @@ function syncGenreNetflixDropdownUI() {
         });
     }
 
-    // Sync Quick Category Pills in Middle Browse Bar
+    // Sync Quick Category Pills in Middle Row
     document.querySelectorAll('.quick-cat-pill').forEach(pill => {
         const cat = pill.getAttribute('data-quick-cat');
         pill.classList.toggle('active', selectedGenres.has(cat));
     });
 
-    // Sync Multi-Genre Pills in Bottom Genre Row
+    // Sync Bottom Genre Filter Pills Row
     const genreRow = document.getElementById('genreFilterRow');
     if (genreRow) {
         const allBtn = genreRow.querySelector('.filter-pill[data-genre=""]');
+        if (allBtn) allBtn.classList.toggle('active', selectedGenres.size === 0);
         genreRow.querySelectorAll('.filter-pill[data-genre]').forEach(pill => {
             const g = pill.getAttribute('data-genre');
-            if (!g) {
-                pill.classList.toggle('active', selectedGenres.size === 0);
-            } else {
-                pill.classList.toggle('active', selectedGenres.has(g));
-            }
+            if (g) pill.classList.toggle('active', selectedGenres.has(g));
         });
-        if (allBtn) allBtn.classList.toggle('active', selectedGenres.size === 0);
     }
 }
 
@@ -2220,6 +2211,10 @@ const profileSubText = document.getElementById('profileSubText');
 const welcomeName = document.getElementById('welcomeName');
 const logoutBtn = document.getElementById('logoutBtn');
 const chatHistory = document.getElementById('chatHistory');
+
+function escapeHTML(str) {
+    return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+}
 
 function saveNovaMemory() {
     sessionStorage.setItem('cinemind_nova_history', JSON.stringify(conversationHistory.slice(-20)));
@@ -2411,14 +2406,14 @@ document.getElementById('continueGuestBtn').onclick = () => {
 document.getElementById('loginBtn').onclick = async () => {
     const u = document.getElementById('authUsername').value.trim();
     const p = document.getElementById('authPassword').value.trim();
-    if (!u || !p) return alert("Please enter your username and password to log in.");
+    if(!u || !p) return alert("Please enter your username and password to log in.");
     try {
         const res = await fetch(`${BACKEND_URL}/api/login`, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({username: u, password: p})
         });
         const data = await res.json();
-        if (data.success) {
+        if(data.success) {
             currentUser = data.username;
             localStorage.setItem('cinemind_auth_user', currentUser);
             if (signupGenres.size >= 3) userGenres = [...signupGenres];
@@ -2429,13 +2424,13 @@ document.getElementById('loginBtn').onclick = async () => {
             profileModal.classList.remove('active');
             initEndlessNetflixHome();
         } else alert(data.message);
-    } catch (e) { alert("Authentication error."); }
+    } catch(e) { alert("Authentication error."); }
 };
 
 document.getElementById('signupBtn').onclick = async () => {
     const u = document.getElementById('authUsername').value.trim().toLowerCase();
     const p = document.getElementById('authPassword').value.trim();
-    if (!u || p.length < 6) return alert("Please enter a username and a password (6+ characters).");
+    if(!u || p.length < 6) return alert("Please enter a username and a password (6+ characters).");
     if (signupGenres.size < 3) return alert("Please pick at least 3 favorite genres before signing up!");
     try {
         const res = await fetch(`${BACKEND_URL}/api/signup`, {
@@ -2443,7 +2438,7 @@ document.getElementById('signupBtn').onclick = async () => {
             body: JSON.stringify({username: u, password: p, genres: [...signupGenres]})
         });
         const data = await res.json();
-        if (data.success) {
+        if(data.success) {
             userGenres = [...signupGenres];
             localStorage.setItem('cinemind_genres', JSON.stringify(userGenres));
             localStorage.setItem(`cinemind_genres_${u}`, JSON.stringify(userGenres));
@@ -2454,7 +2449,7 @@ document.getElementById('signupBtn').onclick = async () => {
             initEndlessNetflixHome();
             alert("Account created & calibrated with your favorite genres!");
         } else alert(data.message);
-    } catch (e) { alert("Signup error."); }
+    } catch(e) { alert("Signup error."); }
 };
 
 logoutBtn.onclick = () => {
@@ -2471,7 +2466,7 @@ logoutBtn.onclick = () => {
     initEndlessNetflixHome();
 };
 
-// Unified Card Builder: Not Interested Button + R-18 Badge + Media Type Badge + Origin Country Badge
+// Card Builder with Origin Country Badge + Quick "Not Interested" Button + Synced R-18 Badge + Porn Blocker
 function createMovieCard(movie, isAI = false, searchContext = "", rankNum = null) {
     const poster = (movie.poster && movie.poster.startsWith('http'))
         ? movie.poster
@@ -2655,7 +2650,8 @@ function getActiveFilterQueryParams(mediaType = "movie") {
     }
     return q;
 }
-    // ---------------- ENDLESS NETFLIX ROWS ENGINE WITH END-OF-STREAM DETECTION ----------------
+
+// ---------------- FAST ENDLESS NETFLIX ROWS ENGINE WITH END-OF-STREAM DETECTION ----------------
 async function appendNextNetflixRowBatch(count = 3) {
     if (isFetchingMore || streamExhausted || currentView !== 'discover' || infiniteMode !== 'rows') return;
     isFetchingMore = true;
@@ -2674,15 +2670,14 @@ async function appendNextNetflixRowBatch(count = 3) {
 
         const mType = forceTV ? "tv" : (forceMovie ? "movie" : template.media);
         const endpoint = mType === "tv" ? "/discover/tv" : "/discover/movie";
-        const filterStr = getActiveFilterQueryParams(mType);
 
-        let baseParams = (selectedGenres.size > 0 || selectedCountry || hasSpecialCategory)
-            ? `sort_by=popularity.desc&page=${nextRowIndex + 2}`
-            : template.params;
-
-        if (pageOffset > 1 && !(selectedGenres.size > 0 || selectedCountry || hasSpecialCategory)) {
+        let baseParams = template.params;
+        if (hasSpecialCategory || selectedGenres.size > 0 || selectedCountry) {
+            baseParams = `sort_by=popularity.desc&page=${nextRowIndex + 2}`;
+        } else if (pageOffset > 1) {
             baseParams = baseParams.replace(/page=\d+/, `page=${pageOffset}`);
         }
+        const filterStr = getActiveFilterQueryParams(mType);
 
         const url = `https://api.themoviedb.org/3${endpoint}?api_key=${TMDB_API_KEY}&${baseParams}${filterStr}`;
 
@@ -2724,8 +2719,8 @@ async function appendNextNetflixRowBatch(count = 3) {
                 mainContainer.innerHTML = `
                     <div style="text-align:center; padding: 50px 20px; background: var(--panel-bg); border-radius: 24px; border: 1px solid var(--glass-border);">
                         <i class="fa-solid fa-film" style="font-size: 2.2rem; color: var(--secondary-glow); margin-bottom: 12px;"></i>
-                        <h3 style="font-size: 1.2rem; margin-bottom: 6px;">No Titles Match This Exact Filter Combination</h3>
-                        <p style="color: var(--text-muted); font-size: 0.9rem;">You've reached the end of available titles for these combined filters. Try deselecting one genre or switching country filters!</p>
+                        <h3 style="font-size: 1.2rem; margin-bottom: 6px;">No Movies Match This Exact Filter Combination</h3>
+                        <p style="color: var(--text-muted); font-size: 0.9rem;">You've reached the end of available titles for these combined genres. Try deselecting one genre or switching country filters!</p>
                     </div>
                 `;
             } else {
@@ -2751,7 +2746,7 @@ async function initEndlessNetflixHome() {
     displayedTitleFingerprints.clear();
     infiniteSentinel.style.display = "flex";
     infiniteSentinel.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Synchronizing Unique Galaxy Cinema & Series Streams...`;
-    mainContainer.innerHTML = `<p style="color: var(--text-muted); text-align:center; padding: 35px;"><i class="fa-solid fa-spinner fa-spin"></i> Synchronizing Unique Galaxy Cinema & Series Streams...</p>`;
+    mainContainer.innerHTML = '';
 
     const isSeriesTab = selectedMedia === 'tv';
     const isMovieOnly = selectedMedia === 'movie';
@@ -2819,7 +2814,7 @@ async function initEndlessNetflixHome() {
         }
     }
 
-    // 1B. GENERAL ANIMATION (16) ROWS
+    // 1B. WHEN GENERAL ANIMATION (16) IS SELECTED
     if (hasAnimation && !hasAnime && !hasKidsFamily) {
         if (!isSeriesTab) {
             specialRows.push({
@@ -2915,7 +2910,7 @@ async function initEndlessNetflixHome() {
         }
     }
 
-    // 5. BOYS' LOVE (BL) & GIRLS' LOVE (GL) ROWS
+    // 5. PRIORITY ROWS WHEN BOYS' LOVE (BL) OR GIRLS' LOVE (GL) IS PICKED
     if (hasBL) {
         if (!isMovieOnly) {
             specialRows.push({
@@ -2962,9 +2957,9 @@ async function initEndlessNetflixHome() {
         }
     }
 
-    // 6. Custom Filtered Rows for other standard genres / apps / countries
+    // 6. Custom Filtered Rows for standard genres / apps / countries
     if ((selectedProvider || selectedGenres.size > 0 || selectedCountry) && (!hasDedicatedCategory || selectedGenres.size > 1)) {
-        const pName = selectedProvider ? PROVIDER_NAMES[selectedProvider] : "Filtered Stream";
+        const pName = selectedProvider ? PROVIDER_NAMES[selectedProvider] : "Multi-Genre Stream";
         if (!isSeriesTab) {
             specialRows.push({
                 title: `<i class="fa-solid fa-sliders" style="color: var(--secondary-glow);"></i> 🎯 Custom Filtered Movies (${pName}${activeGenreLabel}${countryBadge})`,
@@ -2972,7 +2967,7 @@ async function initEndlessNetflixHome() {
                 mType: 'movie',
                 isAI: true,
                 allowCross: true,
-                customRationale: `Matched to your active filter selection.`
+                customRationale: `Matched to your active multi-genre selection.`
             });
         }
         if (!isMovieOnly) {
@@ -2982,7 +2977,7 @@ async function initEndlessNetflixHome() {
                 mType: 'tv',
                 isAI: true,
                 allowCross: true,
-                customRationale: `Series matched to your active filter selection.`
+                customRationale: `Series matched to your active multi-genre selection.`
             });
         }
     }
@@ -3049,7 +3044,7 @@ async function initEndlessNetflixHome() {
     }
 
     if (userGenres.length && selectedGenres.size === 0) {
-        const gNames = userGenres.map(id => GENRE_OPTIONS[id]).filter(Boolean);
+        const gNames = userGenres.map(id => GENRE_OPTIONS[id] || PICKER_GENRES[id]).filter(Boolean);
         const SPECIAL_KEYS = new Set(['BL', 'GL', 'ANIME', 'KIDS_FAMILY', 'SPORTS']);
         const stdUserG = userGenres.filter(g => !SPECIAL_KEYS.has(g));
         if (userGenres.includes('ANIME')) stdUserG.push('16');
@@ -3094,45 +3089,41 @@ async function initEndlessNetflixHome() {
     await appendNextNetflixRowBatch(3);
 }
 
-// Unified Format, Quick Category & Multi-Genre Pill Click Handlers
-document.querySelectorAll('.filter-row').forEach(row => {
-    row.querySelectorAll('.filter-pill').forEach(pill => {
-        pill.onclick = (e) => {
-            const btn = e.currentTarget;
-
-            if (btn.hasAttribute('data-quick-cat')) {
-                const cat = btn.getAttribute('data-quick-cat');
-                if (selectedGenres.has(cat)) selectedGenres.delete(cat);
-                else selectedGenres.add(cat);
-                syncGenreNetflixDropdownUI();
-                initEndlessNetflixHome();
-                return;
-            }
-
-            if (btn.hasAttribute('data-genre')) {
-                const gVal = btn.getAttribute('data-genre');
-                if (!gVal) {
-                    selectedGenres.clear();
-                } else {
-                    if (selectedGenres.has(gVal)) selectedGenres.delete(gVal);
-                    else selectedGenres.add(gVal);
-                }
-                syncGenreNetflixDropdownUI();
-                initEndlessNetflixHome();
-                return;
-            }
-
-            if (btn.hasAttribute('data-media')) {
-                row.querySelectorAll('.filter-pill[data-media]').forEach(p => p.classList.remove('active'));
-                btn.classList.add('active');
-                selectedMedia = btn.getAttribute('data-media');
-                initEndlessNetflixHome();
-            }
-        };
-    });
+// Format, Quick Category & Multi-Genre Pill Click Handlers
+document.querySelectorAll('#mediaFilterRow .filter-pill').forEach(pill => {
+    pill.onclick = (e) => {
+        const btn = e.currentTarget;
+        if (btn.hasAttribute('data-quick-cat')) {
+            const cat = btn.getAttribute('data-quick-cat');
+            if (selectedGenres.has(cat)) selectedGenres.delete(cat);
+            else selectedGenres.add(cat);
+            syncGenreNetflixDropdownUI();
+            initEndlessNetflixHome();
+            return;
+        }
+        document.querySelectorAll('#mediaFilterRow .filter-pill[data-media]').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        if (btn.hasAttribute('data-media')) selectedMedia = btn.getAttribute('data-media');
+        initEndlessNetflixHome();
+    };
 });
 
-// ---------------- ENDLESS MULTI-SEARCH & CATEGORY/COUNTRY/PLOT AI MATCHING ENGINE ----------------
+document.querySelectorAll('#genreFilterRow .filter-pill').forEach(pill => {
+    pill.onclick = (e) => {
+        const btn = e.currentTarget;
+        const gVal = btn.getAttribute('data-genre');
+        if (!gVal) {
+            selectedGenres.clear();
+        } else {
+            if (selectedGenres.has(gVal)) selectedGenres.delete(gVal);
+            else selectedGenres.add(gVal);
+        }
+        syncGenreNetflixDropdownUI();
+        initEndlessNetflixHome();
+    };
+});
+
+// ---------------- ENDLESS MULTI-SEARCH & CATEGORY/COUNTRY+GENRE AI MATCHING ENGINE ----------------
 async function performSearch() {
     const query = searchInput.value.trim();
     if (currentView !== 'discover') {
@@ -3162,8 +3153,8 @@ async function performSearch() {
     infiniteSentinel.style.display = "none";
     mainContainer.innerHTML = `<p style="color: var(--text-muted); text-align:center; padding: 40px;"><i class="fa-solid fa-spinner fa-spin"></i> Nova is analyzing "${escapeHTML(query)}"...</p>`;
 
-    const isBLQuery = /\b(bl|boys love|boy's love|boys' love|boys love boys|yaoi|gay romance|danmei)\b/i.test(query);
-    const isGLQuery = /\b(gl|girls love|girl's love|girls' love|girls love girls|yuri|lesbian romance|sapphic|baihe)\b/i.test(query);
+    const isBLQuery = /\b(bl|boys love|boy's love|boys' love|boys love boys|yaoi|gay romance|danmei)\b/i.test(query) && query.split(/\s+/).length <= 4;
+    const isGLQuery = /\b(gl|girls love|girl's love|girls' love|girls love girls|yuri|lesbian romance|sapphic|baihe)\b/i.test(query) && query.split(/\s+/).length <= 4;
     const isAnimeQuery = /\b(anime|shonen|shounen|seinen|isekai|donghua|manga)\b/i.test(query) && query.split(/\s+/).length <= 3;
     const isSportsQuery = /\b(sports|sport|basketball|football|soccer|volleyball|boxing|baseball|tennis|f1|racing)\b/i.test(query) && query.split(/\s+/).length <= 3;
     const isKidsQuery = /\b(kids|children|family movie|family movies|kids & family|for kids)\b/i.test(query) && query.split(/\s+/).length <= 3;
@@ -3193,7 +3184,7 @@ async function performSearch() {
             initialMovies = [...tvList, ...mList].filter(isSafeNonPorn);
             aiNote = `Showing official <strong>${label}</strong> movies and series.`;
             isAISearch = true;
-        } else if (isAnimeQuery && !countryContext) {
+        } else if (isAnimeQuery) {
             const [tvJP, tvKW, mJP] = await Promise.all([
                 fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=16&with_origin_country=JP&sort_by=popularity.desc&page=1`).then(r => r.json()).catch(() => ({ results: [] })),
                 fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=16&with_keywords=${ANIME_TMDB_KEYWORDS}&sort_by=popularity.desc&page=1`).then(r => r.json()).catch(() => ({ results: [] })),
@@ -3239,14 +3230,14 @@ async function performSearch() {
             ].filter(isSafeNonPorn);
             aiNote = `Showing <strong>Documentaries & Docuseries</strong>.`;
             isAISearch = true;
-        } else if (countryContext) {
+        } else if (countryContext && !isQuestionOrPlot) {
             const originCode = countryContext.code;
             const targetGenreIds = queryGenres.length > 0
                 ? queryGenres
                 : (selectedGenres.size > 0
                     ? [...selectedGenres].map(Number).filter(Boolean)
                     : (userGenres.length > 0 ? userGenres.map(Number).filter(Boolean) : countryContext.preferredGenres));
-            const genresPipe = targetGenreIds.length ? targetGenreIds.join('|') : countryContext.preferredGenres.join('|');
+            const genresPipe = (targetGenreIds.length ? targetGenreIds : countryContext.preferredGenres).join('|');
             const genreNamesText = targetGenreIds.map(id => GENRE_OPTIONS[id]).filter(Boolean).join(', ');
 
             const [cMovies1, cMovies2, cTV] = await Promise.all([
@@ -3331,7 +3322,7 @@ async function performSearch() {
 
         mainContainer.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-                <h3 class="row-title"><i class="fa-solid fa-magnifying-glass-chart" style="color: var(--secondary-glow);"></i> ${countryContext ? `${countryContext.label} Genre Matches` : `Search & AI Matches for "${escapeHTML(query)}"`}</h3>
+                <h3 class="row-title"><i class="fa-solid fa-magnifying-glass-chart" style="color: var(--secondary-glow);"></i> ${countryContext && !isQuestionOrPlot ? `${countryContext.label} Genre Matches` : `Search & AI Matches for "${escapeHTML(query)}"`}</h3>
                 <button type="button" class="filter-pill" onclick="searchInput.value='';performSearch();"><i class="fa-solid fa-arrow-left"></i> Back to Galaxy Stream</button>
             </div>
         `;
@@ -3352,7 +3343,7 @@ async function performSearch() {
             infiniteSentinel.style.display = "flex";
             infiniteSentinel.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Loading more matching titles...`;
         } else {
-            grid.innerHTML = `<p style="color: var(--text-muted);">You've reached the end — no matching titles found for "${escapeHTML(query)}". Try asking Nova AI on the right!</p>`;
+            grid.innerHTML = `<p style="color: var(--text-muted);">You've reached the end — no matching titles found for "${escapeHTML(query)}".</p>`;
             streamExhausted = true;
         }
         mainContainer.appendChild(grid);
@@ -3486,7 +3477,7 @@ async function renderDataAnalyticsDashboard() {
         total_recommendations_viewed: watchedMovies.length,
         total_liked: favorites.length,
         total_watchlist: watchlist.length,
-        dominant_mood: userGenres.length ? userGenres.slice(0, 3).map(id => GENRE_OPTIONS[id]).join(' • ') : "Multi-Condition Neural Match"
+        dominant_mood: userGenres.length ? userGenres.slice(0, 3).map(id => GENRE_OPTIONS[id] || PICKER_GENRES[id]).join(' • ') : "Multi-Condition Neural Match"
     };
     if (currentUser) {
         try {
@@ -3495,7 +3486,7 @@ async function renderDataAnalyticsDashboard() {
             insights.total_liked = Math.max(favorites.length, d.total_liked || 0);
             insights.total_watchlist = Math.max(watchlist.length, d.total_watchlist || 0);
             insights.total_recommendations_viewed = watchedMovies.length + (d.total_recommendations_viewed || 0);
-        } catch (e) {}
+        } catch(e) {}
     }
 
     mainContainer.innerHTML = `
@@ -3600,7 +3591,6 @@ function renderEnlargedNovaView() {
                     <span class="chip" onclick="sendEnlargedPrompt('Why is there boxing in Toy Story?')">🥊 "Why is there boxing in Toy Story?"</span>
                     <span class="chip" onclick="sendEnlargedPrompt('Philippines romance and drama movies')">🇵🇭 "Philippines romance & drama"</span>
                     <span class="chip" onclick="sendEnlargedPrompt('i am looking for a movie where two girls were stuck from a really high pole')">🗼 "Two girls stuck on a high pole"</span>
-                    <span class="chip" onclick="sendEnlargedPrompt('The movie about a poor family who infiltrates a rich household')">🕵️ "Poor family infiltrates rich house"</span>
                     <span class="chip" onclick="sendEnlargedPrompt('Korean romcom that is super funny and sweet')">🇰🇷 "Korean romcom funny & sweet"</span>
                 </div>
                 <div class="nova-input-row" style="display: flex; gap: 10px;">
@@ -3634,7 +3624,7 @@ function renderEnlargedNovaView() {
     window.sendEnlargedPrompt = (p) => executeEnlargedChat(p);
 }
 
-// ---------------- MODAL DETAILS, ORIGIN COUNTRY, COMPLETE CAST/CREW, EXACT MULTI-GENRES, TRAILER & SIMILAR AI PICKS ----------------
+// ---------------- MODAL DETAILS, COMPLETE CAST/CREW, EXACT MULTI-GENRES, ORIGIN COUNTRY & SIMILAR AI PICKS ----------------
 async function loadModalSimilarRecommendations(id, mType, title) {
     const box = document.getElementById('modalSimilarBox');
     const strip = document.getElementById('modalSimilarStrip');
@@ -3733,6 +3723,81 @@ function renderModalGenresAndCredits(item, mType) {
             if (!writers.includes(name)) writers.push(name);
         } else if (job.includes('producer')) {
             if (!producers.includes(name)) producers.push(name);
+        } else if (job.includes('director of photography') || job.includes('cinematography') || job.includes('original music composer')
+        function renderModalGenresAndCredits(item, mType) {
+    const genresRow = document.getElementById('modalGenresRow');
+    genresRow.innerHTML = '';
+
+    const exactGenres = [];
+    const addGenreUnique = (label) => {
+        if (label && !exactGenres.includes(label)) exactGenres.push(label);
+    };
+
+    const allCatKeys = getAllItemCategories(item);
+    const adultAnim = isAdultOrTeenAnimation(item);
+    const hasAnim = (item.genre_ids || (item.genres || []).map(g => g.id) || []).map(Number).includes(16);
+
+    if (allCatKeys.has('ANIME')) addGenreUnique('Anime');
+    if (allCatKeys.has('KIDS_FAMILY')) addGenreUnique('Kids & Family');
+    if (allCatKeys.has('99')) addGenreUnique('Documentaries');
+    if (allCatKeys.has('SPORTS')) addGenreUnique('Sports');
+    if (allCatKeys.has('BL')) addGenreUnique("Boys' Love (BL)");
+    if (allCatKeys.has('GL')) addGenreUnique("Girls' Love (GL)");
+
+    const rawGenres = Array.isArray(item.genres) && item.genres.length > 0
+        ? item.genres
+        : (item.genre_ids || []).map(gid => ({ id: Number(gid), name: GENRE_OPTIONS[gid] })).filter(g => g.name);
+
+    rawGenres.forEach(g => {
+        if (!g || !g.name) return;
+        if (g.id === 10751 || g.id === 10762 || g.name === 'Family' || g.name === 'Kids') {
+            if (!adultAnim && !isGenuineR18(item)) addGenreUnique('Kids & Family');
+        } else if (g.id === 99 || g.name === 'Documentary') {
+            addGenreUnique('Documentaries');
+        } else {
+            addGenreUnique(g.name);
+        }
+    });
+
+    if (hasAnim && adultAnim) {
+        addGenreUnique('Teen / Adult Animation');
+    }
+
+    if (exactGenres.length === 0) addGenreUnique(mType === 'tv' ? 'Dramatic Series' : 'Feature Film');
+
+    exactGenres.forEach(gName => {
+        const span = document.createElement('span');
+        span.className = 'modal-genre-tag';
+        span.innerHTML = `<i class="fa-solid fa-tag" style="color:var(--secondary-glow); font-size:0.68rem;"></i> ${escapeHTML(gName)}`;
+        genresRow.appendChild(span);
+    });
+
+    // Full Crew Breakdown (Director, Writers, Producers, Creators, Music/Cinematography)
+    const credits = item.credits || item.aggregate_credits || {};
+    const crew = credits.crew || [];
+    const cast = credits.cast || [];
+
+    const directors = [];
+    const writers = [];
+    const producers = [];
+    const keyCrew = [];
+
+    if (Array.isArray(item.created_by) && item.created_by.length > 0) {
+        item.created_by.forEach(c => { if (c.name) directors.push(`${c.name} (Creator)`); });
+    }
+
+    crew.forEach(member => {
+        const job = (member.job || '').toLowerCase();
+        const dept = (member.department || '').toLowerCase();
+        const name = member.name;
+        if (!name) return;
+
+        if (job === 'director' || job === 'series director') {
+            if (!directors.includes(name)) directors.push(name);
+        } else if (job.includes('writer') || job.includes('screenplay') || job.includes('story') || job.includes('teleplay') || dept === 'writing') {
+            if (!writers.includes(name)) writers.push(name);
+        } else if (job.includes('producer')) {
+            if (!producers.includes(name)) producers.push(name);
         } else if (job.includes('director of photography') || job.includes('cinematography') || job.includes('original music composer') || job === 'editor') {
             const label = `${name} (${member.job})`;
             if (!keyCrew.includes(label)) keyCrew.push(label);
@@ -3759,6 +3824,7 @@ function renderModalGenresAndCredits(item, mType) {
         </div>
     `;
 
+    // Full Cast & Characters Played
     const castStrip = document.getElementById('modalCastStrip');
     castStrip.innerHTML = '';
 
@@ -3883,6 +3949,7 @@ async function fetchAndOpenModal(title, fallbackPoster, customRationale, movieId
         document.getElementById('modalPoster').src = currentMovieData.poster;
         document.getElementById('modalRationale').innerText = customRationale || `Matched via CineMind neural collaborative filters for ${currentUser || 'Guest'}.`;
 
+        // Render Complete Genres, Cast (Characters + Actors), and Crew
         renderModalGenresAndCredits(item, mType);
 
         fetch(`${BACKEND_URL}/api/omdb?title=${encodeURIComponent(currentMovieData.title)}&year=${year}`)
@@ -3978,35 +4045,35 @@ function libraryPayload(m) {
 }
 
 document.getElementById('watchlistBtn').onclick = async () => {
-    if (!currentUser) { alert("Please log in to save items to your cloud watchlist."); updateProfileModalView(); profileModal.classList.add('active'); return; }
+    if(!currentUser) { alert("Please log in to save items to your cloud watchlist."); updateProfileModalView(); profileModal.classList.add('active'); return; }
     try {
         const res = await fetch(`${BACKEND_URL}/api/user/library/toggle`, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({username: currentUser, type: 'watchlist', movie: libraryPayload(currentMovieData)})
         });
         const data = await res.json();
-        if (data.success) {
+        if(data.success) {
             await syncCloudLibrary();
             updateButtonStates();
             if (currentView === 'watchlist') navItems[3].click();
         }
-    } catch (e) { alert("Sync error."); }
+    } catch(e) { alert("Sync error."); }
 };
 
 document.getElementById('favoriteBtn').onclick = async () => {
-    if (!currentUser) { alert("Please log in to save items to your cloud favorites."); updateProfileModalView(); profileModal.classList.add('active'); return; }
+    if(!currentUser) { alert("Please log in to save items to your cloud favorites."); updateProfileModalView(); profileModal.classList.add('active'); return; }
     try {
         const res = await fetch(`${BACKEND_URL}/api/user/library/toggle`, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({username: currentUser, type: 'favorites', movie: libraryPayload(currentMovieData)})
         });
         const data = await res.json();
-        if (data.success) {
+        if(data.success) {
             await syncCloudLibrary();
             updateButtonStates();
             if (currentView === 'favorites') navItems[4].click();
         }
-    } catch (e) { alert("Sync error."); }
+    } catch(e) { alert("Sync error."); }
 };
 
 document.getElementById('watchedBtn').onclick = () => {
@@ -4121,9 +4188,10 @@ async function sendToNovaEngine(message) {
     appendBubbleToBothChats(`<i class="fa-solid fa-spinner fa-spin"></i> Nova is analyzing your question & scanning cinema vectors...`, 'ai', true);
 
     try {
-        const activeFilterGenres = [...selectedGenres].map(id => GENRE_OPTIONS[id]).filter(Boolean);
-        const prefGenres = activeFilterGenres.length ? activeFilterGenres : userGenres.map(id => GENRE_OPTIONS[id]).filter(Boolean);
+        const activeFilterGenres = [...selectedGenres].map(id => GENRE_OPTIONS[id] || PICKER_GENRES[id]).filter(Boolean);
+        const prefGenres = activeFilterGenres.length ? activeFilterGenres : userGenres.map(id => GENRE_OPTIONS[id] || PICKER_GENRES[id]).filter(Boolean);
 
+        // Run browser-side AI plot assist in parallel so Render always has exact candidate titles!
         const clientGuesses = await clientSidePlotAssist(message);
 
         const response = await fetch(`${BACKEND_URL}/chat`, {
@@ -4210,15 +4278,15 @@ async function handleChat(queryText) {
     await sendToNovaEngine(message);
 }
 
-window.sendQuickPrompt = (promptText) => {
-    if (!chatModal.classList.contains('active')) toggleNovaChatModal();
-    handleChat(promptText);
-};
+window.sendQuickPrompt = (prompt) => handleChat(prompt);
+sendBtn.addEventListener('click', () => handleChat());
+chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        handleChat();
+    }
+});
 
-sendBtn.onclick = () => handleChat();
-chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleChat(); });
-
-// Initialize Galaxy Home Stream on Load
 initEndlessNetflixHome();
 </script>
 </body>
