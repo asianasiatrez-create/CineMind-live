@@ -4,6 +4,7 @@ import json
 import html
 import sqlite3
 import hashlib
+import urllib.parse
 from datetime import date
 
 import requests
@@ -73,95 +74,6 @@ KNOWN_R18_TITLES = {
     "squid game", "the boys", "euphoria", "game of thrones", "breaking bad"
 }
 
-# Instant High-Speed Plot & Series Pattern Cache (Includes BL, Series, Fairy Tales, Survival, Sci-Fi)
-KNOWN_PLOT_PATTERNS = [
-    {
-        "patterns": ["twins named black and white", "black and white", "white took over", "twin got badly injured", "boys love", "bl series", "fell in love with black"],
-        "must_have_any": ["black", "white", "twin", "twins"],
-        "reply": "You're looking for the acclaimed Thai Boys' Love (BL) series 'Not Me' (2021) starring Off Jumpol and Gun Atthaphan! When twin brother Black is brutally attacked and left in a coma, his twin White disguises himself as Black to infiltrate his motorcycle gang and uncover the traitor—slowly falling in love with Black's intense friend Sean.",
-        "guesses": [
-            {"title": "Not Me", "year": 2021, "media_type": "tv", "why": "Exact match: Twin brother White takes over the identity of his comatose twin Black and falls for Black's friend Sean."},
-            {"title": "The Eclipse", "year": 2022, "media_type": "tv", "why": "Acclaimed Thai BL mystery-romance about rebellion and secrets at an elite all-boys school."},
-            {"title": "Bad Buddy", "year": 2021, "media_type": "tv", "why": "Hit Thai BL series about lifelong next-door rivals Pat and Pran who secretly fall in love."},
-            {"title": "KinnPorsche", "year": 2022, "media_type": "tv", "why": "Action-packed Thai BL drama about a mafia heir and his fiercely loyal bodyguard."},
-            {"title": "Theory of Love", "year": 2019, "media_type": "tv", "why": "Starring Off and Gun—a film student secretly falls in love with his playboy best friend."},
-            {"title": "2gether", "year": 2020, "media_type": "tv", "why": "Beloved Thai BL series where two college students fake-date and fall in love for real."},
-            {"title": "Moonlight Chicken", "year": 2023, "media_type": "tv", "why": "Award-winning, deeply emotional Thai BL drama about love, class, and resilience."}
-        ]
-    },
-    {
-        "patterns": ["lies and his nose", "nose gets longer", "nose grows", "wooden boy", "puppet who wants to be a real boy", "pinocchio"],
-        "must_have_any": ["nose", "pinocchio", "puppet"],
-        "reply": "That's 'Pinocchio'! Crafted by woodcarver Geppetto, Pinocchio is a wooden puppet brought to life whose nose grows longer every time he tells a lie. Here are the most iconic film adaptations of Pinocchio:",
-        "guesses": [
-            {"title": "Pinocchio", "year": 1940, "media_type": "movie", "why": "Disney's animated masterpiece about the wooden puppet whose nose grows whenever he lies."},
-            {"title": "Guillermo del Toro's Pinocchio", "year": 2022, "media_type": "movie", "why": "Oscar-winning stop-motion reimagining of the classic tale of the wooden boy who lies."},
-            {"title": "Pinocchio", "year": 2022, "media_type": "movie", "why": "Live-action Disney adaptation starring Tom Hanks as Geppetto."},
-            {"title": "Pinocchio", "year": 2019, "media_type": "movie", "why": "Matteo Garrone's faithful, critically acclaimed Italian live-action adaptation."},
-            {"title": "Pinocchio", "year": 2014, "media_type": "tv", "why": "Hit Korean drama where a girl with 'Pinocchio syndrome' hiccups whenever she tells a lie."},
-            {"title": "Liar Liar", "year": 1997, "media_type": "movie", "why": "Hilarious comedy about a fast-talking lawyer who is magically cursed to tell the truth for 24 hours."}
-        ]
-    },
-    {
-        "patterns": ["boxing in toy story", "toy story boxing", "why is there boxing in toy story", "rock em sock em", "rock 'em sock 'em"],
-        "must_have_any": ["toy story", "boxing"],
-        "reply": "In the Toy Story franchise (especially Toy Story 2), there is a memorable boxing scene featuring the classic 'Rock 'Em Sock 'Em Robots' (the Red Rocker and Blue Bomber) inside Al's Toy Barn! Plus, 'Real Steel' (2011) is the famous robot-boxing movie many people associate with fighting robots.",
-        "guesses": [
-            {"title": "Toy Story 2", "year": 1999, "media_type": "movie", "why": "Features the famous Rock 'Em Sock 'Em Robots boxing match scene inside Al's office!"},
-            {"title": "Toy Story", "year": 1995, "media_type": "movie", "why": "The original Pixar classic introducing Woody, Buzz Lightyear, and Andy's bedroom toys."},
-            {"title": "Toy Story 3", "year": 2010, "media_type": "movie", "why": "Woody, Buzz, and the gang face Sunnyside Daycare as Andy prepares for college."},
-            {"title": "Toy Story 4", "year": 2019, "media_type": "movie", "why": "Woody and Buzz embark on a road trip with Forky and Duke Caboom."},
-            {"title": "Real Steel", "year": 2011, "media_type": "movie", "why": "The hit robot-boxing movie often associated with fighting toy robots."}
-        ]
-    },
-    {
-        "patterns": ["high pole", "tv tower", "radio tower", "two girls", "2 girls", "stuck on top", "climbs a tower", "2000 feet", "ladder breaks", "stuck on a tower", "tall tower", "tall pole"],
-        "must_have_any": ["pole", "tower", "stuck", "climb"],
-        "reply": "You're looking for 'Fall' (2022)! Best friends Becky and Hunter climb a 2,000-foot abandoned radio tower and get stranded at the very top when the ladder breaks. Here is 'Fall' along with intense survival thrillers:",
-        "guesses": [
-            {"title": "Fall", "year": 2022, "media_type": "movie", "why": "Exact plot match: two girls climb a 2,000-foot tall radio tower/pole and get trapped at the top with no way down."},
-            {"title": "47 Meters Down", "year": 2017, "media_type": "movie", "why": "Two sisters get trapped in a shark cage at the bottom of the ocean with less than an hour of oxygen left."},
-            {"title": "The Shallows", "year": 2016, "media_type": "movie", "why": "A surfer gets stranded on a tiny rock 200 yards from shore while a great white shark circles her."},
-            {"title": "127 Hours", "year": 2010, "media_type": "movie", "why": "A mountain climber becomes trapped under a boulder in an isolated slot canyon and must fight to survive."},
-            {"title": "Frozen", "year": 2010, "media_type": "movie", "why": "Three friends get stranded high up on a ski chairlift when the resort closes for the weekend."},
-            {"title": "Nowhere", "year": 2023, "media_type": "movie", "why": "A pregnant woman gets trapped alone inside a drifting shipping container in the middle of the sea."}
-        ]
-    },
-    {
-        "patterns": ["poor family", "rich household", "rich family", "infiltrate", "infiltrates", "wealthy family", "pose as tutor"],
-        "must_have_any": ["poor", "rich", "infiltrate", "infiltrates", "wealthy", "household"],
-        "reply": "You're thinking of the Oscar-winning masterpiece 'Parasite' (2019)! Here is 'Parasite' along with sharp thrillers about class divide and infiltration:",
-        "guesses": [
-            {"title": "Parasite", "year": 2019, "media_type": "movie", "why": "Exact plot match: the Kim family infiltrates the wealthy Park household by posing as unrelated, highly qualified workers."},
-            {"title": "Saltburn", "year": 2023, "media_type": "movie", "why": "A scheming student infiltrates an aristocratic British family's sprawling estate."},
-            {"title": "The Handmaiden", "year": 2016, "media_type": "movie", "why": "A Korean con-artist plot involving a pickpocket hired as a maid to defraud a wealthy heiress."},
-            {"title": "Knives Out", "year": 2019, "media_type": "movie", "why": "A clever mystery revolving around a wealthy, dysfunctional family and an outsider."},
-            {"title": "Us", "year": 2019, "media_type": "movie", "why": "A sharp, suspenseful thriller centered on duality, privilege, and home invasion."}
-        ]
-    },
-    {
-        "patterns": ["relives the same day", "same day over", "wakes up and relives", "time loop", "repeating the same day", "every time he dies"],
-        "must_have_any": ["relives", "loop", "same day", "repeating"],
-        "reply": "That classic time-loop premise matches 'Groundhog Day' (1993), 'Palm Springs' (2020), and 'Edge of Tomorrow' (2014)!",
-        "guesses": [
-            {"title": "Groundhog Day", "year": 1993, "media_type": "movie", "why": "The definitive time-loop movie where a cynical weatherman relives February 2nd over and over."},
-            {"title": "Palm Springs", "year": 2020, "media_type": "movie", "why": "A hilarious and heartfelt modern twist where wedding guests get stuck reliving the same day."},
-            {"title": "Edge of Tomorrow", "year": 2014, "media_type": "movie", "why": "A sci-fi action thriller where a soldier relives a brutal alien battle every time he dies."},
-            {"title": "Happy Death Day", "year": 2017, "media_type": "movie", "why": "A college student must relive the day of her murder until she figures out who her killer is."},
-            {"title": "Source Code", "year": 2011, "media_type": "movie", "why": "A soldier wakes up in someone else's body and relives an 8-minute train explosion."}
-        ]
-    }
-]
-
-CURATED_KOREAN_ROMCOMS = [
-    {"title": "Love Reset", "year": 2023, "media_type": "movie", "why": "Hilarious Korean romcom about a married couple on the verge of divorce who both get amnesia and fall in love all over again."},
-    {"title": "20th Century Girl", "year": 2022, "media_type": "movie", "why": "Sweet, nostalgic, and deeply moving Korean teen romance about first love and friendship in 1999."},
-    {"title": "My Sassy Girl", "year": 2001, "media_type": "movie", "why": "The iconic, laugh-out-loud Korean romantic comedy classic that defined the entire genre."},
-    {"title": "Sweet & Sour", "year": 2021, "media_type": "movie", "why": "A witty, modern Korean romcom with a clever twist about the realities of dating and long-distance love."},
-    {"title": "On Your Wedding Day", "year": 2018, "media_type": "movie", "why": "Charming, funny, and heartfelt Korean romance following two people's timing over ten years."},
-    {"title": "Tune in for Love", "year": 2019, "media_type": "movie", "why": "Warm, sweet Korean romance about two people whose paths keep crossing over the years."}
-]
-
 
 def is_safe_non_porn(m):
     if not m or m.get("adult") is True:
@@ -213,7 +125,7 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Super-Nova Galaxy Engine Live", "version": "19.0"})
+    return jsonify({"status": "CineMind Universal AI Engine Live", "version": "20.0", "groq_active": bool(GROQ_API_KEY)})
 
 
 @app.route("/api/signup", methods=["POST"])
@@ -358,8 +270,8 @@ def omdb_info():
     return jsonify({})
 
 
-# ------------------------- MULTI-LLM + UNIVERSAL PLOT/SERIES ENGINE -------------------------
-PARSE_PROMPT = f"""You are Nova, an encyclopedic AI expert on global movies, TV series, K-dramas, Thai BL (Boys' Love) dramas, anime, and indie cinema.
+# ------------------------- UNIVERSAL AI + LIVE WEB SEARCH PLOT ENGINE -------------------------
+PARSE_PROMPT = f"""You are Nova, an encyclopedic AI expert on all world cinema, TV series, K-dramas, Thai/Asian BL (Boys' Love) dramas, anime, Western films, and indie movies.
 Analyze the user's latest message and conversation history.
 NEVER suggest pornographic, erotic, softcore, or adult-only films.
 Return ONLY a valid JSON object with these exact keys:
@@ -367,7 +279,7 @@ Return ONLY a valid JSON object with these exact keys:
   "intent": "plot_search" | "recommend" | "similar_to" | "question" | "chitchat",
   "media_preference": "all" | "movie" | "tv",
   "plot_guesses": [
-    {{"title": "Exact Movie or TV Series Title", "year": 2021, "media_type": "movie" | "tv", "why": "1-sentence explanation of why this exact title matches"}}
+    {{"title": "Exact Movie or TV Series Title", "year": 2023, "media_type": "movie" | "tv", "why": "1-sentence explanation of how this exact title matches the user's description"}}
   ],
   "genres": [list of matching genres from: {GENRE_LIST}],
   "exclude_genres": [genres the user explicitly does NOT want],
@@ -377,16 +289,15 @@ Return ONLY a valid JSON object with these exact keys:
   "language": ISO 639-1 code like "ko", "ja", "tl", "th", "es", "fr", "hi" or null,
   "origin_country": ISO 3166-1 code like "KR", "PH", "JP", "TH", "US", "GB", "IN", "FR", "ES", "TW", "CN" or null,
   "sort": "popularity" | "rating" | "newest",
-  "mood_keywords": [2-4 specific plot/theme keywords, e.g. "twins", "time loop", "wooden puppet", "undercover"],
+  "mood_keywords": [2-4 specific plot/theme keywords, e.g. "enemies to lovers", "music", "family legacy", "time loop"],
   "similar_to": [movie or series titles the user says they liked],
   "exclude_titles": [titles the user wants to avoid],
-  "direct_reply": "Your warm, accurate, and specific response! If the user describes a plot or asks 'what movie/series is about...', name the #1 exact title immediately in your first sentence and explain how the plot matches!"
+  "direct_reply": "Your warm, accurate, and specific response! If the user describes a plot, logline, or asks 'what movie/series is about...', name the #1 exact matching title in your first sentence and explain why it matches!"
 }}
 
-CRITICAL INSTRUCTIONS:
-1. If the user describes ANY plot, character names, scene, twist, fairy tale, BL series, K-drama, anime, or asks 'what do you call the film/series about...', MUST set "intent": "plot_search" and put the exact matching Movie or TV Series at index 0 of "plot_guesses" (with "media_type": "tv" for series/dramas or "movie" for films), followed by 4-5 closely related titles!
-2. Example: "boys love series about two twins named black and white and white took over the life of black..." -> #1 guess MUST be {{"title": "Not Me", "year": 2021, "media_type": "tv", "why": "Twin brother White impersonates his comatose twin Black and falls for Black's friend Sean."}}
-3. Example: "what do you call the film about a boy who lies and his nose gets longer" -> #1 guess MUST be {{"title": "Pinocchio", "year": 1940, "media_type": "movie", "why": "The classic story of a wooden boy whose nose grows longer whenever he tells a lie."}}
+CRITICAL RULES:
+1. Whenever a user describes a plot, premise, logline, character names, or scene (even if it is a niche BL series, indie movie, K-drama, musical romance, or anime), MUST set "intent": "plot_search" and put your best 5-6 real-world title matches in "plot_guesses" (most accurate #1 first).
+2. Always include both "movie" and "tv" possibilities if the plot could be a series or a film.
 """
 
 
@@ -404,7 +315,6 @@ def parse_json_safely(raw_text):
     if not raw_text:
         return None
     raw_text = raw_text.strip()
-    # Strip markdown code fences if present
     raw_text = re.sub(r"^```(?:json)?\s*", "", raw_text, flags=re.I)
     raw_text = re.sub(r"\s*```$", "", raw_text)
     try:
@@ -419,52 +329,80 @@ def parse_json_safely(raw_text):
     return None
 
 
-def llm_json(system, user, temperature=0.2, timeout=12):
+def llm_json(system, user, temperature=0.15, timeout=14):
     """
-    1) Uses Groq (llama-3.3-70b-versatile) if GROQ_API_KEY is configured and active.
-    2) Automatically falls back to Keyless Free OpenAI/Llama JSON endpoint (Pollinations AI)
-       so Nova's 70B/GPT-4o-mini brain works 100% of the time even without an API key!
+    Multi-LLM Router:
+    1) Groq llama-3.3-70b-versatile (if GROQ_API_KEY is set)
+    2) Groq llama-3.1-8b-instant (if 70b is rate-limited)
+    3) Pollinations OpenAI Chat Completions POST endpoint (Keyless Free GPT-4o-mini)
+    4) Pollinations Direct GET JSON endpoint (Keyless Fallback)
     """
     if GROQ_API_KEY:
+        for model_name in ("llama-3.3-70b-versatile", "llama-3.1-8b-instant"):
+            try:
+                res = requests.post(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    headers={"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"},
+                    json={
+                        "model": model_name,
+                        "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+                        "response_format": {"type": "json_object"},
+                        "temperature": temperature,
+                    },
+                    timeout=timeout,
+                )
+                if res.status_code == 200:
+                    parsed = parse_json_safely(res.json()["choices"][0]["message"]["content"])
+                    if isinstance(parsed, dict):
+                        return parsed
+            except Exception:
+                pass
+
+    browser_headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    }
+
+    # Keyless Free AI Provider #1 (Pollinations OpenAI v1 Endpoint)
+    for url_ep in ("https://text.pollinations.ai/openai/chat/completions", "https://text.pollinations.ai/openai"):
         try:
             res = requests.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers={"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"},
+                url_ep,
+                headers=browser_headers,
                 json={
-                    "model": "llama-3.3-70b-versatile",
-                    "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
-                    "response_format": {"type": "json_object"},
+                    "model": "openai",
+                    "messages": [
+                        {"role": "system", "content": system + "\nReturn ONLY raw JSON."},
+                        {"role": "user", "content": user}
+                    ],
+                    "jsonMode": True,
                     "temperature": temperature,
                 },
                 timeout=timeout,
             )
             if res.status_code == 200:
-                parsed = parse_json_safely(res.json()["choices"][0]["message"]["content"])
-                if isinstance(parsed, dict):
+                try:
+                    data = res.json()
+                    if isinstance(data, dict) and "choices" in data:
+                        content = data["choices"][0]["message"]["content"]
+                        parsed = parse_json_safely(content)
+                    else:
+                        parsed = data if isinstance(data, dict) else parse_json_safely(res.text)
+                except Exception:
+                    parsed = parse_json_safely(res.text)
+                if isinstance(parsed, dict) and ("intent" in parsed or "plot_guesses" in parsed or "reply" in parsed):
                     return parsed
         except Exception:
             pass
 
-    # Keyless Free LLM Fallback (Pollinations OpenAI-Compatible Endpoint — No API Key Needed!)
+    # Keyless Free AI Provider #2 (Pollinations Direct GET JSON)
     try:
-        res = requests.post(
-            "https://text.pollinations.ai/openai",
-            headers={"Content-Type": "application/json"},
-            json={
-                "model": "openai",
-                "messages": [
-                    {"role": "system", "content": system + "\nRespond ONLY with raw valid JSON."},
-                    {"role": "user", "content": user}
-                ],
-                "response_format": {"type": "json_object"},
-                "temperature": temperature,
-            },
-            timeout=timeout,
-        )
+        encoded_prompt = urllib.parse.quote(f"{user}\n\nReturn ONLY valid JSON matching the system schema.")
+        encoded_sys = urllib.parse.quote(system)
+        get_url = f"https://text.pollinations.ai/{encoded_prompt}?model=openai&json=true&system={encoded_sys}"
+        res = requests.get(get_url, headers={"User-Agent": browser_headers["User-Agent"]}, timeout=timeout)
         if res.status_code == 200:
-            data = res.json()
-            content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-            parsed = parse_json_safely(content)
+            parsed = parse_json_safely(res.text)
             if isinstance(parsed, dict):
                 return parsed
     except Exception:
@@ -473,92 +411,78 @@ def llm_json(system, user, temperature=0.2, timeout=12):
     return None
 
 
-def deep_plot_detective(message):
-    """Backup plot resolver if both LLM endpoints are unreachable."""
-    lower = message.lower()
-    for rule in KNOWN_PLOT_PATTERNS:
-        if any(w in lower for w in rule.get("must_have_any", [])):
-            score = sum(2 if pat in lower else 0 for pat in rule["patterns"])
-            word_hits = sum(1 for w in rule["must_have_any"] if w in lower)
-            if score >= 2 or word_hits >= 2:
-                return rule["guesses"], rule["reply"]
+def live_web_plot_search(message):
+    """
+    Searches the live web (DuckDuckGo HTML / IMDb / MyDramaList / TMDB) for any arbitrary plot or logline!
+    Even if a user pastes a brand-new or obscure synopsis, this finds the real movie/series titles from the web.
+    """
+    clean = re.sub(
+        r"^(what|which)\s+(do\s+you\s+call\s+the\s+|is\s+the\s+)?(movie|film|series|show|drama|bl|boys\s+love\s+series|k-drama|anime)\s+(is\s+)?(about|where|that)\s+",
+        "",
+        message.strip(),
+        flags=re.I
+    ).strip()
 
-    # Extract only high-signal nouns/names (strip conversational filler so "boy" doesn't match "Baby Boy")
-    stop_words = {
-        "what", "do", "you", "call", "the", "film", "movie", "series", "show", "drama",
-        "about", "where", "who", "when", "why", "how", "is", "are", "was", "were", "a",
-        "an", "in", "on", "of", "to", "for", "and", "or", "his", "her", "their", "he",
-        "she", "they", "it", "gets", "got", "took", "over", "after", "since", "slowly",
-        "fell", "love", "with", "named", "that", "this", "looking", "find", "tell", "me",
-        "boys", "boy", "girl", "guy", "man", "woman", "life", "friend", "badly"
-    }
-    tokens = [w for w in re.findall(r"[a-z0-9']+", lower) if w not in stop_words and len(w) > 2]
-    is_tv_query = any(w in lower for w in ["series", "drama", "show", "bl", "boys love", "k-drama", "kdrama", "episode", "season"])
-    media_hint = "television series" if is_tv_query else "film"
+    is_tv = bool(re.search(r"\b(series|show|drama|bl|boys love|k-drama|kdrama|episodes|season)\b", message, re.I))
+    search_q = f'{clean} {"series OR drama OR movie" if is_tv else "movie OR film OR series"} site:imdb.com OR site:mydramalist.com OR site:themoviedb.org'
 
     guesses = []
-    clean_q = " ".join(tokens[:7]) if tokens else lower
+    seen_titles = set()
+
     try:
-        if len(clean_q) >= 3:
-            wiki_res = requests.get(
-                "https://en.wikipedia.org/w/api.php",
-                params={"action": "query", "list": "search", "srsearch": f'{clean_q} {media_hint} plot', "srlimit": 10, "format": "json"},
-                headers={"User-Agent": "CineMindCapstone/2.0"},
-                timeout=5
-            ).json()
-            for item in wiki_res.get("query", {}).get("search", []):
-                w_title = html.unescape(item.get("title", ""))
-                raw_snippet = re.sub(r"<[^>]+>", "", item.get("snippet", ""))
-                snippet = html.unescape(raw_snippet).strip()
+        resp = requests.post(
+            "https://html.duckduckgo.com/html/",
+            data={"q": search_q},
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            timeout=6
+        )
+        if resp.status_code == 200:
+            raw_titles = re.findall(r'<a[^>]*class="result__a"[^>]*>(.*?)</a>', resp.text, flags=re.I | re.S)
+            raw_snippets = re.findall(r'<a[^>]*class="result__snippet"[^>]*>(.*?)</a>', resp.text, flags=re.I | re.S)
 
-                # Skip non-movie/series biography or list pages (prevents "Tupac Shakur" false matches!)
-                if any(skip in w_title.lower() for skip in ["list of", "category:", "disambiguation", "awards", "filmography", "discography"]):
+            for idx, rt in enumerate(raw_titles[:10]):
+                t_text = html.unescape(re.sub(r"<[^>]+>", "", rt)).strip()
+                s_text = html.unescape(re.sub(r"<[^>]+>", "", raw_snippets[idx])).strip() if idx < len(raw_snippets) else ""
+
+                # Extract year if present e.g. "(2023)" or "(TV Series 2021– )"
+                yr_match = re.search(r"\((?:[^\)]*?)((?:19|20)\d{2})(?:[^\)]*?)\)", t_text)
+                year = int(yr_match.group(1)) if yr_match else None
+
+                m_type = "tv" if re.search(r"\b(tv series|tv mini|mydramalist|season|episodes|drama)\b", t_text, re.I) or is_tv else "movie"
+
+                # Clean site suffixes like " - IMDb", " - MyDramaList", " (2022) -The Movie Database"
+                t_clean = re.sub(r"\s*[\-\|—]\s*(IMDb|MyDramaList|The Movie Database|TMDB|Wikipedia|Rotten Tomatoes).*$", "", t_text, flags=re.I)
+                t_clean = re.sub(r"\s*\([^\)]*\).*$", "", t_clean).strip()
+                t_clean = re.sub(r"^(Watch|Review|Plot of)\s+", "", t_clean, flags=re.I).strip()
+
+                # Skip generic non-title pages
+                if not t_clean or len(t_clean) > 65 or len(t_clean) < 2:
                     continue
-                is_media_article = any(tag in w_title.lower() for tag in ["film", "tv series", "series", "miniseries", "anime"]) or any(w in snippet.lower() for w in ["directed by", "starring", "plot", " television series", " released in "])
-                if not is_media_article and len(guesses) > 0:
+                if any(bad in t_clean.lower() for bad in ["top 10", "best ", "list of", "movies like", "imdb", "google", "search"]):
                     continue
 
-                m_year = re.search(r"\((\d{4})\s*[^\)]*(?:film|series|tv)", w_title, re.I)
-                year = int(m_year.group(1)) if m_year else None
-                m_type = "tv" if ("series" in w_title.lower() or "tv" in w_title.lower() or is_tv_query) else "movie"
-                clean_title = re.sub(r"\s*\([^\)]*\)\s*", "", w_title).strip()
-                if clean_title and len(clean_title) < 60:
+                norm_key = t_clean.lower()
+                if norm_key not in seen_titles:
+                    seen_titles.add(norm_key)
                     guesses.append({
-                        "title": clean_title,
+                        "title": t_clean,
                         "year": year,
                         "media_type": m_type,
-                        "why": snippet[:150] + "..." if snippet else f"Matched via plot keywords: '{clean_q}'."
+                        "why": s_text[:160] + "..." if s_text else f"Matched to your plot description: '{clean[:80]}'."
                     })
-                if len(guesses) >= 5:
+                if len(guesses) >= 6:
                     break
     except Exception:
         pass
 
-    if guesses:
-        top_name = guesses[0]["title"]
-        top_yr = f" ({guesses[0]['year']})" if guesses[0].get("year") else ""
-        reply = f"Based on your plot description, the title you're looking for is '{top_name}'{top_yr}! Here are the top matching titles:"
-        return guesses, reply
-    return [], None
+    return guesses
 
 
 def smart_local_nlp_parse(message, history, username="Guest", fav_genres=None):
     lower = message.lower()
-
-    # 1. Check instant high-precision plot cache first
-    for rule in KNOWN_PLOT_PATTERNS:
-        if any(w in lower for w in rule.get("must_have_any", [])):
-            score = sum(2 if pat in lower else 0 for pat in rule["patterns"])
-            word_hits = sum(1 for w in rule["must_have_any"] if w in lower)
-            if score >= 2 or word_hits >= 2:
-                return {
-                    "intent": "plot_search",
-                    "plot_guesses": rule["guesses"],
-                    "genres": [],
-                    "mood_keywords": [],
-                    "direct_reply": rule["reply"]
-                }
-
     genres = []
     origin_country = None
     language = None
@@ -591,11 +515,13 @@ def smart_local_nlp_parse(message, history, username="Guest", fav_genres=None):
 
     if any(w in lower for w in ["romcom", "rom-com", "romantic comedy"]):
         genres.extend(["romance", "comedy"])
-    if any(w in lower for w in ["romance", "romantic", "love", "sweet", "heartbreaking", "boys love", "bl"]):
+    if any(w in lower for w in ["romance", "romantic", "love", "sweet", "heartbreaking", "boys love", "bl", "hate each other"]):
         if "romance" not in genres: genres.append("romance")
+    if any(w in lower for w in ["music", "musical", "song", "singing", "band", "concert"]):
+        if "music" not in genres: genres.append("music")
     if any(w in lower for w in ["funny", "comedy", "hilarious", "laugh"]):
         if "comedy" not in genres: genres.append("comedy")
-    if any(w in lower for w in ["sad", "cry", "tearjerker", "emotional"]):
+    if any(w in lower for w in ["sad", "cry", "tearjerker", "emotional", "family", "legacies", "legacy"]):
         if "drama" not in genres: genres.append("drama")
     if any(w in lower for w in ["sci-fi", "scifi", "science fiction", "space", "future", "alien", "time travel"]):
         if "sci-fi" not in genres: genres.append("sci-fi")
@@ -614,38 +540,22 @@ def smart_local_nlp_parse(message, history, username="Guest", fav_genres=None):
         len(lower.split()) >= 5
         or "?" in lower
         or any(p in lower for p in [
-            "why", "how", "what", "movie where", "movie about", "film about",
+            "why", "how", "what", "which", "movie where", "movie about", "film about",
             "series about", "show about", "looking for", "forgot the name",
             "what's that", "whats that", "stuck", "trapped", "infiltrate",
-            "relives", "twins", "nose"
+            "relives", "twins", "nose", "raised to hate"
         ])
     )
 
-    if looks_like_plot_or_question:
-        det_guesses, det_reply = deep_plot_detective(message)
-        if det_guesses:
-            return {
-                "intent": "plot_search",
-                "plot_guesses": det_guesses,
-                "genres": genres,
-                "mood_keywords": [],
-                "direct_reply": det_reply
-            }
-
-    if origin_country and not genres:
+    if origin_country and not genres and not looks_like_plot_or_question:
         if fav_genres:
             genres = [g.lower() for g in fav_genres if g.lower() in GENRES][:3]
         if not genres:
             genres = COUNTRY_DEFAULT_GENRES.get(origin_country, ["drama", "romance"])
 
-    if origin_country == "KR" and "romance" in genres:
-        guesses = CURATED_KOREAN_ROMCOMS
-        direct_reply = f"I've curated the sweetest, funniest Korean romantic comedies for you, {username}—starting with 'Love Reset', '20th Century Girl', and 'My Sassy Girl'!"
-
-    if not direct_reply:
-        desc_parts = [p for p in [country_label, "/".join(genres[:3]).title()] if p]
-        desc = " ".join(desc_parts) if desc_parts else f"'{message}'"
-        direct_reply = f"Here are the top {desc} recommendations matched to your preferences, {username}!"
+    desc_parts = [p for p in [country_label, "/".join(genres[:3]).title()] if p]
+    desc = " ".join(desc_parts) if desc_parts else f"'{message}'"
+    direct_reply = f"Here are the top {desc} matches tailored to your request, {username}!"
 
     return {
         "intent": "plot_search" if looks_like_plot_or_question else intent,
@@ -662,38 +572,49 @@ def smart_local_nlp_parse(message, history, username="Guest", fav_genres=None):
 def extract_intent(message, history, username="Guest", fav_genres=None, selected_country=None):
     local_parsed = smart_local_nlp_parse(message, history, username, fav_genres)
 
-    # If our instant verified pattern cache already nailed it (e.g. Not Me, Pinocchio, Fall, Parasite, Toy Story), return immediately!
-    for rule in KNOWN_PLOT_PATTERNS:
-        if any(w in message.lower() for w in rule.get("must_have_any", [])):
-            score = sum(2 if pat in message.lower() else 0 for pat in rule["patterns"])
-            word_hits = sum(1 for w in rule["must_have_any"] if w in message.lower())
-            if score >= 2 or word_hits >= 2:
-                return local_parsed
-
     ctx_lines = [f"{'User' if h.get('role') == 'user' else 'Nova'}: {h.get('content')}" for h in (history or [])[-10:] if isinstance(h, dict) and h.get("content")]
     ctx = "\n".join(ctx_lines) if ctx_lines else "No prior messages."
     user_prompt = f"User: {username}\nFavorite Genres: {', '.join(fav_genres or [])}\nHistory:\n{ctx}\n\nLatest Request: {message}"
 
+    # 1. Always consult the AI LLM first!
     llm_parsed = llm_json(PARSE_PROMPT, user_prompt, temperature=0.15)
+
+    # 2. If it's a plot search, also run Live Web Plot Search if LLM didn't return enough guesses (or to enrich obscure plots!)
+    web_guesses = []
+    if local_parsed.get("intent") == "plot_search" and (not llm_parsed or len(llm_parsed.get("plot_guesses") or []) < 3):
+        web_guesses = live_web_plot_search(message)
 
     if llm_parsed and isinstance(llm_parsed, dict):
         for k in ("origin_country", "language", "genres"):
             if not llm_parsed.get(k) and local_parsed.get(k):
                 llm_parsed[k] = local_parsed[k]
         llm_guesses = llm_parsed.get("plot_guesses") or []
-        local_guesses = local_parsed.get("plot_guesses") or []
-        llm_parsed["plot_guesses"] = llm_guesses + [g for g in local_guesses if g not in llm_guesses]
+        combined_guesses = list(llm_guesses)
+        seen_t = {(g.get("title") or "").lower() for g in combined_guesses if isinstance(g, dict)}
+        for wg in web_guesses:
+            if wg["title"].lower() not in seen_t:
+                combined_guesses.append(wg)
+                seen_t.add(wg["title"].lower())
+        llm_parsed["plot_guesses"] = combined_guesses
         return llm_parsed
+
+    # 3. If LLM was unreachable, use our Live Web Plot Search results!
+    if web_guesses:
+        local_parsed["intent"] = "plot_search"
+        local_parsed["plot_guesses"] = web_guesses
+        top_t = web_guesses[0]["title"]
+        top_y = f" ({web_guesses[0]['year']})" if web_guesses[0].get("year") else ""
+        local_parsed["direct_reply"] = f"Based on your plot description, the title you're looking for is '{top_t}'{top_y}! Here are the top matching titles:"
+
     return local_parsed
 
 
 def search_tmdb_title(title, year=None, media_hint=None):
-    """Searches TMDB across BOTH movies and TV series so shows like 'Not Me' are always found!"""
+    """Searches TMDB across BOTH movies and TV series accurately."""
     if not title:
         return None
     title_clean = title.strip()
 
-    # 1. If explicitly a TV series/drama, search /search/tv first
     if media_hint == "tv":
         params = {"query": title_clean}
         if year:
@@ -706,7 +627,6 @@ def search_tmdb_title(title, year=None, media_hint=None):
             exact["media_type"] = "tv"
             return exact
 
-    # 2. Search /search/movie if movie hint or general
     if media_hint != "tv":
         params = {"query": title_clean}
         if year:
@@ -719,7 +639,6 @@ def search_tmdb_title(title, year=None, media_hint=None):
             if exact:
                 exact["media_type"] = "movie"
                 return exact
-            # If not an exact title match on movie, check /search/multi in case it's actually a famous TV series!
             multi = [h for h in tmdb("/search/multi", query=title_clean).get("results", []) if h.get("media_type") in ("movie", "tv") and is_safe_non_porn(h) and h.get("poster_path")]
             exact_multi = next((h for h in multi if (h.get("title") or h.get("name") or "").lower() == title_clean.lower()), None)
             if exact_multi:
@@ -727,7 +646,6 @@ def search_tmdb_title(title, year=None, media_hint=None):
             hits[0]["media_type"] = "movie"
             return hits[0]
 
-    # 3. Fallback to /search/multi (covers both movies and TV shows)
     multi_hits = [
         h for h in tmdb("/search/multi", query=title_clean).get("results", [])
         if h.get("media_type") in ("movie", "tv") and is_safe_non_porn(h) and h.get("poster_path")
@@ -768,10 +686,11 @@ def plot_search(p):
                     chosen["_guess_why"] = html.unescape(str(why))
                 results.append(chosen)
 
+    # Backup 1: Match on mood_keywords
     if len(results) < 6:
         kws = keyword_ids(p.get("mood_keywords", []))
         if kws:
-            extra = tmdb("/discover/movie", with_keywords="|".join(kws), sort_by="popularity.desc", **{"vote_count.gte": 30}).get("results", [])
+            extra = tmdb("/discover/movie", with_keywords="|".join(kws), sort_by="popularity.desc", **{"vote_count.gte": 25}).get("results", [])
             for m in extra:
                 u_key = f"movie_{m.get('id')}"
                 if is_safe_non_porn(m) and m.get("poster_path") and u_key not in seen:
@@ -780,6 +699,7 @@ def plot_search(p):
                     m["_bonus"] = 10.0
                     results.append(m)
 
+    # Backup 2: Pull recommendations from #1 verified match
     if results and len(results) < 8:
         top_hit = results[0]
         top_type = top_hit.get("media_type", "movie")
@@ -792,6 +712,20 @@ def plot_search(p):
                 m["_bonus"] = 8.0
                 m["_guess_why"] = f"Recommended because it shares key themes with {top_title}."
                 results.append(m)
+
+    # Backup 3: If still fewer than 4 results and genres were detected in the plot (e.g. Music + Romance + Drama), discover by those exact genres!
+    if len(results) < 6 and p.get("genres"):
+        gids = [str(GENRES[g.lower()]) for g in p.get("genres") if g.lower() in GENRES]
+        if gids:
+            disc = tmdb("/discover/movie", with_genres=",".join(gids[:2]), sort_by="popularity.desc", **{"vote_count.gte": 30}).get("results", [])
+            for m in disc:
+                u_key = f"movie_{m.get('id')}"
+                if is_safe_non_porn(m) and m.get("poster_path") and u_key not in seen:
+                    seen.add(u_key)
+                    m["media_type"] = "movie"
+                    m["_bonus"] = 6.0
+                    results.append(m)
+
     return results
 
 
@@ -843,7 +777,7 @@ def find_movies(intent):
     gids = [str(GENRES[g.lower()]) for g in (intent.get("genres") or []) if g.lower() in GENRES]
     xids = [str(GENRES[g.lower()]) for g in intent.get("exclude_genres") or [] if g.lower() in GENRES]
 
-    min_votes = 15 if (target_country or target_lang) else 100
+    min_votes = 15 if (target_country or target_lang) else 80
     p = {"include_adult": "false", "vote_count.gte": min_votes, "language": "en-US", "sort_by": "popularity.desc"}
     if gids: p["with_genres"] = "|".join(gids[:3]) if target_country else ",".join(gids[:2])
     if xids: p["without_genres"] = ",".join(xids)
@@ -919,7 +853,7 @@ def explain(message, username, movies, intent):
         '"reasons": {"<id>": "1 specific sentence explaining why this title fits their request"}}. '
         "Only mention titles from the provided list."
     )
-    return llm_json(system, f"User Request: {message}\nVerified Titles: {json.dumps(listing)}", temperature=0.25) or {}
+    return llm_json(system, f"User Request: {message}\nVerified Titles: {json.dumps(listing)}", temperature=0.2) or {}
 
 
 @app.route("/chat", methods=["POST"])
@@ -967,7 +901,6 @@ def chat():
             "movies": [], "intent": intent_type, "success": True
         })
 
-    # If extract_intent already produced a specific direct_reply for a plot_search, keep it fast & accurate!
     direct_reply = html.unescape(intent.get("direct_reply") or "")
     reasons = {}
     if not direct_reply or direct_reply.startswith("Here are the top"):
@@ -976,7 +909,11 @@ def chat():
         if ex.get("reply"):
             direct_reply = html.unescape(ex.get("reply"))
 
-    reply = direct_reply or f"Here are my top handpicked matches for '{message}', {username}!"
+    if not direct_reply:
+        top_name = top[0].get("title") or top[0].get("name")
+        top_yr = (top[0].get("release_date") or top[0].get("first_air_date") or "")[:4]
+        yr_str = f" ({top_yr})" if top_yr else ""
+        direct_reply = f"Based on your description, my top match is '{top_name}'{yr_str}! Here are the closest matching titles:"
 
     movies = [{
         "id": m["id"],
@@ -993,17 +930,17 @@ def chat():
         "r18": is_genuine_r18(m),
         "match": m.get("_match", 96),
         "platforms": [region or "Global"],
-        "rationale": html.unescape(reasons.get(str(m["id"])) or m.get("_guess_why") or f"Matched to your '{message}' query."),
+        "rationale": html.unescape(reasons.get(str(m["id"])) or m.get("_guess_why") or (m.get("overview") or "")[:140] or f"Matched to your '{message}' query."),
     } for m in top]
 
-    return jsonify({"reply": reply, "movies": movies, "intent": intent_type, "success": True})
+    return jsonify({"reply": direct_reply, "movies": movies, "intent": intent_type, "success": True})
 
 
 @app.route("/trends", methods=["GET"])
 def trends():
     return jsonify({
-        "ai_forecast": "Super-Nova Multi-LLM + Movie/Series Plot-Search Pipeline Online.",
-        "trending_genres": ["Multi-LLM Plot & Series Recognition", "TMDB Movie + TV Verification", "OMDb Metadata Enrichment"]
+        "ai_forecast": "Super-Nova Multi-LLM + Live Web Plot-Search Pipeline Online.",
+        "trending_genres": ["Multi-LLM Plot & Series Recognition", "Live Web IMDb/MDL Plot Resolver", "OMDb Metadata Enrichment"]
     })
 
 
