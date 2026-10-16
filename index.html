@@ -96,24 +96,26 @@ html[data-theme="light"] .cosmic-stars { opacity: 0.22; }
 
 .app-layout { display: flex; width: 100%; max-width: 1780px; margin: 0 auto; min-height: 100vh; padding: 24px; gap: 24px; }
 
-/* ---- Sidebar & CineMind Logo ---- */
+/* ---- 1. Standalone Clean Unboxed Logo (NO CIRCLE, NO BORDER, NO BACKGROUND) ---- */
 .sidebar { width: 280px; background: var(--sidebar-bg); border: 1px solid var(--glass-border); border-radius: 28px; padding: 24px 20px; display: flex; flex-direction: column; z-index: 20; gap: 18px; flex-shrink: 0; box-shadow: var(--shadow-heavy); backdrop-filter: blur(28px); position: sticky; top: 24px; height: fit-content; max-height: calc(100vh - 48px); overflow-y: auto; }
 .sidebar-top-bar { display: flex; flex-direction: column; gap: 16px; width: 100%; }
-.logo-free-wrapper { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px; width: 100%; cursor: pointer; }
+.logo-free-wrapper { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; width: 100%; cursor: pointer; }
 .logo-unboxed {
-    width: 112px;
-    height: 112px;
-    border-radius: 50%;
-    object-fit: cover;
-    background: #0d0628;
-    border: 2.5px solid var(--secondary-glow);
-    box-shadow: 0 0 28px rgba(0, 242, 254, 0.55), 0 0 45px rgba(217, 70, 239, 0.35);
-    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease;
+    width: 118px;
+    height: auto;
+    max-height: 118px;
+    border-radius: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    object-fit: contain;
+    filter: drop-shadow(0 0 16px rgba(0, 242, 254, 0.65)) drop-shadow(0 0 32px rgba(217, 70, 239, 0.45));
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.35s ease;
     display: block;
 }
-.logo-unboxed:hover {
-    transform: scale(1.08) rotate(4deg);
-    box-shadow: 0 0 35px rgba(217, 70, 239, 0.85), 0 0 55px rgba(0, 242, 254, 0.75);
+.logo-unboxed:hover, .logo-unboxed:active {
+    transform: scale(1.12) rotate(6deg);
+    filter: drop-shadow(0 0 26px rgba(217, 70, 239, 0.95)) drop-shadow(0 0 45px rgba(0, 242, 254, 0.85));
 }
 .logo-brand-title {
     font-size: 1.4rem;
@@ -161,9 +163,28 @@ html[data-theme="light"] .cosmic-stars { opacity: 0.22; }
 .hero-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1.1s ease-in-out, transform 6.5s ease-out; }
 .hero-slide.backdrop-slide { background-size: cover; background-position: center 22%; transform: scale(1.08); filter: brightness(1.05) contrast(1.1) saturate(1.25); }
 .hero-slide.backdrop-slide.active { opacity: 0.90; transform: scale(1); }
-.hero-slide.poster-wall-slide { display: grid; grid-template-columns: repeat(9, 1fr); grid-template-rows: repeat(2, 1fr); gap: 8px; padding: 8px; background: #05020e; }
-.hero-slide.poster-wall-slide.active { opacity: 0.94; }
-.poster-wall-tile { width: 100%; height: 100%; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.15); background: #120c30; }
+
+/* Slanted Dynamic Moving Poster Wall + Recent Slideshow */
+@keyframes slantedWallGlide {
+    0% { transform: rotate(-10deg) scale(1.26) translateY(0px); }
+    50% { transform: rotate(-10deg) scale(1.30) translateY(-16px); }
+    100% { transform: rotate(-10deg) scale(1.26) translateY(0px); }
+}
+.hero-slide.poster-wall-slide {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 10px;
+    padding: 8px;
+    background: #05020e;
+    transform: rotate(-10deg) scale(1.26);
+    transform-origin: center center;
+}
+.hero-slide.poster-wall-slide.active {
+    opacity: 0.92;
+    animation: slantedWallGlide 12s ease-in-out infinite;
+}
+.poster-wall-tile { width: 100%; height: 100%; border-radius: 10px; overflow: hidden; border: 1px solid rgba(0, 242, 254, 0.28); background: #120c30; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7); }
 .poster-wall-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .hero-slideshow-overlay {
     position: absolute; inset: 0; z-index: 1; pointer-events: none;
@@ -188,7 +209,7 @@ html[data-theme="light"] .hero-slideshow-overlay {
 .search-btn-submit { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); border: none; padding: 0 26px; border-radius: 30px; color: #fff; font-weight: 700; cursor: pointer; transition: 0.25s; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .search-btn-submit:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0, 242, 254, 0.55); }
 
-/* ---- Filter Panel: Top Dropdowns + Left-Aligned Format & Quick Categories ---- */
+/* ---- Filter Panel: Top Dropdowns + Format-Only (No Genres in Format Row) ---- */
 .filter-panel { position: relative; z-index: 35; display: flex; flex-direction: column; gap: 14px; background: var(--panel-bg); padding: 20px 24px; border-radius: 24px; border: 1px solid var(--glass-border); backdrop-filter: blur(22px); box-shadow: var(--shadow-heavy); }
 .filter-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; }
 .filter-row-middle { justify-content: flex-start; text-align: left; padding-top: 2px; }
@@ -196,7 +217,6 @@ html[data-theme="light"] .hero-slideshow-overlay {
 .filter-pill { background: rgba(124, 58, 237, 0.08); border: 1px solid var(--glass-border); padding: 7px 15px; border-radius: 20px; font-size: 0.81rem; font-weight: 600; cursor: pointer; color: var(--text-muted); transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; user-select: none; }
 .filter-pill:hover, .filter-pill.active { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); color: #fff; border-color: transparent; box-shadow: 0 0 18px rgba(0, 242, 254, 0.5); }
 .filter-pill.active i, .filter-pill:hover i { color: #fff !important; }
-.filter-divider { width: 1.5px; height: 22px; background: var(--glass-border); margin: 0 4px; flex-shrink: 0; }
 
 /* Netflix-Style Custom Dropdown Menus (Top Row) */
 .filter-dropdown-container {
@@ -277,10 +297,6 @@ html[data-theme="light"] .netflix-dropdown-trigger {
     background: rgba(255, 255, 255, 0.14);
     border-color: var(--secondary-glow);
     box-shadow: 0 0 18px rgba(0, 242, 254, 0.4);
-}
-html[data-theme="light"] .netflix-dropdown-trigger:hover,
-html[data-theme="light"] .netflix-dropdown.open .netflix-dropdown-trigger {
-    background: rgba(30, 20, 74, 0.98);
 }
 .netflix-caret {
     font-size: 0.75rem;
@@ -386,7 +402,7 @@ html[data-theme="light"] .netflix-dropdown.open .netflix-dropdown-trigger {
 
 /* ---- Rows & Equal-Sized Cards ---- */
 .row-title { font-size: 1.35rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
-.catalog-container { display: flex; flex-direction: column; gap: 34px; min-width: 0; }
+.catalog-container { display: flex; flex-direction: column; gap: 34px; min-width: 0; width: 100%; }
 .row-section { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .movie-row {
     display: flex;
@@ -598,7 +614,7 @@ html[data-theme="light"] .top10-rank-num {
 }
 .infinite-loader { text-align: center; padding: 28px; color: var(--secondary-glow); font-weight: 700; font-size: 0.95rem; display: flex; justify-content: center; align-items: center; gap: 10px; }
 
-/* ---- Nova Holographic Animations & Tooltip ---- */
+/* ---- Nova Holographic Animations & Tilt Motion ---- */
 @keyframes novaFloat {
     0%, 100% { transform: translateY(0px) rotate(0deg); }
     50% { transform: translateY(-8px) rotate(3deg); }
@@ -612,14 +628,35 @@ html[data-theme="light"] .top10-rank-num {
     0%, 100% { transform: translateY(0px); box-shadow: 0 6px 25px rgba(0, 242, 254, 0.35); border-color: var(--secondary-glow); }
     50% { transform: translateY(-6px); box-shadow: 0 12px 28px rgba(217, 70, 239, 0.6); border-color: var(--primary-glow); }
 }
+@keyframes novaTiltTap {
+    0% { transform: scale(1) rotate(0deg); }
+    40% { transform: scale(1.16) rotate(9deg); }
+    75% { transform: scale(1.08) rotate(-5deg); }
+    100% { transform: scale(1) rotate(0deg); }
+}
 
-.nova-avatar-animated { animation: novaFloat 3.4s ease-in-out infinite; filter: drop-shadow(0 0 16px rgba(0, 242, 254, 0.75)); cursor: pointer; }
+.nova-avatar-animated {
+    animation: novaFloat 3.4s ease-in-out infinite;
+    filter: drop-shadow(0 0 16px rgba(0, 242, 254, 0.75));
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.35s ease;
+    cursor: pointer;
+}
+.nova-avatar-animated:hover, .nova-avatar-animated:active, .nova-avatar-animated.tilted {
+    animation: novaTiltTap 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    transform: scale(1.12) rotate(7deg) !important;
+}
 .nova-chathead {
     width: 72px; height: 72px; background: radial-gradient(circle, #1a0b4b, #070318);
     border: 2.5px solid var(--secondary-glow); border-radius: 50%; cursor: pointer;
     display: flex; justify-content: center; align-items: center; position: relative;
     box-shadow: 0 0 32px rgba(0, 242, 254, 0.7), 0 0 55px rgba(217, 70, 239, 0.45);
     animation: novaFloat 3.6s ease-in-out infinite; padding: 5px; user-select: none; touch-action: none;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+}
+.nova-chathead:hover, .nova-chathead:active, .nova-chathead.tilted {
+    animation: novaTiltTap 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    transform: scale(1.12) rotate(7deg) !important;
+    border-color: var(--primary-glow) !important;
 }
 .nova-chathead::before {
     content: ""; position: absolute; inset: -6px; border-radius: 50%;
@@ -806,28 +843,19 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
 
 /* ---- Mobile & Tablet Responsive Layout Fixes ---- */
 @media (max-width: 1280px) {
-    .filter-dropdown-container {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-    }
+    .filter-dropdown-container { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 }
 
 @media (max-width: 1100px) {
     .app-layout { flex-direction: column; padding: 12px; gap: 16px; }
-    .sidebar {
-        width: 100%; height: auto; max-height: none; position: static;
-        flex-direction: column; padding: 14px 16px; border-radius: 22px; gap: 12px;
-    }
+    .sidebar { width: 100%; height: auto; max-height: none; position: static; flex-direction: column; padding: 14px 16px; border-radius: 22px; gap: 12px; }
     .sidebar-top-bar { display: flex; flex-direction: row; width: 100%; align-items: center; justify-content: space-between; gap: 12px; }
     .logo-free-wrapper { width: auto; flex-direction: row; gap: 10px; }
     .logo-unboxed { width: 46px; height: 46px; }
     .logo-brand-title { font-size: 1.15rem; }
     .top-controls-row { width: auto; flex: 0 1 auto; justify-content: flex-end; }
     .account-top-btn { flex: 0 1 auto; padding: 8px 12px; }
-    .nav-links {
-        flex-direction: row; gap: 8px; overflow-x: auto; width: 100%;
-        padding: 4px 2px 6px 2px; -webkit-overflow-scrolling: touch; scrollbar-width: none;
-    }
+    .nav-links { flex-direction: row; gap: 8px; overflow-x: auto; width: 100%; padding: 4px 2px 6px 2px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
     .nav-item { padding: 9px 14px; font-size: 0.82rem; gap: 7px; white-space: nowrap; flex-shrink: 0; }
     .hero-banner { padding: 24px 18px; min-height: 220px; border-radius: 22px; gap: 16px; }
     .hero-slide.poster-wall-slide { grid-template-columns: repeat(5, 1fr); }
@@ -836,7 +864,6 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
     .filter-row-middle { justify-content: flex-start; }
     .filter-label { min-width: auto; font-size: 0.8rem; margin-right: 4px; flex-shrink: 0; }
     .filter-pill { flex-shrink: 0; padding: 6px 13px; font-size: 0.78rem; }
-    .netflix-dropdown-grid.three-col { grid-template-columns: repeat(2, minmax(135px, 1fr)); }
 }
 
 @media (max-width: 640px) {
@@ -854,10 +881,7 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
     .card-poster-wrap { height: 215px; }
     .top10-card { min-width: 195px; width: 195px; height: 330px; padding-left: 46px; }
     .top10-rank-num { font-size: 6.4rem; letter-spacing: -5px; bottom: 18px; }
-    .movie-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-    }
+    .movie-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
     .movie-grid .movie-card { height: 335px; }
     .movie-grid .card-poster-wrap { height: 220px; }
     .modal-content { flex-direction: column; padding: 18px; max-height: 92vh; gap: 14px; }
@@ -866,7 +890,6 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
     .nova-chathead { width: 62px; height: 62px; }
     .chat-modal { width: calc(100vw - 24px); bottom: 76px; }
     .media-badge, .r18-badge, .origin-country-badge { font-size: 0.58rem; padding: 2px 6px; }
-    .netflix-dropdown-grid, .netflix-dropdown-grid.three-col { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
 }
 </style>
 </head>
@@ -877,8 +900,9 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
 <div class="app-layout">
 <aside class="sidebar">
     <div class="sidebar-top-bar">
+        <!-- STANDALONE LOGO (NO CIRCLE, NO BORDER) WITH GLOWING BRAIN FALLBACK -->
         <div class="logo-free-wrapper" id="homeLogoBtn" title="Return to Galaxy Home">
-            <img src="CineMind-Logo.jpg" alt="CineMind" class="logo-unboxed" id="mainBrandLogo">
+            <img src="CineMind-Logo.jpg" alt="CineMind" class="logo-unboxed" id="mainBrandLogo" onerror="this.onerror=null;this.src=`data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><text x='50%' y='56%' fill='%2300f2fe' font-size='78' text-anchor='middle' dominant-baseline='middle' font-family='sans-serif'>🧠</text></svg>`;">
             <h2 class="logo-brand-title">CineMind</h2>
         </div>
 
@@ -923,7 +947,7 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
     </div>
 
     <div class="filter-panel" id="filterPanel">
-        <!-- 1. TOP ROW: NETFLIX-STYLE DROPDOWN SELECTORS (GENRES MULTI + STREAMING APP + ORIGIN COUNTRY + STREAMING REGION) -->
+        <!-- 1. TOP ROW: NETFLIX-STYLE DROPDOWNS (GENRES MULTI + STREAMING APP + ORIGIN COUNTRY + STREAMING REGION) -->
         <div class="filter-dropdown-container">
             <div class="filter-select-wrapper">
                 <label><i class="fa-solid fa-film"></i> Genres (Multi):</label>
@@ -989,14 +1013,16 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
             </div>
         </div>
         
-        <!-- 2. BOTTOM ROW (LEFT-ALIGNED): FORMAT SELECTION ONLY -->
+        <!-- 2. BOTTOM ROW: FORMAT SELECTION ONLY (NO GENRES/CATEGORIES) -->
         <div class="filter-row filter-row-middle" id="mediaFilterRow">
             <span class="filter-label"><i class="fa-solid fa-layer-group"></i> Format:</span>
             <button type="button" class="filter-pill active" data-media="all">🌌 All Formats</button>
             <button type="button" class="filter-pill" data-media="movie">🎬 Movies Only</button>
             <button type="button" class="filter-pill" data-media="tv">📺 TV Series, Shows & K-Dramas</button>
         </div>
+    </div> <!-- END OF FILTER-PANEL -->
 
+    <!-- CATALOG CONTAINER (ALL ROWS & MOVIES LIVE HERE) -->
     <div id="mainContainer" class="catalog-container"></div>
     <div id="infiniteSentinel" class="infinite-loader" style="display:none;">
         <i class="fa-solid fa-spinner fa-spin"></i> Warping more unique galaxy streams...
@@ -1004,7 +1030,7 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
 </main>
 </div>
 
-<!-- MOVIE / SERIES DETAILS MODAL (COMPLETE DETAILS: ORIGIN, GENRES, CHARACTERS, ACTORS, FULL CAST & CREW) -->
+<!-- MOVIE / SERIES DETAILS MODAL -->
 <div class="modal-overlay" id="movieModal">
 <div class="modal-content">
     <i class="fa-solid fa-xmark close-modal" id="closeModal"></i>
@@ -1065,7 +1091,7 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
 </div>
 </div>
 
-<!-- SMART PROFILE / AUTH MODAL (Shows User Account Card if Logged In, or Login/Signup if Guest) -->
+<!-- SMART PROFILE / AUTH MODAL -->
 <div class="modal-overlay" id="profileModal">
 <div class="profile-box" style="width: 480px; max-width: 100%; max-height: 92vh; overflow-y: auto; background: var(--modal-bg); padding: 30px; border-radius: 26px; border: 1px solid var(--glass-border-hover); box-shadow: var(--shadow-heavy); display: flex; flex-direction: column; gap: 16px; position: relative;">
     <i class="fa-solid fa-xmark close-modal" id="closeProfileModal" style="top:20px; right:22px;"></i>
@@ -1105,7 +1131,7 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
         </div>
     </div>
 
-    <!-- VIEW B: LOGIN / SIGNUP INPUTS (Shown ONLY for Guest / Logged-Out users) -->
+    <!-- VIEW B: LOGIN / SIGNUP INPUTS -->
     <div class="pref-group" id="guestAuthInputs" style="display:flex; flex-direction:column; gap:10px;">
         <input type="text" id="authUsername" placeholder="Username..." style="width: 100%; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 14px; padding: 12px 16px; color: var(--text-main); outline: none; font-size: 0.92rem;">
         <input type="password" id="authPassword" placeholder="Password (6+ chars)..." style="width: 100%; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 14px; padding: 12px 16px; color: var(--text-main); outline: none; font-size: 0.92rem;">
@@ -1192,21 +1218,21 @@ const BACKEND_URL = "https://cinemind-live.onrender.com";
 
 const NO_POSTER = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='500' height='750'><rect width='100%' height='100%' fill='%23160f38'/><text x='50%' y='50%' fill='%2394a3b8' font-size='28' text-anchor='middle' font-family='sans-serif'>CineMind Poster</text></svg>`;
 const NO_AVATAR = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><rect width='100%' height='100%' rx='60' fill='%231e1448'/><text x='50%' y='56%' fill='%2300f2fe' font-size='42' text-anchor='middle' font-family='sans-serif'>👤</text></svg>`;
-const FALLBACK_LOGO_SVG = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><defs><radialGradient id='g' cx='50%' cy='50%' r='50%'><stop offset='0%' stop-color='%2300f2fe'/><stop offset='60%' stop-color='%23d946ef'/><stop offset='100%' stop-color='%23190a42'/></radialGradient></defs><circle cx='60' cy='60' r='54' fill='url(%23g)' stroke='%2300f2fe' stroke-width='3'/><text x='50%' y='56%' fill='%23ffffff' font-size='44' text-anchor='middle' dominant-baseline='middle' font-family='sans-serif'>🧠</text></svg>`;
+const FALLBACK_LOGO_SVG = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><text x='50%' y='56%' fill='%2300f2fe' font-size='78' text-anchor='middle' dominant-baseline='middle' font-family='sans-serif'>🧠</text></svg>`;
 
 const LOGO_CANDIDATES = ['CineMind-Logo.jpg', 'CineMind-Logo.png', 'logo.png', 'logo.jpg', 'CineMind-Logo.jpeg', 'nova.png', FALLBACK_LOGO_SVG];
 let logoTryIdx = 0;
 const mainBrandLogo = document.getElementById('mainBrandLogo');
-mainBrandLogo.onerror = function() {
-    logoTryIdx++;
-    if (logoTryIdx < LOGO_CANDIDATES.length) {
-        this.src = LOGO_CANDIDATES[logoTryIdx];
-    } else {
-        this.onerror = null;
-    }
-};
-
-function playSciFiChime() {}
+if (mainBrandLogo) {
+    mainBrandLogo.onerror = function() {
+        logoTryIdx++;
+        if (logoTryIdx < LOGO_CANDIDATES.length) {
+            this.src = LOGO_CANDIDATES[logoTryIdx];
+        } else {
+            this.onerror = null;
+        }
+    };
+}
 
 function showToast(msg) {
     const t = document.getElementById('cinemindToast');
@@ -1321,30 +1347,18 @@ const GENRE_OPTIONS = {
 };
 
 const PICKER_GENRES = {
-    28: 'Action',
-    12: 'Adventure',
-    16: 'Animation',
-    ANIME: '🎌 Anime',
-    35: 'Comedy',
-    80: 'Crime',
-    99: '🎥 Documentaries',
-    18: 'Drama',
-    14: 'Fantasy',
-    27: 'Horror',
-    KIDS_FAMILY: '🧸 Kids & Family',
-    9648: 'Mystery',
-    10749: 'Romance',
-    878: 'Sci-Fi',
-    SPORTS: '🏆 Sports',
-    53: 'Thriller',
-    BL: "💙 Boys' Love (BL)",
-    GL: "💖 Girls' Love (GL)"
+    28: 'Action', 12: 'Adventure', 16: 'Animation', ANIME: '🎌 Anime',
+    35: 'Comedy', 80: 'Crime', 99: '🎥 Documentaries', 18: 'Drama',
+    14: 'Fantasy', 27: 'Horror', KIDS_FAMILY: '🧸 Kids & Family',
+    9648: 'Mystery', 10749: 'Romance', 878: 'Sci-Fi', SPORTS: '🏆 Sports',
+    53: 'Thriller', BL: "💙 Boys' Love (BL)", GL: "💖 Girls' Love (GL)"
 };
 
 const BL_TMDB_KEYWORDS = "289844|250606|10180|240377|316421|293198";
 const GL_TMDB_KEYWORDS = "264386|9840|240455|193681|290527|315999";
 const ANIME_TMDB_KEYWORDS = "210024|287501|293016|222243|13141|9914|310008|279876";
-const SPORTS_TMDB_KEYWORDS = "6075|6496|13042|6078|159212|1721|9713|180491|579|191020|2702";
+const REAL_SPORTS_KEYWORDS = "6075|6496|13042|6078|159212|1721|9713|180491|579|191020|2702|11616";
+const TRUE_CRIME_DOCU_KEYWORDS = "9826|10714|6149|18035|33637|156866";
 
 const COUNTRY_QUERY_KEYWORDS = {
     "philippines": { code: "PH", lang: "tl", label: "Philippines 🇵🇭", preferredGenres: [18, 10749, 35, 27, 53] },
@@ -1463,9 +1477,16 @@ const KNOWN_R18_TITLES = new Set([
     "helluva boss", "castlevania"
 ]);
 
+// ALL HORROR TITLES (Genre 27) ARE LABELED R-18
 function isGenuineR18(item) {
     if (!item || !isSafeNonPorn(item)) return false;
     const key = `${item.media_type || 'movie'}_${item.id}`;
+    const gids = (item.genre_ids || (item.genres || []).map(g => g.id) || []).map(Number);
+
+    if (gids.includes(27)) {
+        r18Cache.set(key, true);
+        return true;
+    }
     if (r18Cache.has(key)) return r18Cache.get(key) === true;
     if (item._isR18 === true || item.r18 === true) {
         r18Cache.set(key, true);
@@ -1473,7 +1494,7 @@ function isGenuineR18(item) {
     }
 
     const cert = (item.certification || "").toUpperCase().trim();
-    if (["R-18", "R18", "TV-MA"].includes(cert)) {
+    if (["R-18", "R18", "TV-MA", "R"].includes(cert)) {
         r18Cache.set(key, true);
         return true;
     }
@@ -1485,12 +1506,10 @@ function isGenuineR18(item) {
         return true;
     }
 
-    const gids = (item.genre_ids || (item.genres || []).map(g => g.id)).map(Number);
     const overview = (item.overview || "").toLowerCase();
     const combinedText = `${titleLower} ${origTitleLower} ${overview}`;
-
-    const disturbingHorrorKeywords = /\b(serial killer|gore|bloody|massacre|brutal|decapitation|mutilation|torture|psychopath|disturbing|slasher|cannibal|gruesome|autopsy|dismember|visceral|terrifier|sadistic|demon|possession|exorcism|cartel)\b/i;
-    if ((gids.includes(27) || gids.includes(80) || gids.includes(53)) && disturbingHorrorKeywords.test(combinedText)) {
+    const disturbingKeywords = /\b(serial killer|gore|bloody|massacre|brutal|decapitation|mutilation|torture|psychopath|slasher|cannibal|gruesome|autopsy|dismember|visceral|terrifier|sadistic|demon|possession|exorcism|cartel|dahmer)\b/i;
+    if ((gids.includes(80) || gids.includes(53) || gids.includes(18)) && disturbingKeywords.test(combinedText)) {
         r18Cache.set(key, true);
         return true;
     }
@@ -1498,7 +1517,7 @@ function isGenuineR18(item) {
     return false;
 }
 
-// ---------------- MULTI-GENRE & CONTENT-AWARE CLASSIFIER ----------------
+// ---------------- MULTI-GENRE & CONTENT-AWARE CLASSIFIERS ----------------
 function isAnimeContent(item) {
     if (!item) return false;
     const gids = (item.genre_ids || (item.genres || []).map(g => g.id) || []).map(Number);
@@ -1540,18 +1559,25 @@ function isKidsAndFamilyContent(item) {
     return gids.includes(10751) || gids.includes(10762);
 }
 
+// REAL-LIFE SPORTS ONLY (FIFA, WWE, NBA, F1, BOXING — NO CARTOONS)
 function isSportsContent(item) {
     if (!item) return false;
+    const gids = (item.genre_ids || (item.genres || []).map(g => g.id) || []).map(Number);
+    if (gids.includes(16)) return false; // Strictly exclude cartoons from Sports
     const kwList = (item.keywords && (item.keywords.keywords || item.keywords.results) || []);
     const kwNames = kwList.map(k => (k.name || '').toLowerCase()).join(' | ');
     const text = `${item.title || item.name || ''} ${item.overview || ''} ${kwNames}`.toLowerCase();
-    return /\b(sport|sports|basketball|nba|football|soccer|baseball|volleyball|boxing|boxer|mma|wrestling|ufc|tennis|golf|olympic|olympics|formula 1|f1|racing|racer|marathon|swimming|skating|skateboard|ice hockey|rugby|badminton|billiards|tournament|championship|coach|athlete|slam dunk|haikyu|haikyuu|blue lock|kuroko|hajime no ippo|yuri on ice|free!|baki|megalo box|inazuma|captain tsubasa|ace of diamond|aoashi|sk8 the infinity|ping pong|chihayafuru|run with the wind|creed|rocky|rush|moneyball|air|challengers|king richard|coach carter|remember the titans|blind side|ted lasso|last dance|welcome to wrexham|drive to survive)\b/i.test(text);
+    return /\b(sport|sports|fifa|wwe|wrestlemania|raw|smackdown|wrestling|wrestler|ufc|mma|basketball|nba|football|soccer|world cup|baseball|volleyball|boxing|boxer|tennis|golf|olympic|olympics|formula 1|f1|grand prix|nascar|racing|racer|marathon|athlete|coach|championship|creed|rocky|rush|moneyball|air|challengers|king richard|coach carter|remember the titans|blind side|ted lasso|last dance|welcome to wrexham|drive to survive|beckham|senna|undisputed|southpaw|raging bull|million dollar baby)\b/i.test(text);
 }
 
+// TRUE CRIME & DOCUMENTARIES (DAHMER, INVESTIGATIONS — NO CARTOONS)
 function isDocumentaryContent(item) {
     if (!item) return false;
     const gids = (item.genre_ids || (item.genres || []).map(g => g.id) || []).map(Number);
-    return gids.includes(99);
+    if (gids.includes(16)) return false;
+    if (gids.includes(99)) return true;
+    const text = `${item.title || item.name || ''} ${item.overview || ''}`.toLowerCase();
+    return /\b(dahmer|jeffrey dahmer|ted bundy|john wayne gacy|richard ramirez|night stalker|menendez|making a murderer|tinder swindler|unsolved mysteries|american murder|evil genius|wild wild country|tiger king|true crime|documentary|docuseries)\b/i.test(text);
 }
 
 function getAllItemCategories(item) {
@@ -1613,13 +1639,17 @@ function getAllItemCategories(item) {
 
 function matchesActiveCategoryRules(item) {
     if (!item || selectedGenres.size === 0) return true;
+    const gids = (item.genre_ids || (item.genres || []).map(g => g.id) || []).map(Number);
     if (selectedGenres.has('KIDS_FAMILY') && !selectedGenres.has('ANIME') && !selectedGenres.has('27')) {
         if (isGenuineR18(item) || isAdultOrTeenAnimation(item)) return false;
+    }
+    if ((selectedGenres.has('SPORTS') || selectedGenres.has('99') || selectedGenres.has('BL') || selectedGenres.has('GL')) && !selectedGenres.has('ANIME') && !selectedGenres.has('16')) {
+        if (gids.includes(16)) return false;
     }
     return true;
 }
 
-// ---------------- "NOT INTERESTED" NEURAL CONCEPT / STORYLINE / GENRE FILTER ----------------
+// ---------------- "NOT INTERESTED" NEURAL FILTER ----------------
 const STOP_WORDS = new Set(["the","and","for","with","that","this","from","into","over","after","before","under","between","through","during","about","against","among","within","without","along","following","across","behind","beyond","plus","except","but","up","out","around","down","off","above","near","movie","series","show","film","story","life","world","man","woman","two","one","new","young","old","find","finds","must","when","where","who","what","how","why","their","they","them","his","her","she","him","has","have","had","been","were","was","are","will","can","may"]);
 
 function extractStoryKeywords(text = "") {
@@ -1739,14 +1769,15 @@ window.markMovieNotInterested = function(movie, cardEl = null, closeOpenModal = 
     showToast(`Marked "${entry.title}" as Not Interested. Similar concepts & themes will be avoided.`);
 };
 
-// Asynchronous TMDB Deep Check: Removes card if porn/Vivamax, updates Origin Country, and syncs genuine R-18 badge
+// VERIFY METADATA ASYNC (NEVER DELETE TOP 10 CARDS)
 async function verifyCardMetadataAsync(movie, cardEl, badgeContainerEl, countryBadgeEl) {
     if (!movie || !movie.id) return;
     const mType = movie.media_type === 'tv' ? 'tv' : 'movie';
     const key = `${mType}_${movie.id}`;
+    const isTop10Card = cardEl && cardEl.classList.contains('top10-card');
 
     if (r18Cache.has(key) && originCountryCache.has(key)) {
-        if (r18Cache.get(key) === "BLOCKED_PORN") {
+        if (r18Cache.get(key) === "BLOCKED_PORN" && !isTop10Card) {
             if (cardEl) cardEl.remove();
             return;
         }
@@ -1765,18 +1796,6 @@ async function verifyCardMetadataAsync(movie, cardEl, badgeContainerEl, countryB
         const d = await res.json();
         if (!d || !d.id) return;
 
-        const companies = (d.production_companies || []).map(c => (c.name || '').toLowerCase()).join(' ');
-        const kwList = (d.keywords && (d.keywords.keywords || d.keywords.results) || []).map(k => (k.name || '').toLowerCase()).join(' ');
-        if (
-            d.adult === true
-            || companies.includes('vivamax')
-            || /\b(porn|porno|erotic|erotica|softcore|pink film|sexploitation|bdsm|hentai|jav|av idol|female nudity|male nudity|full frontal nudity|explicit sex|prostitution|brothel|stripper)\b/i.test(kwList)
-        ) {
-            r18Cache.set(key, "BLOCKED_PORN");
-            if (cardEl) cardEl.remove();
-            return;
-        }
-
         let exactCountryCode = "";
         if (Array.isArray(d.origin_country) && d.origin_country.length > 0) {
             exactCountryCode = d.origin_country[0].toUpperCase();
@@ -1792,8 +1811,12 @@ async function verifyCardMetadataAsync(movie, cardEl, badgeContainerEl, countryB
             }
         }
 
-        let detectedR18 = isGenuineR18(d);
-        if (/\b(gore|slasher|extreme violence|serial killer|massacre|torture)\b/i.test(kwList)) {
+        const gids = (d.genres || []).map(g => Number(g.id));
+        let detectedR18 = gids.includes(27) || isGenuineR18(d);
+
+        const companies = (d.production_companies || []).map(c => (c.name || '').toLowerCase()).join(' ');
+        const kwList = (d.keywords && (d.keywords.keywords || d.keywords.results) || []).map(k => (k.name || '').toLowerCase()).join(' ');
+        if (companies.includes('vivamax') || /\b(gore|slasher|extreme violence|serial killer|massacre|torture|erotic|nudity|sexual|vivamax)\b/i.test(kwList)) {
             detectedR18 = true;
         }
 
@@ -1803,12 +1826,7 @@ async function verifyCardMetadataAsync(movie, cardEl, badgeContainerEl, countryB
                 if (!['US', 'PH'].includes(iso)) continue;
                 for (const rd of (cEntry.release_dates || [])) {
                     const cert = (rd.certification || '').toUpperCase().trim();
-                    if (['NC-17', 'X'].includes(cert)) {
-                        r18Cache.set(key, "BLOCKED_PORN");
-                        if (cardEl) cardEl.remove();
-                        return;
-                    }
-                    if ((iso === 'PH' && ['R-18', 'R18'].includes(cert)) || (iso === 'US' && cert === 'R' && isGenuineR18(d))) {
+                    if (['R', 'R-18', 'R18', 'R-16', 'NC-17', '18', '18+'].includes(cert)) {
                         detectedR18 = true;
                     }
                 }
@@ -1833,7 +1851,7 @@ async function verifyCardMetadataAsync(movie, cardEl, badgeContainerEl, countryB
     } catch (e) {}
 }
 
-// ---------------- CLIENT-SIDE AI + TMDB SYNOPSIS PLOT ASSIST ----------------
+// ---------------- CLIENT-SIDE AI PLOT ASSIST ----------------
 async function clientSidePlotAssist(userQuery) {
     const guesses = [];
     try {
@@ -1843,10 +1861,7 @@ async function clientSidePlotAssist(userQuery) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 model: "openai",
-                messages: [
-                    { role: "system", content: sys },
-                    { role: "user", content: userQuery }
-                ],
+                messages: [{ role: "system", content: sys }, { role: "user", content: userQuery }],
                 temperature: 0.1
             })
         });
@@ -1856,14 +1871,11 @@ async function clientSidePlotAssist(userQuery) {
             if (m) {
                 const parsed = JSON.parse(m[0]);
                 if (Array.isArray(parsed)) {
-                    parsed.forEach(g => {
-                        if (g && g.title) guesses.push(g);
-                    });
+                    parsed.forEach(g => { if (g && g.title) guesses.push(g); });
                 }
             }
         }
     } catch (e) {}
-
     return guesses;
 }
 
@@ -1889,20 +1901,19 @@ const ENDLESS_ROW_CATALOG = [
     { title: "🔥 Blockbuster Movies Trending", media: "movie", path: "/discover/movie", params: "sort_by=popularity.desc&page=1" },
     { title: "📺 Binge-Worthy TV Series & K-Dramas", media: "tv", path: "/discover/tv", params: "sort_by=popularity.desc&page=1" },
     { title: "🎌 Japanese & Global Anime Series", media: "tv", path: "/discover/tv", params: `with_genres=16&with_keywords=${ANIME_TMDB_KEYWORDS}&sort_by=popularity.desc&page=1` },
-    { title: "🎌 Acclaimed Anime Feature Films", media: "movie", path: "/discover/movie", params: `with_genres=16&with_keywords=${ANIME_TMDB_KEYWORDS}&sort_by=popularity.desc&page=1` },
     { title: "🧸 Kids & Family Adventures (All-Ages)", media: "movie", path: "/discover/movie", params: "with_genres=10751&without_genres=27,80,53&certification_country=US&certification.lte=PG&sort_by=popularity.desc&page=1" },
-    { title: "🏆 High-Stakes Sports Movies & Anime", media: "movie", path: "/discover/movie", params: `with_keywords=${SPORTS_TMDB_KEYWORDS}&sort_by=popularity.desc&page=1` },
-    { title: "🎥 Acclaimed Documentaries & Docuseries", media: "tv", path: "/discover/tv", params: "with_genres=99&sort_by=popularity.desc&page=1" },
+    { title: "🏆 High-Stakes Real-Life Sports (FIFA, WWE, NBA)", media: "movie", path: "/discover/movie", params: `with_keywords=${REAL_SPORTS_KEYWORDS}&without_genres=16&sort_by=popularity.desc&page=1` },
+    { title: "🎥 Acclaimed Documentaries & True Crime", media: "tv", path: "/discover/tv", params: `with_keywords=${TRUE_CRIME_DOCU_KEYWORDS}&without_genres=16&sort_by=popularity.desc&page=1` },
     { title: "🇵🇭 Hit Filipino Dramas & Movies", media: "movie", path: "/discover/movie", params: "with_origin_country=PH&sort_by=popularity.desc&page=1" },
     { title: "🇹🇭 Trending Thai Cinema & Series", media: "tv", path: "/discover/tv", params: "with_origin_country=TH&sort_by=popularity.desc&page=1" },
-    { title: "💙 Trending Boys' Love (BL) Series & Cinema", media: "tv", path: "/discover/tv", params: `with_keywords=${BL_TMDB_KEYWORDS}&sort_by=popularity.desc&page=1` },
-    { title: "💖 Trending Girls' Love (GL) Series & Cinema", media: "movie", path: "/discover/movie", params: `with_keywords=${GL_TMDB_KEYWORDS}&sort_by=popularity.desc&page=1` },
+    { title: "💙 Trending Boys' Love (BL) Series & Cinema", media: "tv", path: "/discover/tv", params: `with_keywords=${BL_TMDB_KEYWORDS}&without_genres=16&sort_by=popularity.desc&page=1` },
+    { title: "💖 Trending Girls' Love (GL) Series & Cinema", media: "movie", path: "/discover/movie", params: `with_keywords=${GL_TMDB_KEYWORDS}&without_genres=16&sort_by=popularity.desc&page=1` },
     { title: "🧠 Mind-Bending Sci-Fi & Portals", media: "movie", path: "/discover/movie", params: "with_genres=878&sort_by=popularity.desc&page=1" },
     { title: "🇰🇷 Hit Korean Dramas & Series", media: "tv", path: "/discover/tv", params: "with_origin_country=KR&sort_by=popularity.desc&page=1" },
     { title: "✨ Critically Acclaimed Masterpieces", media: "movie", path: "/discover/movie", params: "sort_by=vote_average.desc&vote_count.gte=500&page=1" },
     { title: "💥 High-Octane Action Thrillers", media: "movie", path: "/discover/movie", params: "with_genres=28,53&sort_by=popularity.desc&page=1" },
     { title: "💕 Heartfelt & Emotional Romances", media: "movie", path: "/discover/movie", params: "with_genres=10749&sort_by=popularity.desc&page=1" },
-    { title: "👻 Spine-Chilling Supernatural Horror", media: "movie", path: "/discover/movie", params: "with_genres=27&sort_by=popularity.desc&page=1" },
+    { title: "👻 Spine-Chilling Supernatural Horror (R-18)", media: "movie", path: "/discover/movie", params: "with_genres=27&sort_by=popularity.desc&page=1" },
     { title: "🎨 Adult, Teen & Visionary Animation", media: "tv", path: "/discover/tv", params: "with_genres=16&without_genres=10762&sort_by=popularity.desc&page=1" },
     { title: "🕵️‍♂️ Twisty Crime & Mystery Shows", media: "tv", path: "/discover/tv", params: "with_genres=80,9648&sort_by=popularity.desc&page=1" },
     { title: "😂 Feel-Good Comedies", media: "movie", path: "/discover/movie", params: "with_genres=35&sort_by=popularity.desc&page=1" },
@@ -2058,11 +2069,6 @@ function syncGenreNetflixDropdownUI() {
             }
         });
     }
-
-    document.querySelectorAll('.quick-cat-pill').forEach(pill => {
-        const cat = pill.getAttribute('data-quick-cat');
-        pill.classList.toggle('active', selectedGenres.has(cat));
-    });
 }
 
 function initNetflixGenreDropdown() {
@@ -2527,22 +2533,25 @@ function createMovieCard(movie, isAI = false, searchContext = "", rankNum = null
     return card;
 }
 
+// BUILD ROW ELEMENT (NEVER DELETE CARDS FROM TOP 10 SO ALL 1-10 ALWAYS SHOW!)
 function buildRowElement(titleHTML, movies, isAI = false, isTop10 = false, allowCrossCategory = false) {
     const valid = [];
     const rowSeenIds = new Set();
     for (const m of (movies || [])) {
         if (!isSafeNonPorn(m)) continue;
         if (!m.poster_path && !(m.poster && m.poster.startsWith('http'))) continue;
-        if (!matchesActiveCategoryRules(m)) continue;
+        if (!isTop10 && !matchesActiveCategoryRules(m)) continue;
         const uniqueKey = `${m.media_type || 'movie'}_${m.id}`;
         if (rowSeenIds.has(uniqueKey)) continue;
-        if (!allowCrossCategory && displayedMovieIds.has(uniqueKey)) continue;
-        if (isBlockedByNotInterested(m, !allowCrossCategory)) continue;
+        if (!isTop10 && !allowCrossCategory && displayedMovieIds.has(uniqueKey)) continue;
+        if (!isTop10 && isBlockedByNotInterested(m, !allowCrossCategory)) continue;
 
         rowSeenIds.add(uniqueKey);
-        displayedMovieIds.add(uniqueKey);
-        const fp = normalizeTitleFingerprint(m.title || m.name || "");
-        if (fp) displayedTitleFingerprints.add(fp);
+        if (!isTop10) {
+            displayedMovieIds.add(uniqueKey);
+            const fp = normalizeTitleFingerprint(m.title || m.name || "");
+            if (fp) displayedTitleFingerprints.add(fp);
+        }
         valid.push(m);
     }
     if (!valid.length) return null;
@@ -2572,6 +2581,7 @@ function getActiveFilterQueryParams(mediaType = "movie") {
     const hasAnime = selectedGenres.has('ANIME');
     const hasKidsFamily = selectedGenres.has('KIDS_FAMILY');
     const hasSports = selectedGenres.has('SPORTS');
+    const hasDocs = selectedGenres.has('99');
 
     let q = "&include_adult=false";
 
@@ -2581,9 +2591,7 @@ function getActiveFilterQueryParams(mediaType = "movie") {
         String(mapped).split(',').forEach(x => gSet.add(x));
     });
 
-    if (hasAnime) {
-        gSet.add("16");
-    }
+    if (hasAnime) gSet.add("16");
 
     if (hasKidsFamily) {
         if (mediaType === "tv") {
@@ -2597,6 +2605,11 @@ function getActiveFilterQueryParams(mediaType = "movie") {
         }
     }
 
+    // Never show cartoons when Sports, Documentaries, BL, or GL is selected without Anime
+    if ((hasSports || hasDocs || hasBL || hasGL) && !hasAnime && !selectedGenres.has('16')) {
+        q += `&without_genres=16,10762`;
+    }
+
     if (gSet.size > 0) {
         q += `&with_genres=${[...gSet].join('|')}`;
     }
@@ -2605,7 +2618,8 @@ function getActiveFilterQueryParams(mediaType = "movie") {
     if (hasBL) kwParts.push(BL_TMDB_KEYWORDS);
     if (hasGL) kwParts.push(GL_TMDB_KEYWORDS);
     if (hasAnime) kwParts.push(ANIME_TMDB_KEYWORDS);
-    if (hasSports) kwParts.push(SPORTS_TMDB_KEYWORDS);
+    if (hasSports) kwParts.push(REAL_SPORTS_KEYWORDS);
+    if (hasDocs && mediaType === "tv") kwParts.push(TRUE_CRIME_DOCU_KEYWORDS);
 
     if (kwParts.length > 0) {
         q += `&with_keywords=${kwParts.join('|')}`;
@@ -2618,7 +2632,7 @@ function getActiveFilterQueryParams(mediaType = "movie") {
     return q;
 }
 
-// ---------------- FAST ENDLESS NETFLIX ROWS ENGINE WITH END-OF-STREAM DETECTION ----------------
+// ---------------- FAST ENDLESS ROWS ENGINE ----------------
 async function appendNextNetflixRowBatch(count = 3) {
     if (isFetchingMore || streamExhausted || currentView !== 'discover' || infiniteMode !== 'rows') return;
     isFetchingMore = true;
@@ -2741,6 +2755,7 @@ async function initEndlessNetflixHome() {
 
     const specialRows = [];
 
+    // 1. DEDICATED ANIME CATEGORY ROWS
     if (hasAnime) {
         if (!isMovieOnly) {
             specialRows.push({
@@ -2759,14 +2774,6 @@ async function initEndlessNetflixHome() {
                 allowCross: true,
                 customRationale: "Japanese & International Animation matching the Anime classification."
             });
-            specialRows.push({
-                title: `<i class="fa-solid fa-basketball" style="color: #fbbf24;"></i> 🎌🏆 Sports Anime Series & Tournament Action${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=16&with_keywords=${SPORTS_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
-                mType: 'tv',
-                isAI: true,
-                allowCross: true,
-                customRationale: "Cross-classified under both Anime and Sports."
-            });
         }
         if (!isSeriesTab) {
             specialRows.push({
@@ -2780,30 +2787,8 @@ async function initEndlessNetflixHome() {
         }
     }
 
-    if (hasAnimation && !hasAnime && !hasKidsFamily) {
-        if (!isSeriesTab) {
-            specialRows.push({
-                title: `<i class="fa-solid fa-palette" style="color: #00f2fe;"></i> 🎨 Animated Feature Films (Across All Genres)${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=16${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
-                mType: 'movie',
-                isAI: true,
-                allowCross: true,
-                customRationale: "Animated feature film."
-            });
-        }
-        if (!isMovieOnly) {
-            specialRows.push({
-                title: `<i class="fa-solid fa-fire-flame-curved" style="color: #f43f5e;"></i> 🎨 Teen & Adult Animated Series (Sci-Fi, Action & Comedy)${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=16&without_genres=10762,10751${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
-                mType: 'tv',
-                isAI: true,
-                allowCross: true,
-                customRationale: "Animation intended for teenagers and adults (not children's content)."
-            });
-        }
-    }
-
-  if (hasKidsFamily) {
+    // 2. DEDICATED KIDS & FAMILY CATEGORY ROWS
+    if (hasKidsFamily) {
         if (!isSeriesTab) {
             specialRows.push({
                 title: `<i class="fa-solid fa-child-reaching" style="color: #fbbf24;"></i> 🧸 Kids & Family Movies (All-Ages Live-Action & Animated Favorites)${appBadge}${countryBadge}`,
@@ -2826,74 +2811,82 @@ async function initEndlessNetflixHome() {
         }
     }
 
-    // 3. DEDICATED DOCUMENTARIES CATEGORY ROWS
+    // 3. DEDICATED DOCUMENTARIES & TRUE CRIME CATEGORY ROWS (DAHMER, INVESTIGATIONS)
     if (hasDocs) {
-        if (!isSeriesTab) {
-            specialRows.push({
-                title: `<i class="fa-solid fa-video" style="color: #10b981;"></i> 🎥 Acclaimed Documentary Films${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=99${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
-                mType: 'movie',
-                isAI: true,
-                allowCross: true,
-                customRationale: "Official Documentary feature film."
-            });
-        }
         if (!isMovieOnly) {
             specialRows.push({
-                title: `<i class="fa-solid fa-earth-americas" style="color: #10b981;"></i> 🎥 Binge-Worthy Docuseries & True Stories${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=99${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-skull-crossbones" style="color: #f43f5e;"></i> 🎥 True Crime Series, Dahmer & Investigative Docuseries${appBadge}${countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${TRUE_CRIME_DOCU_KEYWORDS}&without_genres=16,10762${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                mType: 'tv',
+                isAI: true,
+                allowCross: true,
+                customRationale: "True-Crime biography & investigative series (like Dahmer)."
+            });
+            specialRows.push({
+                title: `<i class="fa-solid fa-earth-americas" style="color: #10b981;"></i> 🎥 Acclaimed Docuseries & Real-Life Chronicles${appBadge}${countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=99&without_genres=16,10762${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'tv',
                 isAI: true,
                 allowCross: true,
                 customRationale: "Official Documentary series."
             });
         }
+        if (!isSeriesTab) {
+            specialRows.push({
+                title: `<i class="fa-solid fa-video" style="color: #10b981;"></i> 🎥 Real-Life Documentary Films & True Crime Features${appBadge}${countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=99&without_genres=16${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                mType: 'movie',
+                isAI: true,
+                allowCross: true,
+                customRationale: "Official Documentary feature film."
+            });
+        }
     }
 
-    // 4. DEDICATED SPORTS CATEGORY ROWS
+    // 4. DEDICATED REAL-LIFE SPORTS ROWS (FIFA, WWE, NBA, F1, BOXING — NO CARTOONS)
     if (hasSports) {
         if (!isSeriesTab) {
             specialRows.push({
-                title: `<i class="fa-solid fa-medal" style="color: #fbbf24;"></i> 🏆 Sports Movies, Dramas & Championship Stories${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${SPORTS_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-medal" style="color: #fbbf24;"></i> 🏆 Real-Life Sports Movies (FIFA, WWE, NBA, Boxing & F1)${appBadge}${countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${REAL_SPORTS_KEYWORDS}&without_genres=16,10762${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'movie',
                 isAI: true,
                 allowCross: true,
-                customRationale: "Official Sports cinema & athletic competition film."
+                customRationale: "Real-life Sports cinema, WWE, FIFA, NBA & athletic competition."
             });
         }
         if (!isMovieOnly) {
             specialRows.push({
-                title: `<i class="fa-solid fa-basketball" style="color: #f97316;"></i> 🏆 Sports Series, Sports Anime & Docuseries${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${SPORTS_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-futbol" style="color: #f97316;"></i> 🏆 Live-Action Sports Series, WWE, FIFA & All-Access Docuseries${appBadge}${countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${REAL_SPORTS_KEYWORDS}&without_genres=16,10762${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'tv',
                 isAI: true,
                 allowCross: true,
-                customRationale: "Official Sports series & athletic anime/docuseries."
+                customRationale: "Live-action Sports series, WWE, FIFA & championship docuseries."
             });
         }
     }
 
-    // 5. PRIORITY ROWS WHEN BOYS' LOVE (BL) OR GIRLS' LOVE (GL) IS PICKED
+    // 5. LIVE-ACTION BOYS' LOVE (BL) & GIRLS' LOVE (GL) ROWS (NO CARTOONS)
     if (hasBL) {
         if (!isMovieOnly) {
             specialRows.push({
-                title: `<i class="fa-solid fa-heart" style="color: #38bdf8;"></i> 💙 Boys' Love (BL) Series & Shows — Boys Love Boys${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${BL_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-heart" style="color: #38bdf8;"></i> 💙 Boys' Love (BL) Live-Action Series & Dramas${appBadge}${countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${BL_TMDB_KEYWORDS}&without_genres=16,10762${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'tv',
                 isAI: true,
                 allowCross: true,
-                customRationale: "Official Boys' Love (BL — Boys Love Boys) series & drama."
+                customRationale: "Official Boys' Love (BL) live-action series & drama."
             });
         }
         if (!isSeriesTab) {
             specialRows.push({
-                title: `<i class="fa-solid fa-film" style="color: #38bdf8;"></i> 💙 Boys' Love (BL) Movies & Romance — Boys Love Boys${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${BL_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-film" style="color: #38bdf8;"></i> 💙 Boys' Love (BL) Live-Action Movies & Romance${appBadge}${countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${BL_TMDB_KEYWORDS}&without_genres=16${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'movie',
                 isAI: true,
                 allowCross: true,
-                customRationale: "Official Boys' Love (BL — Boys Love Boys) romance film."
+                customRationale: "Official Boys' Love (BL) live-action romance film."
             });
         }
     }
@@ -2901,27 +2894,27 @@ async function initEndlessNetflixHome() {
     if (hasGL) {
         if (!isSeriesTab) {
             specialRows.push({
-                title: `<i class="fa-solid fa-heart" style="color: #f43f5e;"></i> 💖 Girls' Love (GL) Movies & Romance — Girls Love Girls${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${GL_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-heart" style="color: #f43f5e;"></i> 💖 Girls' Love (GL) Live-Action Movies & Romance${appBadge}${countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${GL_TMDB_KEYWORDS}&without_genres=16${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'movie',
                 isAI: true,
                 allowCross: true,
-                customRationale: "Official Girls' Love (GL — Girls Love Girls) romance film."
+                customRationale: "Official Girls' Love (GL) live-action romance film."
             });
         }
         if (!isMovieOnly) {
             specialRows.push({
-                title: `<i class="fa-solid fa-tv" style="color: #f43f5e;"></i> 💖 Girls' Love (GL) Series & Shows — Girls Love Girls${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${GL_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-tv" style="color: #f43f5e;"></i> 💖 Girls' Love (GL) Live-Action Series & Dramas${appBadge}${countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${GL_TMDB_KEYWORDS}&without_genres=16,10762${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'tv',
                 isAI: true,
                 allowCross: true,
-                customRationale: "Official Girls' Love (GL — Girls Love Girls) series & drama."
+                customRationale: "Official Girls' Love (GL) live-action series & drama."
             });
         }
     }
 
-    // 6. Custom Filtered Rows for standard genres / apps / countries
+    // 6. CUSTOM FILTERED ROWS
     if ((selectedProvider || selectedGenres.size > 0 || selectedCountry) && (!hasDedicatedCategory || selectedGenres.size > 1)) {
         const pName = selectedProvider ? PROVIDER_NAMES[selectedProvider] : "Multi-Genre Stream";
         if (!isSeriesTab) {
@@ -2946,7 +2939,7 @@ async function initEndlessNetflixHome() {
         }
     }
 
-    // 7. "Because You Watched" Row
+    // 7. "BECAUSE YOU WATCHED" ROW
     if (watchedMovies.length > 0 && selectedGenres.size === 0 && !selectedCountry) {
         const lastWatched = watchedMovies[0];
         const lwType = lastWatched.media_type === 'tv' ? 'tv' : 'movie';
@@ -2959,9 +2952,10 @@ async function initEndlessNetflixHome() {
         });
     }
 
+    // 8. TOP 10 ROWS (FETCH FROM PAGE 1 SO ALL 10 TITLES ARE ALWAYS PRESENT IN THE PHILIPPINES)
     if (!isSeriesTab) {
         const top10MovieUrl = (selectedProvider || selectedCountry || selectedGenres.size > 0)
-            ? `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams('movie')}&page=2`
+            ? `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams('movie')}&page=1`
             : `https://api.themoviedb.org/3/trending/movie/day?api_key=${TMDB_API_KEY}`;
         specialRows.push({
             title: `<i class="fa-solid fa-trophy" style="color: #fbbf24;"></i> 🏆 Top 10 Movies Today${appBadge}${activeGenreLabel}${countryBadge}`,
@@ -2973,7 +2967,7 @@ async function initEndlessNetflixHome() {
     }
     if (!isMovieOnly) {
         const top10TVUrl = (selectedProvider || selectedCountry || selectedGenres.size > 0)
-            ? `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams('tv')}&page=2`
+            ? `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams('tv')}&page=1`
             : `https://api.themoviedb.org/3/trending/tv/day?api_key=${TMDB_API_KEY}`;
         specialRows.push({
             title: `<i class="fa-solid fa-crown" style="color: var(--primary-glow);"></i> 🏆 Top 10 Series & Dramas Today${appBadge}${activeGenreLabel}${countryBadge}`,
@@ -3018,7 +3012,7 @@ async function initEndlessNetflixHome() {
         if (userGenres.includes('BL')) kwParts.push(BL_TMDB_KEYWORDS);
         if (userGenres.includes('GL')) kwParts.push(GL_TMDB_KEYWORDS);
         if (userGenres.includes('ANIME')) kwParts.push(ANIME_TMDB_KEYWORDS);
-        if (userGenres.includes('SPORTS')) kwParts.push(SPORTS_TMDB_KEYWORDS);
+        if (userGenres.includes('SPORTS')) kwParts.push(REAL_SPORTS_KEYWORDS);
 
         const gParam = stdUserG.length ? `&with_genres=${[...new Set(stdUserG)].join('|')}` : '';
         const kwParam = kwParts.length ? `&with_keywords=${kwParts.join('|')}` : '';
@@ -3053,18 +3047,10 @@ async function initEndlessNetflixHome() {
     await appendNextNetflixRowBatch(3);
 }
 
-// Format & Quick Category Pill Click Handlers
+// Format Button Click Handlers
 document.querySelectorAll('#mediaFilterRow .filter-pill').forEach(pill => {
     pill.onclick = (e) => {
         const btn = e.currentTarget;
-        if (btn.hasAttribute('data-quick-cat')) {
-            const cat = btn.getAttribute('data-quick-cat');
-            if (selectedGenres.has(cat)) selectedGenres.delete(cat);
-            else selectedGenres.add(cat);
-            syncGenreNetflixDropdownUI();
-            initEndlessNetflixHome();
-            return;
-        }
         document.querySelectorAll('#mediaFilterRow .filter-pill[data-media]').forEach(p => p.classList.remove('active'));
         btn.classList.add('active');
         if (btn.hasAttribute('data-media')) selectedMedia = btn.getAttribute('data-media');
@@ -3072,7 +3058,7 @@ document.querySelectorAll('#mediaFilterRow .filter-pill').forEach(pill => {
     };
 });
 
-// ---------------- ENDLESS MULTI-SEARCH & CATEGORY/COUNTRY+GENRE AI MATCHING ENGINE ----------------
+// ---------------- ENDLESS SEARCH ENGINE ----------------
 async function performSearch() {
     const query = searchInput.value.trim();
     if (currentView !== 'discover') {
@@ -3125,8 +3111,8 @@ async function performSearch() {
             const kw = isBLQuery && isGLQuery ? `${BL_TMDB_KEYWORDS}|${GL_TMDB_KEYWORDS}` : (isBLQuery ? BL_TMDB_KEYWORDS : GL_TMDB_KEYWORDS);
             const label = isBLQuery && isGLQuery ? "Boys' Love (BL) & Girls' Love (GL)" : (isBLQuery ? "Boys' Love (BL — Boys Love Boys)" : "Girls' Love (GL — Girls Love Girls)");
             const [mRes, tvRes] = await Promise.all([
-                fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${kw}&sort_by=popularity.desc&page=1`).then(r => r.json()).catch(() => ({ results: [] })),
-                fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${kw}&sort_by=popularity.desc&page=1`).then(r => r.json()).catch(() => ({ results: [] }))
+                fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${kw}&without_genres=16&sort_by=popularity.desc&page=1`).then(r => r.json()).catch(() => ({ results: [] })),
+                fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${kw}&without_genres=16,10762&sort_by=popularity.desc&page=1`).then(r => r.json()).catch(() => ({ results: [] }))
             ]);
             const mList = (mRes.results || []).map(m => ({ ...m, media_type: 'movie', rationale: `Matched ${label} romance movie.` }));
             const tvList = (tvRes.results || []).map(t => ({ ...t, media_type: 'tv', rationale: `Matched ${label} series.` }));
@@ -3148,14 +3134,14 @@ async function performSearch() {
             isAISearch = true;
         } else if (isSportsQuery) {
             const [mRes, tvRes] = await Promise.all([
-                fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${SPORTS_TMDB_KEYWORDS}&sort_by=popularity.desc&page=1`).then(r => r.json()).catch(() => ({ results: [] })),
-                fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${SPORTS_TMDB_KEYWORDS}&sort_by=popularity.desc&page=1`).then(r => r.json()).catch(() => ({ results: [] }))
+                fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${REAL_SPORTS_KEYWORDS}&without_genres=16,10762&sort_by=popularity.desc&page=1`).then(r => r.json()).catch(() => ({ results: [] })),
+                fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${REAL_SPORTS_KEYWORDS}&without_genres=16,10762&sort_by=popularity.desc&page=1`).then(r => r.json()).catch(() => ({ results: [] }))
             ]);
             initialMovies = [
                 ...(mRes.results || []).map(m => ({ ...m, media_type: 'movie', rationale: "Official Sports Movie." })),
-                ...(tvRes.results || []).map(t => ({ ...t, media_type: 'tv', rationale: "Official Sports Series / Anime." }))
+                ...(tvRes.results || []).map(t => ({ ...t, media_type: 'tv', rationale: "Official Sports Series." }))
             ].filter(isSafeNonPorn);
-            aiNote = `Showing <strong>Sports</strong> movies, series, and sports anime.`;
+            aiNote = `Showing <strong>Real-Life Sports (FIFA, WWE, NBA, F1, Boxing)</strong>.`;
             isAISearch = true;
         } else if (isKidsQuery) {
             const [mRes, tvRes] = await Promise.all([
@@ -3170,14 +3156,14 @@ async function performSearch() {
             isAISearch = true;
         } else if (isDocQuery) {
             const [mRes, tvRes] = await Promise.all([
-                fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=99&sort_by=popularity.desc&page=1`).then(r => r.json()).catch(() => ({ results: [] })),
-                fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=99&sort_by=popularity.desc&page=1`).then(r => r.json()).catch(() => ({ results: [] }))
+                fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=99&without_genres=16&sort_by=popularity.desc&page=1`).then(r => r.json()).catch(() => ({ results: [] })),
+                fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${TRUE_CRIME_DOCU_KEYWORDS}&without_genres=16,10762&sort_by=popularity.desc&page=1`).then(r => r.json()).catch(() => ({ results: [] }))
             ]);
             initialMovies = [
                 ...(mRes.results || []).map(m => ({ ...m, media_type: 'movie', rationale: "Official Documentary Film." })),
                 ...(tvRes.results || []).map(t => ({ ...t, media_type: 'tv', rationale: "Official Documentary Series." }))
             ].filter(isSafeNonPorn);
-            aiNote = `Showing <strong>Documentaries & Docuseries</strong>.`;
+            aiNote = `Showing <strong>Documentaries & True Crime (like Dahmer)</strong>.`;
             isAISearch = true;
         } else if (countryContext && !isQuestionOrPlot) {
             const originCode = countryContext.code;
@@ -3573,7 +3559,7 @@ function renderEnlargedNovaView() {
     window.sendEnlargedPrompt = (p) => executeEnlargedChat(p);
 }
 
-// ---------------- MODAL DETAILS, COMPLETE CAST/CREW, EXACT MULTI-GENRES, ORIGIN COUNTRY & SIMILAR AI PICKS ----------------
+// ---------------- MODAL DETAILS, COMPLETE CAST/CREW, GENRES & SIMILAR AI PICKS ----------------
 async function loadModalSimilarRecommendations(id, mType, title) {
     const box = document.getElementById('modalSimilarBox');
     const strip = document.getElementById('modalSimilarStrip');
@@ -3668,7 +3654,8 @@ function renderModalGenresAndCredits(item, mType) {
 
         if (job === 'director' || job === 'series director') {
             if (!directors.includes(name)) directors.push(name);
-        } else if (job.includes('writer') || job.includes('screenplay') || job.includes('story') || job.includes('teleplay') || dept === 'writing') {
+        } else if (job.includes('writer') || job.includes('screenplay') || job.includes('story') || job
+                   } else if (job.includes('writer') || job.includes('screenplay') || job.includes('story') || job.includes('teleplay') || dept === 'writing') {
             if (!writers.includes(name)) writers.push(name);
         } else if (job.includes('producer')) {
             if (!producers.includes(name)) producers.push(name);
@@ -3752,7 +3739,9 @@ async function fetchAndOpenModal(title, fallbackPoster, customRationale, movieId
         if (!item || !isSafeNonPorn(item)) return;
 
         const key = `${mType}_${item.id}`;
-        let certR18 = (originMovie && originMovie._isR18 === true)
+        const gids = (item.genres || []).map(g => Number(g.id));
+        let certR18 = gids.includes(27)
+            || (originMovie && originMovie._isR18 === true)
             || r18Cache.get(key) === true
             || isGenuineR18(item);
 
@@ -3963,7 +3952,7 @@ document.getElementById('watchedBtn').onclick = () => {
     else if (currentView === 'discover') initEndlessNetflixHome();
 };
 
-// ---------------- UNIFIED SUPER-NOVA CHAT ENGINE ----------------
+// ---------------- UNIFIED SUPER-NOVA CHAT ENGINE (WITH TILT MOTION ON TAP) ----------------
 const chatWrapper = document.getElementById('chatWrapper');
 const chatToggle = document.getElementById('chatToggle');
 const chatModal = document.getElementById('chatModal');
@@ -3998,6 +3987,11 @@ function adjustChatModalPlacement() {
 }
 
 function toggleNovaChatModal() {
+    chatToggle.classList.remove('tilted');
+    void chatToggle.offsetWidth;
+    chatToggle.classList.add('tilted');
+    setTimeout(() => chatToggle.classList.remove('tilted'), 500);
+
     adjustChatModalPlacement();
     chatModal.classList.toggle('active');
     chatTooltip.style.display = chatModal.classList.contains('active') ? 'none' : 'block';
@@ -4158,257 +4152,6 @@ chatInput.addEventListener('keydown', (e) => {
     }
 });
 
-initEndlessNetflixHome();
-
-    <!-- ================= CINEMIND MASTER UPGRADE PATCH ================= -->
-<style>
-/* 1. Remove Circle Border & Box from Logo */
-.logo-unboxed, #mainBrandLogo {
-    border-radius: 0 !important;
-    border: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    object-fit: contain !important;
-    width: 118px !important;
-    height: auto !important;
-    max-height: 118px !important;
-    filter: drop-shadow(0 0 18px rgba(0, 242, 254, 0.6)) drop-shadow(0 0 32px rgba(217, 70, 239, 0.4)) !important;
-    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.35s ease !important;
-}
-.logo-unboxed:hover, .logo-unboxed:active, #mainBrandLogo:hover {
-    transform: scale(1.12) rotate(6deg) !important;
-    filter: drop-shadow(0 0 26px rgba(217, 70, 239, 0.9)) drop-shadow(0 0 45px rgba(0, 242, 254, 0.8)) !important;
-}
-
-/* 2. Slanted Moving Poster Wall + Keep Recent Backdrops */
-@keyframes slantedWallGlide {
-    0% { transform: rotate(-10deg) scale(1.26) translateY(0px); }
-    50% { transform: rotate(-10deg) scale(1.30) translateY(-18px); }
-    100% { transform: rotate(-10deg) scale(1.26) translateY(0px); }
-}
-.hero-slide.poster-wall-slide {
-    transform: rotate(-10deg) scale(1.26) !important;
-    transform-origin: center center !important;
-}
-.hero-slide.poster-wall-slide.active {
-    opacity: 0.92 !important;
-    animation: slantedWallGlide 12s ease-in-out infinite !important;
-}
-
-/* 3. Nova Tilting Motion When Tapped or Hovered (Matches Logo Tilt) */
-@keyframes novaTiltTap {
-    0% { transform: scale(1) rotate(0deg); }
-    40% { transform: scale(1.16) rotate(9deg); }
-    75% { transform: scale(1.08) rotate(-5deg); }
-    100% { transform: scale(1) rotate(0deg); }
-}
-.nova-chathead, .nova-avatar-animated {
-    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease !important;
-}
-.nova-chathead:hover, .nova-chathead:active, .nova-chathead.tilted,
-.nova-avatar-animated:hover, .nova-avatar-animated:active, .nova-avatar-animated.tilted {
-    animation: novaTiltTap 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-    transform: scale(1.12) rotate(7deg) !important;
-    border-color: var(--primary-glow) !important;
-}
-
-/* 4. Format Row Only Shows Movies / TV Shows / All Formats (Hide Extra Genre Pills) */
-.quick-cat-pill, #mediaFilterRow .filter-divider, #genreFilterRow {
-    display: none !important;
-}
-</style>
-
-<script>
-// 5. Real-Life Sports (FIFA, WWE, NBA, F1, Boxing — No Cartoons) & True-Crime Documentaries (Dahmer)
-const REAL_SPORTS_KEYWORDS = "6075|6496|13042|6078|159212|1721|9713|180491|579|191020|2702|11616";
-const TRUE_CRIME_DOCU_KEYWORDS = "9826|10714|6149|18035|33637|156866";
-
-window.isSportsContent = function(item) {
-    if (!item) return false;
-    const gids = (item.genre_ids || (item.genres || []).map(g => g.id) || []).map(Number);
-    if (gids.includes(16)) return false; // Never show cartoons or anime under Sports
-    const kwList = (item.keywords && (item.keywords.keywords || item.keywords.results) || []);
-    const kwNames = kwList.map(k => (k.name || '').toLowerCase()).join(' | ');
-    const text = `${item.title || item.name || ''} ${item.overview || ''} ${kwNames}`.toLowerCase();
-    return /\b(sport|sports|fifa|wwe|wrestlemania|raw|smackdown|wrestling|wrestler|ufc|mma|basketball|nba|football|soccer|world cup|baseball|volleyball|boxing|boxer|tennis|golf|olympic|olympics|formula 1|f1|grand prix|nascar|racing|racer|marathon|athlete|coach|championship|creed|rocky|rush|moneyball|air|challengers|king richard|coach carter|remember the titans|blind side|ted lasso|last dance|welcome to wrexham|drive to survive|beckham|senna)\b/i.test(text);
-};
-
-window.isDocumentaryContent = function(item) {
-    if (!item) return false;
-    const gids = (item.genre_ids || (item.genres || []).map(g => g.id) || []).map(Number);
-    if (gids.includes(16)) return false; // Never show cartoons in Documentaries
-    if (gids.includes(99)) return true;
-    const text = `${item.title || item.name || ''} ${item.overview || ''}`.toLowerCase();
-    return /\b(dahmer|jeffrey dahmer|ted bundy|john wayne gacy|richard ramirez|night stalker|menendez|making a murderer|tinder swindler|unsolved mysteries|american murder|evil genius|wild wild country|tiger king|true crime|documentary|docuseries)\b/i.test(text);
-};
-
-// 6. Label ALL Horror Movies (Genre 27) + Mature R-18 Titles with the R-18 Badge
-window.isGenuineR18 = function(item) {
-    if (!item || !isSafeNonPorn(item)) return false;
-    const key = `${item.media_type || 'movie'}_${item.id}`;
-    const gids = (item.genre_ids || (item.genres || []).map(g => g.id) || []).map(Number);
-
-    // Every Horror movie/series (genre 27) gets labeled R-18
-    if (gids.includes(27)) {
-        r18Cache.set(key, true);
-        return true;
-    }
-    if (r18Cache.has(key)) return r18Cache.get(key) === true;
-    if (item._isR18 === true || item.r18 === true) {
-        r18Cache.set(key, true);
-        return true;
-    }
-
-    const cert = (item.certification || "").toUpperCase().trim();
-    if (["R-18", "R18", "TV-MA", "R"].includes(cert)) {
-        r18Cache.set(key, true);
-        return true;
-    }
-
-    const titleLower = (item.title || item.name || "").toLowerCase().trim();
-    const origTitleLower = (item.original_title || item.original_name || "").toLowerCase().trim();
-    if (KNOWN_R18_TITLES.has(titleLower) || KNOWN_R18_TITLES.has(origTitleLower)) {
-        r18Cache.set(key, true);
-        return true;
-    }
-
-    const overview = (item.overview || "").toLowerCase();
-    const combinedText = `${titleLower} ${origTitleLower} ${overview}`;
-    if ((gids.includes(80) || gids.includes(53) || gids.includes(18)) && /\b(serial killer|gore|bloody|massacre|brutal|decapitation|mutilation|torture|psychopath|slasher|cannibal|terrifier|sadistic|demon|possession|exorcism|cartel|dahmer)\b/i.test(combinedText)) {
-        r18Cache.set(key, true);
-        return true;
-    }
-    return false;
-};
-
-// 7. Exclude Cartoons from Sports, Documentaries, BL & GL
-window.matchesActiveCategoryRules = function(item) {
-    if (!item) return false;
-    const gids = (item.genre_ids || (item.genres || []).map(g => g.id) || []).map(Number);
-    if (selectedGenres.has('KIDS_FAMILY') && !selectedGenres.has('ANIME') && !selectedGenres.has('27')) {
-        if (isGenuineR18(item) || isAdultOrTeenAnimation(item)) return false;
-    }
-    if ((selectedGenres.has('SPORTS') || selectedGenres.has('99') || selectedGenres.has('BL') || selectedGenres.has('GL')) && !selectedGenres.has('ANIME') && !selectedGenres.has('16')) {
-        if (gids.includes(16)) return false;
-    }
-    return true;
-};
-
-window.getActiveFilterQueryParams = function(mediaType = "movie") {
-    const SPECIAL_KEYS = new Set(['BL', 'GL', 'ANIME', 'KIDS_FAMILY', 'SPORTS']);
-    const standardGenres = [...selectedGenres].filter(g => !SPECIAL_KEYS.has(g));
-    const hasBL = selectedGenres.has('BL');
-    const hasGL = selectedGenres.has('GL');
-    const hasAnime = selectedGenres.has('ANIME');
-    const hasKidsFamily = selectedGenres.has('KIDS_FAMILY');
-    const hasSports = selectedGenres.has('SPORTS');
-    const hasDocs = selectedGenres.has('99');
-
-    let q = "&include_adult=false";
-    const gSet = new Set();
-    standardGenres.forEach(gid => {
-        const mapped = mediaType === "tv" ? (MOVIE_TO_TV_GENRE[gid] || gid) : gid;
-        String(mapped).split(',').forEach(x => gSet.add(x));
-    });
-
-    if (hasAnime) gSet.add("16");
-    if (hasKidsFamily) {
-        gSet.add("10751");
-        if (!selectedGenres.has('27') && !selectedGenres.has('80') && !selectedGenres.has('53')) {
-            q += `&without_genres=27,80,53,10768`;
-        }
-    }
-
-    // Never include cartoons/animation (genre 16) when Sports, Documentaries, BL, or GL is selected
-    if ((hasSports || hasDocs || hasBL || hasGL) && !hasAnime && !selectedGenres.has('16')) {
-        q += `&without_genres=16,10762`;
-    }
-
-    if (gSet.size > 0) {
-        q += `&with_genres=${[...gSet].join('|')}`;
-    }
-
-    const kwParts = [];
-    if (hasBL) kwParts.push(BL_TMDB_KEYWORDS);
-    if (hasGL) kwParts.push(GL_TMDB_KEYWORDS);
-    if (hasAnime) kwParts.push(ANIME_TMDB_KEYWORDS);
-    if (hasSports) kwParts.push(REAL_SPORTS_KEYWORDS);
-    if (hasDocs && mediaType === "tv") kwParts.push(TRUE_CRIME_DOCU_KEYWORDS);
-
-    if (kwParts.length > 0) {
-        q += `&with_keywords=${kwParts.join('|')}`;
-    }
-
-    if (selectedCountry) q += `&with_origin_country=${selectedCountry}`;
-    if (selectedProvider) {
-        q += `&with_watch_providers=${selectedProvider}&watch_region=${selectedRegion}`;
-    }
-    return q;
-};
-
-// 8. Fix Missing Top 10 Movies in Philippines (Ensure All 1-10 Always Render!)
-window.buildRowElement = function(titleHTML, movies, isAI = false, isTop10 = false, allowCrossCategory = false) {
-    const valid = [];
-    const rowSeenIds = new Set();
-    for (const m of (movies || [])) {
-        if (!isSafeNonPorn(m)) continue;
-        if (!m.poster_path && !(m.poster && m.poster.startsWith('http'))) continue;
-        if (!isTop10 && !matchesActiveCategoryRules(m)) continue;
-        const uniqueKey = `${m.media_type || 'movie'}_${m.id}`;
-        if (rowSeenIds.has(uniqueKey)) continue;
-        if (!isTop10 && !allowCrossCategory && displayedMovieIds.has(uniqueKey)) continue;
-        if (!isTop10 && isBlockedByNotInterested(m, !allowCrossCategory)) continue;
-
-        rowSeenIds.add(uniqueKey);
-        if (!isTop10) {
-            displayedMovieIds.add(uniqueKey);
-            const fp = normalizeTitleFingerprint(m.title || m.name || "");
-            if (fp) displayedTitleFingerprints.add(fp);
-        }
-        valid.push(m);
-    }
-    if (!valid.length) return null;
-
-    const sec = document.createElement('div');
-    sec.className = 'row-section';
-    const h3 = document.createElement('h3');
-    h3.className = 'row-title';
-    h3.innerHTML = titleHTML;
-    sec.appendChild(h3);
-
-    const row = document.createElement('div');
-    row.className = 'movie-row';
-    const slice = isTop10 ? valid.slice(0, 10) : valid;
-    slice.forEach((m, idx) => {
-        row.appendChild(createMovieCard(m, isAI, "", isTop10 ? idx + 1 : null));
-    });
-    sec.appendChild(row);
-    return sec;
-};
-
-// Prevent card verifier from deleting Top 10 cards & sync Horror R-18 badge
-const _origVerifyCard = window.verifyCardMetadataAsync;
-window.verifyCardMetadataAsync = async function(movie, cardEl, badgeContainerEl, countryBadgeEl) {
-    if (movie && isGenuineR18(movie) && badgeContainerEl && !badgeContainerEl.querySelector('.r18-badge')) {
-        badgeContainerEl.insertAdjacentHTML('afterbegin', `<span class="r18-badge">R-18</span>`);
-    }
-    const isTop10 = cardEl && cardEl.classList.contains('top10-card');
-    if (typeof _origVerifyCard === 'function') {
-        await _origVerifyCard(movie, isTop10 ? null : cardEl, badgeContainerEl, countryBadgeEl);
-    }
-};
-
-// 9. Add Tilt-on-Tap to Nova Avatar & Chathead
-document.querySelectorAll('.nova-chathead, .nova-avatar-animated').forEach(el => {
-    el.addEventListener('click', () => {
-        el.classList.remove('tilted');
-        void el.offsetWidth;
-        el.classList.add('tilted');
-        setTimeout(() => el.classList.remove('tilted'), 500);
-    });
-});
-
-// Re-initialize the home feed with the patched rules
 initEndlessNetflixHome();
 </script>
 </body>
