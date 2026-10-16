@@ -16,7 +16,7 @@ TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "7c7e21b0fe58e5868e262c9bd6b8e7e9"
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "").strip().strip('"').strip("'")
 OMDB_API_KEY = os.environ.get("OMDB_API_KEY", "554ae239").strip().strip('"').strip("'")
 
-DB_NAME = "cinemind.db"
+DB_NAME = os.environ.get("CINEMIND_DB", "cinemind.db")
 TMDB = "https://api.themoviedb.org/3"
 
 GENRES = {
@@ -72,7 +72,6 @@ KNOWN_R18_TITLES = {
     "dexter", "monster: the jeffrey dahmer story"
 }
 
-# Curated High-Precision Lists for BL, GL, Real-Life Sports, and Documentaries
 CURATED_SPECIAL_CATALOG = {
     "BL": [
         {"title": "KinnPorsche", "media_type": "tv", "year": 2022, "why": "Hit Thai Boys' Love action-romance drama."},
@@ -251,35 +250,149 @@ def format_exact_genres(m, custom_badge=None):
     return names[:4] if names else ["Drama"]
 
 
+# ---------------- DATABASE INITIALIZATION (6 RELATED TABLES + FOREIGN KEYS) ----------------
 def init_db():
     conn = sqlite3.connect(DB_NAME)
+    conn.execute("PRAGMA foreign_keys = ON")
     c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, password TEXT NOT NULL, genres TEXT DEFAULT '[]')''')
-    try:
-        c.execute("ALTER TABLE users ADD COLUMN genres TEXT DEFAULT '[]'")
-    except Exception:
-        pass
-    c.execute('''CREATE TABLE IF NOT EXISTS watchlist (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL, movie_id INTEGER NOT NULL, title TEXT NOT NULL, poster TEXT, vote_average REAL, media_type TEXT DEFAULT 'movie', UNIQUE(username, movie_id))''')
+
+    # 1. Users Table (Supports RBAC via 'role' column: 'admin' or 'user')
+    c.execute('''CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        genres TEXT DEFAULT '[]',
+        role TEXT DEFAULT 'user',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )''')
+    for col_sql in [
+        "ALTER TABLE users ADD COLUMN genres TEXT DEFAULT '[]'",
+        "ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'",
+        "ALTER TABLE users ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP"
+    ]:
+        try:
+            c.execute(col_sql)
+        except Exception:
+            pass
+
+    # 2. Watchlist Table (Related to users.username)
+    c.execute('''CREATE TABLE IF NOT EXISTS watchlist (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL,
+        movie_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        poster TEXT,
+        vote_average REAL,
+        media_type TEXT DEFAULT 'movie',
+        UNIQUE(username, movie_id),
+        FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+    )''')
     try:
         c.execute("ALTER TABLE watchlist ADD COLUMN media_type TEXT DEFAULT 'movie'")
     except Exception:
         pass
-    c.execute('''CREATE TABLE IF NOT EXISTS favorites (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL, movie_id INTEGER NOT NULL, title TEXT NOT NULL, poster TEXT, vote_average REAL, media_type TEXT DEFAULT 'movie', UNIQUE(username, movie_id))''')
+
+    # 3. Favorites Table (Related to users.username)
+    c.execute('''CREATE TABLE IF NOT EXISTS favorites (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL,
+        movie_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        poster TEXT,
+        vote_average REAL,
+        media_type TEXT DEFAULT 'movie',
+        UNIQUE(username, movie_id),
+        FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+    )''')
     try:
         c.execute("ALTER TABLE favorites ADD COLUMN media_type TEXT DEFAULT 'movie'")
     except Exception:
         pass
-    c.execute('''CREATE TABLE IF NOT EXISTS not_interested (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL, movie_id INTEGER NOT NULL, title TEXT NOT NULL, keywords TEXT DEFAULT '[]', UNIQUE(username, movie_id))''')
-    c.execute('''CREATE TABLE IF NOT EXISTS interactions (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL, movie_id INTEGER NOT NULL, title TEXT NOT NULL, action TEXT NOT NULL, vote_average REAL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
+
+    # 4. Not Interested Concept Table (Related to users.username)
+    c.execute('''CREATE TABLE IF NOT EXISTS not_interested (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL,
+        movie_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        keywords TEXT DEFAULT '[]',
+        UNIQUE(username, movie_id),
+        FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+    )''')
+
+    # 5. User Telemetry Interactions Table (Related to users.username)
+    c.execute('''CREATE TABLE IF NOT EXISTS interactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL,
+        movie_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        action TEXT NOT NULL,
+        vote_average REAL,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+    )''')
+
+    # 6. Security Audit Logs Table (Tracks Authentication, RBAC & Library Modifications)
+    c.execute('''CREATE TABLE IF NOT EXISTS audit_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL,
+        event_type TEXT NOT NULL,
+        details TEXT,
+        ip_address TEXT,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (username) REFERENCES users(username) ON DELETE SET NULL
+    )''')
+
     conn.commit()
     conn.close()
+
 
 init_db()
 
 
+def log_audit_event(username, event_type, details=""):
+    """Records security, authentication, and access control events in audit_logs."""
+    try:
+        ip_addr = request.headers.get("X-Forwarded-For", request.remote_addr or "127.0.0.1")
+    except RuntimeError:
+        ip_addr = "127.0.0.1"
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        conn.execute(
+            "INSERT INTO audit_logs (username, event_type, details, ip_address) VALUES (?, ?, ?, ?)",
+            ((username or "guest").lower(), event_type, details[:300], ip_addr)
+        )
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
+
+
+def get_user_role(username):
+    """Returns 'admin', 'user', or 'guest' for Role-Based Access Control (RBAC)."""
+    if not username:
+        return "guest"
+    u_clean = username.strip().lower()
+    if u_clean == "admin" or u_clean.startswith("admin_"):
+        return "admin"
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        row = conn.execute("SELECT role FROM users WHERE username = ?", (u_clean,)).fetchone()
+        conn.close()
+        if row and row[0]:
+            return row[0]
+    except Exception:
+        pass
+    return "user"
+
+
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Super-Nova Galaxy Engine Live", "version": "18.0"})
+    return jsonify({
+        "status": "CineMind Super-Nova Galaxy Engine Live",
+        "version": "18.5-RBAC-Audit",
+        "database_tables": ["users", "watchlist", "favorites", "not_interested", "interactions", "audit_logs"]
+    })
 
 
 @app.route("/api/signup", methods=["POST"])
@@ -288,16 +401,31 @@ def signup():
     username = data.get("username", "").strip().lower()
     password = data.get("password", "")
     genres = data.get("genres") or []
-    if not username or len(password) < 6:
+
+    if not username or not re.match(r"^[a-z0-9_.\-]{3,30}$", username):
+        return jsonify({"success": False, "message": "Username must be 3-30 alphanumeric characters."}), 400
+    if len(password) < 6:
         return jsonify({"success": False, "message": "Username required and password must be 6+ characters."}), 400
+
+    assigned_role = "admin" if (username == "admin" or username.startswith("admin_")) else "user"
     try:
         conn = sqlite3.connect(DB_NAME)
-        conn.execute("INSERT INTO users (username, password, genres) VALUES (?, ?, ?)",
-                     (username, generate_password_hash(password), json.dumps(genres)))
+        conn.execute(
+            "INSERT INTO users (username, password, genres, role) VALUES (?, ?, ?, ?)",
+            (username, generate_password_hash(password), json.dumps(genres), assigned_role)
+        )
         conn.commit()
         conn.close()
-        return jsonify({"success": True, "username": username, "genres": genres, "message": "Account created successfully!"})
+        log_audit_event(username, "USER_SIGNUP", f"Account created with role={assigned_role}")
+        return jsonify({
+            "success": True,
+            "username": username,
+            "role": assigned_role,
+            "genres": genres,
+            "message": "Account created successfully!"
+        })
     except sqlite3.IntegrityError:
+        log_audit_event(username, "SIGNUP_DUPLICATE", "Attempted duplicate username registration")
         return jsonify({"success": False, "message": "Username already exists."}), 400
 
 
@@ -306,16 +434,21 @@ def login():
     data = request.get_json() or {}
     username = data.get("username", "").strip().lower()
     password = data.get("password", "")
+    if not username or not password:
+        return jsonify({"success": False, "message": "Username and password are required."}), 400
+
     conn = sqlite3.connect(DB_NAME)
-    row = conn.execute("SELECT password, genres FROM users WHERE username = ?", (username,)).fetchone()
+    row = conn.execute("SELECT password, genres, role FROM users WHERE username = ?", (username,)).fetchone()
     ok = False
     saved_genres = []
+    role = "user"
     if row:
         stored = row[0]
         try:
             saved_genres = json.loads(row[1] or "[]")
         except Exception:
             saved_genres = []
+        role = row[2] or ("admin" if username.startswith("admin") else "user")
         if stored.startswith(("pbkdf2:", "scrypt:")):
             ok = check_password_hash(stored, password)
         elif stored == hashlib.sha256(password.encode()).hexdigest():
@@ -324,8 +457,18 @@ def login():
                          (generate_password_hash(password), username))
             conn.commit()
     conn.close()
+
     if ok:
-        return jsonify({"success": True, "username": username, "genres": saved_genres, "message": "Login successful!"})
+        log_audit_event(username, "LOGIN_SUCCESS", f"Authenticated with role={role}")
+        return jsonify({
+            "success": True,
+            "username": username,
+            "role": role,
+            "genres": saved_genres,
+            "message": "Login successful!"
+        })
+
+    log_audit_event(username, "LOGIN_FAILED", "Invalid username or password attempt")
     return jsonify({"success": False, "message": "Invalid username or password."}), 401
 
 
@@ -333,7 +476,7 @@ def login():
 def get_library():
     username = request.args.get("username", "").strip().lower()
     if not username:
-        return jsonify({"watchlist": [], "favorites": [], "not_interested": [], "genres": []})
+        return jsonify({"watchlist": [], "favorites": [], "not_interested": [], "genres": [], "role": "guest"})
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     c.execute("SELECT movie_id, title, poster, vote_average, media_type FROM watchlist WHERE username = ?", (username,))
@@ -342,16 +485,26 @@ def get_library():
     favorites = [{"id": r[0], "title": r[1], "poster": r[2], "vote_average": r[3], "media_type": r[4] or "movie"} for r in c.fetchall()]
     c.execute("SELECT movie_id, title, keywords FROM not_interested WHERE username = ?", (username,))
     not_interested = [{"id": r[0], "title": r[1], "keywords": json.loads(r[2] or "[]")} for r in c.fetchall()]
-    c.execute("SELECT genres FROM users WHERE username = ?", (username,))
+    c.execute("SELECT genres, role FROM users WHERE username = ?", (username,))
     g_row = c.fetchone()
     conn.close()
     saved_genres = []
-    if g_row and g_row[0]:
-        try:
-            saved_genres = json.loads(g_row[0])
-        except Exception:
-            pass
-    return jsonify({"watchlist": watchlist, "favorites": favorites, "not_interested": not_interested, "genres": saved_genres})
+    role = get_user_role(username)
+    if g_row:
+        if g_row[0]:
+            try:
+                saved_genres = json.loads(g_row[0])
+            except Exception:
+                pass
+        if g_row[1]:
+            role = g_row[1]
+    return jsonify({
+        "watchlist": watchlist,
+        "favorites": favorites,
+        "not_interested": not_interested,
+        "genres": saved_genres,
+        "role": role
+    })
 
 
 @app.route("/api/user/library/toggle", methods=["POST"])
@@ -360,7 +513,7 @@ def toggle_library():
     username = data.get("username", "").strip().lower()
     lib_type = data.get("type")
     movie = data.get("movie", {})
-    if not username or not lib_type or not movie:
+    if not username or lib_type not in ("watchlist", "favorites") or not movie:
         return jsonify({"success": False, "message": "Invalid payload."}), 400
     movie_id = movie.get("id")
     title = movie.get("title") or movie.get("name")
@@ -374,12 +527,14 @@ def toggle_library():
     if c.fetchone():
         c.execute(f"DELETE FROM {table} WHERE username = ? AND movie_id = ?", (username, movie_id))
         action = "removed"
+        log_audit_event(username, "LIBRARY_REMOVE", f"Removed '{title}' ({movie_id}) from {table}")
     else:
         c.execute(f"INSERT OR REPLACE INTO {table} (username, movie_id, title, poster, vote_average, media_type) VALUES (?, ?, ?, ?, ?, ?)",
                   (username, movie_id, title, poster, vote_average, media_type))
         action = "added"
         c.execute("INSERT INTO interactions (username, movie_id, title, action, vote_average) VALUES (?, ?, ?, ?, ?)",
                   (username, movie_id, title, 'like' if lib_type == 'favorites' else 'watched', vote_average))
+        log_audit_event(username, "LIBRARY_ADD", f"Added '{title}' ({movie_id}) to {table}")
     conn.commit()
     conn.close()
     return jsonify({"success": True, "action": action})
@@ -407,7 +562,31 @@ def mark_not_interested():
     )
     conn.commit()
     conn.close()
+    log_audit_event(username, "NOT_INTERESTED_HIDE", f"Eliminated concept '{title}' ({movie_id})")
     return jsonify({"success": True, "action": "hidden"})
+
+
+# ---------------- ROLE-BASED ACCESS CONTROL (ADMIN ENDPOINTS) ----------------
+@app.route("/api/admin/audit-logs", methods=["GET"])
+def admin_audit_logs():
+    requester = (request.args.get("username") or "").strip().lower()
+    role = get_user_role(requester)
+    if role != "admin":
+        log_audit_event(requester or "anonymous", "UNAUTHORIZED_ADMIN_ACCESS", "Blocked non-admin access to /api/admin/audit-logs")
+        return jsonify({"success": False, "message": "Access Denied: Administrator role required."}), 403
+
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("SELECT id, username, event_type, details, ip_address, timestamp FROM audit_logs ORDER BY id DESC LIMIT 100")
+    logs = [
+        {"id": r[0], "username": r[1], "event_type": r[2], "details": r[3], "ip_address": r[4], "timestamp": r[5]}
+        for r in c.fetchall()
+    ]
+    c.execute("SELECT COUNT(*) FROM users")
+    total_users = c.fetchone()[0]
+    conn.close()
+    log_audit_event(requester, "ADMIN_AUDIT_VIEW", "Viewed security audit logs")
+    return jsonify({"success": True, "role": role, "total_registered_users": total_users, "audit_logs": logs})
 
 
 @app.route("/api/user/insights", methods=["GET"])
@@ -428,6 +607,7 @@ def get_insights():
     avg_rating = sum(rated) / len(rated) if rated else 0.0
     return jsonify({
         "username": username or "Guest",
+        "role": get_user_role(username),
         "total_recommendations_viewed": len(interactions),
         "total_liked": total_liked,
         "total_watchlist": total_watchlist,
@@ -931,7 +1111,6 @@ def find_movies(intent):
         if hit:
             add([hit], bonus=45.0 - (idx * 2.0), why_note=why, default_media=hit.get("media_type", "movie"))
 
-    # Special Category Discover Queries
     if special_cat == "BL":
         origin_p = target_country or "TH|KR|JP|TW|PH"
         add(tmdb("/discover/tv", with_origin_country=origin_p, with_keywords="286407|250606|158718", without_genres="16", sort_by="popularity.desc").get("results", []), bonus=20.0, why_note="Boys' Love (BL) drama series.", default_media="tv")
@@ -1034,7 +1213,6 @@ def rank(cands, intent, seen_ids, disliked_titles=None, disliked_keywords=None):
         if not is_plot and not m.get("_is_guess") and m["id"] in seen_ids:
             continue
 
-        # Eliminate movies sharing 2+ concept keywords with "Not Interested" titles
         if disliked_keywords:
             text_blob = f"{m.get('title') or ''} {m.get('name') or ''} {m.get('overview') or ''}".lower()
             hits = sum(1 for kw in disliked_keywords if kw in text_blob)
@@ -1094,6 +1272,7 @@ def chat():
     if not message:
         return jsonify({"reply": f"Hey {username}! Tell me a plot, BL/GL craving, real-life sport, documentary, anime, or mood!", "movies": []})
 
+    log_audit_event(username, "NOVA_AI_QUERY", f"Query: {message[:120]}")
     intent = extract_intent(message, history, username, fav_genres, selected_country, client_guesses)
     intent_type = intent.get("intent", "recommend")
 
