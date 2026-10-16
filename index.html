@@ -4159,6 +4159,257 @@ chatInput.addEventListener('keydown', (e) => {
 });
 
 initEndlessNetflixHome();
+
+    <!-- ================= CINEMIND MASTER UPGRADE PATCH ================= -->
+<style>
+/* 1. Remove Circle Border & Box from Logo */
+.logo-unboxed, #mainBrandLogo {
+    border-radius: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    object-fit: contain !important;
+    width: 118px !important;
+    height: auto !important;
+    max-height: 118px !important;
+    filter: drop-shadow(0 0 18px rgba(0, 242, 254, 0.6)) drop-shadow(0 0 32px rgba(217, 70, 239, 0.4)) !important;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.35s ease !important;
+}
+.logo-unboxed:hover, .logo-unboxed:active, #mainBrandLogo:hover {
+    transform: scale(1.12) rotate(6deg) !important;
+    filter: drop-shadow(0 0 26px rgba(217, 70, 239, 0.9)) drop-shadow(0 0 45px rgba(0, 242, 254, 0.8)) !important;
+}
+
+/* 2. Slanted Moving Poster Wall + Keep Recent Backdrops */
+@keyframes slantedWallGlide {
+    0% { transform: rotate(-10deg) scale(1.26) translateY(0px); }
+    50% { transform: rotate(-10deg) scale(1.30) translateY(-18px); }
+    100% { transform: rotate(-10deg) scale(1.26) translateY(0px); }
+}
+.hero-slide.poster-wall-slide {
+    transform: rotate(-10deg) scale(1.26) !important;
+    transform-origin: center center !important;
+}
+.hero-slide.poster-wall-slide.active {
+    opacity: 0.92 !important;
+    animation: slantedWallGlide 12s ease-in-out infinite !important;
+}
+
+/* 3. Nova Tilting Motion When Tapped or Hovered (Matches Logo Tilt) */
+@keyframes novaTiltTap {
+    0% { transform: scale(1) rotate(0deg); }
+    40% { transform: scale(1.16) rotate(9deg); }
+    75% { transform: scale(1.08) rotate(-5deg); }
+    100% { transform: scale(1) rotate(0deg); }
+}
+.nova-chathead, .nova-avatar-animated {
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease !important;
+}
+.nova-chathead:hover, .nova-chathead:active, .nova-chathead.tilted,
+.nova-avatar-animated:hover, .nova-avatar-animated:active, .nova-avatar-animated.tilted {
+    animation: novaTiltTap 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    transform: scale(1.12) rotate(7deg) !important;
+    border-color: var(--primary-glow) !important;
+}
+
+/* 4. Format Row Only Shows Movies / TV Shows / All Formats (Hide Extra Genre Pills) */
+.quick-cat-pill, #mediaFilterRow .filter-divider, #genreFilterRow {
+    display: none !important;
+}
+</style>
+
+<script>
+// 5. Real-Life Sports (FIFA, WWE, NBA, F1, Boxing — No Cartoons) & True-Crime Documentaries (Dahmer)
+const REAL_SPORTS_KEYWORDS = "6075|6496|13042|6078|159212|1721|9713|180491|579|191020|2702|11616";
+const TRUE_CRIME_DOCU_KEYWORDS = "9826|10714|6149|18035|33637|156866";
+
+window.isSportsContent = function(item) {
+    if (!item) return false;
+    const gids = (item.genre_ids || (item.genres || []).map(g => g.id) || []).map(Number);
+    if (gids.includes(16)) return false; // Never show cartoons or anime under Sports
+    const kwList = (item.keywords && (item.keywords.keywords || item.keywords.results) || []);
+    const kwNames = kwList.map(k => (k.name || '').toLowerCase()).join(' | ');
+    const text = `${item.title || item.name || ''} ${item.overview || ''} ${kwNames}`.toLowerCase();
+    return /\b(sport|sports|fifa|wwe|wrestlemania|raw|smackdown|wrestling|wrestler|ufc|mma|basketball|nba|football|soccer|world cup|baseball|volleyball|boxing|boxer|tennis|golf|olympic|olympics|formula 1|f1|grand prix|nascar|racing|racer|marathon|athlete|coach|championship|creed|rocky|rush|moneyball|air|challengers|king richard|coach carter|remember the titans|blind side|ted lasso|last dance|welcome to wrexham|drive to survive|beckham|senna)\b/i.test(text);
+};
+
+window.isDocumentaryContent = function(item) {
+    if (!item) return false;
+    const gids = (item.genre_ids || (item.genres || []).map(g => g.id) || []).map(Number);
+    if (gids.includes(16)) return false; // Never show cartoons in Documentaries
+    if (gids.includes(99)) return true;
+    const text = `${item.title || item.name || ''} ${item.overview || ''}`.toLowerCase();
+    return /\b(dahmer|jeffrey dahmer|ted bundy|john wayne gacy|richard ramirez|night stalker|menendez|making a murderer|tinder swindler|unsolved mysteries|american murder|evil genius|wild wild country|tiger king|true crime|documentary|docuseries)\b/i.test(text);
+};
+
+// 6. Label ALL Horror Movies (Genre 27) + Mature R-18 Titles with the R-18 Badge
+window.isGenuineR18 = function(item) {
+    if (!item || !isSafeNonPorn(item)) return false;
+    const key = `${item.media_type || 'movie'}_${item.id}`;
+    const gids = (item.genre_ids || (item.genres || []).map(g => g.id) || []).map(Number);
+
+    // Every Horror movie/series (genre 27) gets labeled R-18
+    if (gids.includes(27)) {
+        r18Cache.set(key, true);
+        return true;
+    }
+    if (r18Cache.has(key)) return r18Cache.get(key) === true;
+    if (item._isR18 === true || item.r18 === true) {
+        r18Cache.set(key, true);
+        return true;
+    }
+
+    const cert = (item.certification || "").toUpperCase().trim();
+    if (["R-18", "R18", "TV-MA", "R"].includes(cert)) {
+        r18Cache.set(key, true);
+        return true;
+    }
+
+    const titleLower = (item.title || item.name || "").toLowerCase().trim();
+    const origTitleLower = (item.original_title || item.original_name || "").toLowerCase().trim();
+    if (KNOWN_R18_TITLES.has(titleLower) || KNOWN_R18_TITLES.has(origTitleLower)) {
+        r18Cache.set(key, true);
+        return true;
+    }
+
+    const overview = (item.overview || "").toLowerCase();
+    const combinedText = `${titleLower} ${origTitleLower} ${overview}`;
+    if ((gids.includes(80) || gids.includes(53) || gids.includes(18)) && /\b(serial killer|gore|bloody|massacre|brutal|decapitation|mutilation|torture|psychopath|slasher|cannibal|terrifier|sadistic|demon|possession|exorcism|cartel|dahmer)\b/i.test(combinedText)) {
+        r18Cache.set(key, true);
+        return true;
+    }
+    return false;
+};
+
+// 7. Exclude Cartoons from Sports, Documentaries, BL & GL
+window.matchesActiveCategoryRules = function(item) {
+    if (!item) return false;
+    const gids = (item.genre_ids || (item.genres || []).map(g => g.id) || []).map(Number);
+    if (selectedGenres.has('KIDS_FAMILY') && !selectedGenres.has('ANIME') && !selectedGenres.has('27')) {
+        if (isGenuineR18(item) || isAdultOrTeenAnimation(item)) return false;
+    }
+    if ((selectedGenres.has('SPORTS') || selectedGenres.has('99') || selectedGenres.has('BL') || selectedGenres.has('GL')) && !selectedGenres.has('ANIME') && !selectedGenres.has('16')) {
+        if (gids.includes(16)) return false;
+    }
+    return true;
+};
+
+window.getActiveFilterQueryParams = function(mediaType = "movie") {
+    const SPECIAL_KEYS = new Set(['BL', 'GL', 'ANIME', 'KIDS_FAMILY', 'SPORTS']);
+    const standardGenres = [...selectedGenres].filter(g => !SPECIAL_KEYS.has(g));
+    const hasBL = selectedGenres.has('BL');
+    const hasGL = selectedGenres.has('GL');
+    const hasAnime = selectedGenres.has('ANIME');
+    const hasKidsFamily = selectedGenres.has('KIDS_FAMILY');
+    const hasSports = selectedGenres.has('SPORTS');
+    const hasDocs = selectedGenres.has('99');
+
+    let q = "&include_adult=false";
+    const gSet = new Set();
+    standardGenres.forEach(gid => {
+        const mapped = mediaType === "tv" ? (MOVIE_TO_TV_GENRE[gid] || gid) : gid;
+        String(mapped).split(',').forEach(x => gSet.add(x));
+    });
+
+    if (hasAnime) gSet.add("16");
+    if (hasKidsFamily) {
+        gSet.add("10751");
+        if (!selectedGenres.has('27') && !selectedGenres.has('80') && !selectedGenres.has('53')) {
+            q += `&without_genres=27,80,53,10768`;
+        }
+    }
+
+    // Never include cartoons/animation (genre 16) when Sports, Documentaries, BL, or GL is selected
+    if ((hasSports || hasDocs || hasBL || hasGL) && !hasAnime && !selectedGenres.has('16')) {
+        q += `&without_genres=16,10762`;
+    }
+
+    if (gSet.size > 0) {
+        q += `&with_genres=${[...gSet].join('|')}`;
+    }
+
+    const kwParts = [];
+    if (hasBL) kwParts.push(BL_TMDB_KEYWORDS);
+    if (hasGL) kwParts.push(GL_TMDB_KEYWORDS);
+    if (hasAnime) kwParts.push(ANIME_TMDB_KEYWORDS);
+    if (hasSports) kwParts.push(REAL_SPORTS_KEYWORDS);
+    if (hasDocs && mediaType === "tv") kwParts.push(TRUE_CRIME_DOCU_KEYWORDS);
+
+    if (kwParts.length > 0) {
+        q += `&with_keywords=${kwParts.join('|')}`;
+    }
+
+    if (selectedCountry) q += `&with_origin_country=${selectedCountry}`;
+    if (selectedProvider) {
+        q += `&with_watch_providers=${selectedProvider}&watch_region=${selectedRegion}`;
+    }
+    return q;
+};
+
+// 8. Fix Missing Top 10 Movies in Philippines (Ensure All 1-10 Always Render!)
+window.buildRowElement = function(titleHTML, movies, isAI = false, isTop10 = false, allowCrossCategory = false) {
+    const valid = [];
+    const rowSeenIds = new Set();
+    for (const m of (movies || [])) {
+        if (!isSafeNonPorn(m)) continue;
+        if (!m.poster_path && !(m.poster && m.poster.startsWith('http'))) continue;
+        if (!isTop10 && !matchesActiveCategoryRules(m)) continue;
+        const uniqueKey = `${m.media_type || 'movie'}_${m.id}`;
+        if (rowSeenIds.has(uniqueKey)) continue;
+        if (!isTop10 && !allowCrossCategory && displayedMovieIds.has(uniqueKey)) continue;
+        if (!isTop10 && isBlockedByNotInterested(m, !allowCrossCategory)) continue;
+
+        rowSeenIds.add(uniqueKey);
+        if (!isTop10) {
+            displayedMovieIds.add(uniqueKey);
+            const fp = normalizeTitleFingerprint(m.title || m.name || "");
+            if (fp) displayedTitleFingerprints.add(fp);
+        }
+        valid.push(m);
+    }
+    if (!valid.length) return null;
+
+    const sec = document.createElement('div');
+    sec.className = 'row-section';
+    const h3 = document.createElement('h3');
+    h3.className = 'row-title';
+    h3.innerHTML = titleHTML;
+    sec.appendChild(h3);
+
+    const row = document.createElement('div');
+    row.className = 'movie-row';
+    const slice = isTop10 ? valid.slice(0, 10) : valid;
+    slice.forEach((m, idx) => {
+        row.appendChild(createMovieCard(m, isAI, "", isTop10 ? idx + 1 : null));
+    });
+    sec.appendChild(row);
+    return sec;
+};
+
+// Prevent card verifier from deleting Top 10 cards & sync Horror R-18 badge
+const _origVerifyCard = window.verifyCardMetadataAsync;
+window.verifyCardMetadataAsync = async function(movie, cardEl, badgeContainerEl, countryBadgeEl) {
+    if (movie && isGenuineR18(movie) && badgeContainerEl && !badgeContainerEl.querySelector('.r18-badge')) {
+        badgeContainerEl.insertAdjacentHTML('afterbegin', `<span class="r18-badge">R-18</span>`);
+    }
+    const isTop10 = cardEl && cardEl.classList.contains('top10-card');
+    if (typeof _origVerifyCard === 'function') {
+        await _origVerifyCard(movie, isTop10 ? null : cardEl, badgeContainerEl, countryBadgeEl);
+    }
+};
+
+// 9. Add Tilt-on-Tap to Nova Avatar & Chathead
+document.querySelectorAll('.nova-chathead, .nova-avatar-animated').forEach(el => {
+    el.addEventListener('click', () => {
+        el.classList.remove('tilted');
+        void el.offsetWidth;
+        el.classList.add('tilted');
+        setTimeout(() => el.classList.remove('tilted'), 500);
+    });
+});
+
+// Re-initialize the home feed with the patched rules
+initEndlessNetflixHome();
 </script>
 </body>
 </html>
