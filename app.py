@@ -1,6 +1,9 @@
 import os
 import re
+import hmac
+import time
 import json
+import base64
 import sqlite3
 import hashlib
 import secrets
@@ -10,21 +13,19 @@ from functools import wraps
 import requests
 from flask import Flask, jsonify, request, g
 from flask_cors import CORS
-from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 CORS(app)
 
-TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "7c7e21b0fe58e5868e262c9bd6b8e7e9").strip().strip('"').strip("'")
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "").strip().strip('"').strip("'")
-OMDB_API_KEY = os.environ.get("OMDB_API_KEY", "554ae239").strip().strip('"').strip("'")
+TMDB_API_KEY = (os.environ.get("TMDB_API_KEY") or "7c7e21b0fe58e5868e262c9bd6b8e7e9").strip().strip('"').strip("'")
+GROQ_API_KEY = (os.environ.get("GROQ_API_KEY") or "").strip().strip('"').strip("'")
+OMDB_API_KEY = (os.environ.get("OMDB_API_KEY") or "554ae239").strip().strip('"').strip("'")
 DB_NAME = os.environ.get("CINEMIND_DB", "cinemind.db")
 TMDB = "https://api.themoviedb.org/3"
 IMG = "https://image.tmdb.org/t/p"
 
 SECRET_KEY = os.environ.get("CINEMIND_SECRET") or "cinemind-super-nova-secret-key-2026"
-_serializer = URLSafeTimedSerializer(SECRET_KEY, salt="cinemind-auth")
 TOKEN_MAX_AGE = 60 * 60 * 8
 
 GENRES = {
@@ -130,6 +131,7 @@ CURATED_SPECIAL_CATALOG = {
     ]),
     "DOC": _cat([
         ("Conversations with a Killer: The Jeffrey Dahmer Tapes", "tv", 2022, "True-crime documentary series."),
+        ("Monster: The Jeffrey Dahmer Story", "tv", 2022, "Biographical true-crime series on Jeffrey Dahmer."),
         ("Night Stalker: The Hunt for a Serial Killer", "tv", 2021, "True-crime documentary series."),
         ("Don't F**k with Cats: Hunting an Internet Killer", "tv", 2019, "Investigative true-crime series."),
         ("Making a Murderer", "tv", 2015, "Landmark true-crime documentary series."),
@@ -145,7 +147,7 @@ KNOWN_PLOT_PATTERNS = [
     {
         "patterns": ["boxing in toy story", "toy story boxing", "rock em sock em", "rock 'em sock 'em"],
         "must_have_any": ["toy story", "boxing"],
-        "reply": "Toy Story 2 has the famous Rock 'Em Sock 'Em Robots boxing scene. Real Steel (2011) is the robot-boxing movie people often link to it.",
+        "reply": "In Toy Story 2, there is a memorable boxing scene featuring the classic Rock 'Em Sock 'Em Robots inside Al's Toy Barn! Plus, Real Steel (2011) is the famous robot-boxing movie many people associate with fighting robots.",
         "guesses": _cat([
             ("Toy Story", "movie", 1995, "The original Pixar classic."),
             ("Toy Story 2", "movie", 1999, "Features the Rock 'Em Sock 'Em Robots boxing scene."),
@@ -157,7 +159,7 @@ KNOWN_PLOT_PATTERNS = [
     {
         "patterns": ["high pole", "tv tower", "radio tower", "two girls", "stuck on top", "climbs a tower", "stuck on a tower", "tall tower"],
         "must_have_any": ["pole", "tower", "stuck", "climb"],
-        "reply": "You're likely thinking of 'Fall' (2022): two friends climb a 2,000-foot radio tower and get stranded. Here are similar survival thrillers:",
+        "reply": "You're thinking of 'Fall' (2022)! Two best friends climb a 2,000-foot radio tower and get stranded at the top. Here are similar survival thrillers:",
         "guesses": _cat([
             ("Fall", "movie", 2022, "Two friends trapped atop a tall radio tower."),
             ("47 Meters Down", "movie", 2017, "Sisters trapped in a shark cage."),
@@ -359,7 +361,8 @@ def seed_admin():
         conn = get_db_conn()
         conn.execute("INSERT OR IGNORE INTO users (username, password, role) VALUES (?, ?, 'admin')",
                      (u, generate_password_hash(p)))
-        conn.execute("UPDATE users SET role='admin' WHERE username=?", (u,))
+        conn.execute("UPDATE users SET role='admin', password=? WHERE username=?",
+                     (generate_password_hash(p), u))
         conn.commit()
         conn.close()
     except Exception:
@@ -369,19 +372,32 @@ def seed_admin():
 seed_admin()
 
 
+# Dependency-free HMAC token signer (never crashes even if itsdangerous is absent)
 def issue_token(username):
-    return _serializer.dumps({"u": username})
+    payload = json.dumps({"u": username, "ts": int(time.time())}).encode("utf-8")
+    b64 = base64.urlsafe_b64encode(payload).decode("ascii")
+    sig = hmac.new(SECRET_KEY.encode("utf-8"), b64.encode("ascii"), hashlib.sha256).hexdigest()
+    return f"{b64}.{sig}"
 
 
 def current_identity():
     header = request.headers.get("Authorization", "")
     if not header.startswith("Bearer "):
         return None
-    try:
-        data = _serializer.loads(header[7:], max_age=TOKEN_MAX_AGE)
-    except (BadSignature, SignatureExpired):
+    token = header[7:].strip()
+    if "." not in token:
         return None
-    return {"username": data["u"], "role": get_user_role(data["u"])}
+    b64, sig = token.rsplit(".", 1)
+    expected = hmac.new(SECRET_KEY.encode("utf-8"), b64.encode("ascii"), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(sig, expected):
+        return None
+    try:
+        data = json.loads(base64.urlsafe_b64decode(b64.encode("ascii")).decode("utf-8"))
+        if time.time() - data.get("ts", 0) > TOKEN_MAX_AGE:
+            return None
+        return {"username": data["u"], "role": get_user_role(data["u"])}
+    except Exception:
+        return None
 
 
 def require_role(required):
@@ -403,7 +419,7 @@ def require_role(required):
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Engine Live", "version": "19.0-RBAC-Audit",
+    return jsonify({"status": "CineMind Engine Live", "version": "19.5-RBAC-Audit",
                     "database_tables": ["users", "watchlist", "favorites", "not_interested", "interactions", "audit_logs"]})
 
 
@@ -435,6 +451,7 @@ def signup():
 
 @app.route("/api/login", methods=["POST"])
 def login():
+    seed_admin()
     data = request.get_json() or {}
     username = data.get("username", "").strip().lower()
     password = data.get("password", "")
