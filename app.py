@@ -1,12 +1,11 @@
 import os
 import re
-import hmac
-import time
 import json
-import base64
 import sqlite3
 import hashlib
-import secrets
+import hmac
+import base64
+import time
 from datetime import date, timedelta
 from functools import wraps
 
@@ -18,14 +17,14 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 CORS(app)
 
-TMDB_API_KEY = (os.environ.get("TMDB_API_KEY") or "7c7e21b0fe58e5868e262c9bd6b8e7e9").strip().strip('"').strip("'")
+TMDB_API_KEY = (os.environ.get("TMDB_API_KEY") or "").strip().strip('"').strip("'")
 GROQ_API_KEY = (os.environ.get("GROQ_API_KEY") or "").strip().strip('"').strip("'")
-OMDB_API_KEY = (os.environ.get("OMDB_API_KEY") or "554ae239").strip().strip('"').strip("'")
+OMDB_API_KEY = (os.environ.get("OMDB_API_KEY") or "").strip().strip('"').strip("'")
 DB_NAME = os.environ.get("CINEMIND_DB", "cinemind.db")
 TMDB = "https://api.themoviedb.org/3"
 IMG = "https://image.tmdb.org/t/p"
 
-SECRET_KEY = os.environ.get("CINEMIND_SECRET") or "cinemind-super-nova-secret-key-2026"
+SECRET_KEY = os.environ.get("CINEMIND_SECRET") or "cinemind-secure-jwt-salt-2026"
 TOKEN_MAX_AGE = 60 * 60 * 8
 
 GENRES = {
@@ -40,8 +39,7 @@ GENRE_ID_TO_NAME = {
     99: "Documentary", 18: "Drama", 10751: "Kids & Family", 14: "Fantasy",
     36: "History", 27: "Horror", 10402: "Music", 9648: "Mystery", 10749: "Romance",
     878: "Sci-Fi", 53: "Thriller", 10752: "War", 37: "Western",
-    10759: "Action & Adventure", 10762: "Kids", 10763: "News", 10764: "Reality",
-    10765: "Sci-Fi & Fantasy", 10766: "Soap", 10767: "Talk", 10768: "War & Politics",
+    10759: "Action & Adventure", 10762: "Kids", 10765: "Sci-Fi & Fantasy", 10768: "War & Politics",
 }
 MOVIE_TO_TV = {
     "28": "10759", "12": "10759", "16": "16", "35": "35", "80": "80", "99": "99",
@@ -131,7 +129,6 @@ CURATED_SPECIAL_CATALOG = {
     ]),
     "DOC": _cat([
         ("Conversations with a Killer: The Jeffrey Dahmer Tapes", "tv", 2022, "True-crime documentary series."),
-        ("Monster: The Jeffrey Dahmer Story", "tv", 2022, "Biographical true-crime series on Jeffrey Dahmer."),
         ("Night Stalker: The Hunt for a Serial Killer", "tv", 2021, "True-crime documentary series."),
         ("Don't F**k with Cats: Hunting an Internet Killer", "tv", 2019, "Investigative true-crime series."),
         ("Making a Murderer", "tv", 2015, "Landmark true-crime documentary series."),
@@ -147,7 +144,7 @@ KNOWN_PLOT_PATTERNS = [
     {
         "patterns": ["boxing in toy story", "toy story boxing", "rock em sock em", "rock 'em sock 'em"],
         "must_have_any": ["toy story", "boxing"],
-        "reply": "In Toy Story 2, there is a memorable boxing scene featuring the classic Rock 'Em Sock 'Em Robots inside Al's Toy Barn! Plus, Real Steel (2011) is the famous robot-boxing movie many people associate with fighting robots.",
+        "reply": "In Toy Story 2, there is a memorable boxing scene featuring the classic Rock 'Em Sock 'Em Robots inside Al's Toy Barn! Plus, Real Steel (2011) is the robot-boxing movie people often link to it.",
         "guesses": _cat([
             ("Toy Story", "movie", 1995, "The original Pixar classic."),
             ("Toy Story 2", "movie", 1999, "Features the Rock 'Em Sock 'Em Robots boxing scene."),
@@ -159,7 +156,7 @@ KNOWN_PLOT_PATTERNS = [
     {
         "patterns": ["high pole", "tv tower", "radio tower", "two girls", "stuck on top", "climbs a tower", "stuck on a tower", "tall tower"],
         "must_have_any": ["pole", "tower", "stuck", "climb"],
-        "reply": "You're thinking of 'Fall' (2022)! Two best friends climb a 2,000-foot radio tower and get stranded at the top. Here are similar survival thrillers:",
+        "reply": "You're likely thinking of 'Fall' (2022): two friends climb a 2,000-foot radio tower and get stranded. Here are similar survival thrillers:",
         "guesses": _cat([
             ("Fall", "movie", 2022, "Two friends trapped atop a tall radio tower."),
             ("47 Meters Down", "movie", 2017, "Sisters trapped in a shark cage."),
@@ -372,7 +369,6 @@ def seed_admin():
 seed_admin()
 
 
-# Dependency-free HMAC token signer (never crashes even if itsdangerous is absent)
 def issue_token(username):
     payload = json.dumps({"u": username, "ts": int(time.time())}).encode("utf-8")
     b64 = base64.urlsafe_b64encode(payload).decode("ascii")
@@ -419,7 +415,7 @@ def require_role(required):
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind Engine Live", "version": "19.5-RBAC-Audit",
+    return jsonify({"status": "CineMind Engine Live", "version": "20.1-Secure-RBAC",
                     "database_tables": ["users", "watchlist", "favorites", "not_interested", "interactions", "audit_logs"]})
 
 
@@ -599,25 +595,6 @@ def admin_users():
     rows = conn.execute("SELECT username, role, created_at FROM users ORDER BY id").fetchall()
     conn.close()
     return jsonify({"success": True, "users": [{"username": r[0], "role": r[1], "created_at": r[2]} for r in rows]})
-
-
-@app.route("/api/admin/users/<target>/role", methods=["POST"])
-@require_role("admin")
-def admin_set_role(target):
-    new_role = (request.get_json() or {}).get("role")
-    target = target.strip().lower()
-    if new_role not in ("admin", "user"):
-        return jsonify({"success": False, "message": "Role must be 'admin' or 'user'."}), 400
-    if target == g.identity["username"]:
-        return jsonify({"success": False, "message": "You cannot change your own role."}), 400
-    conn = get_db_conn()
-    cur = conn.execute("UPDATE users SET role = ? WHERE username = ?", (new_role, target))
-    conn.commit()
-    conn.close()
-    if cur.rowcount == 0:
-        return jsonify({"success": False, "message": "User not found."}), 404
-    log_audit_event(g.identity["username"], "ROLE_CHANGED", f"{target} -> {new_role}")
-    return jsonify({"success": True, "username": target, "role": new_role})
 
 
 @app.route("/api/user/insights", methods=["GET"])
