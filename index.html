@@ -232,41 +232,18 @@ html[data-theme="light"] .hero-slideshow-overlay {
 .search-btn-submit { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); border: none; padding: 0 26px; border-radius: 30px; color: #fff; font-weight: 700; cursor: pointer; transition: 0.25s; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .search-btn-submit:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0, 242, 254, 0.55); }
 
-/* ---- Filter Panel & Netflix-Style Multi-Column Genre Dropdown ---- */
+/* ---- Filter Panel & Unified Netflix-Style Dropdowns ---- */
 .filter-panel { display: flex; flex-direction: column; gap: 16px; background: var(--panel-bg); padding: 22px 26px; border-radius: 24px; border: 1px solid var(--glass-border); backdrop-filter: blur(22px); box-shadow: var(--shadow-heavy); position: relative; z-index: 15; }
-.filter-dropdown-container { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; padding-bottom: 12px; border-bottom: 1px solid rgba(0, 242, 254, 0.14); }
-.filter-select-wrapper { display: flex; align-items: center; gap: 8px; flex: 1 1 200px; min-width: 180px; position: relative; }
-.filter-select-wrapper label { font-size: 0.84rem; font-weight: 700; color: var(--secondary-glow); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
-.custom-select {
-    width: 100%;
-    background: var(--input-bg);
-    border: 1px solid var(--glass-border);
-    border-radius: 16px;
-    padding: 10px 36px 10px 16px;
-    color: var(--text-main);
-    font-size: 0.86rem;
-    font-weight: 600;
-    outline: none;
-    cursor: pointer;
-    transition: 0.22s;
-    appearance: none;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300f2fe' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 14px center;
-    background-size: 14px;
-}
-.custom-select:focus, .custom-select:hover { border-color: var(--secondary-glow); box-shadow: 0 0 16px rgba(0, 242, 254, 0.35); }
-.custom-select option { background: #120935; color: #fff; }
-html[data-theme="light"] .custom-select option { background: #ede9fe; color: #1e1b4b; }
+.filter-dropdown-container { display: grid; grid-template-columns: repeat(4, minmax(185px, 1fr)); gap: 14px; align-items: end; padding-bottom: 14px; border-bottom: 1px solid rgba(0, 242, 254, 0.14); }
 
-/* Netflix Multi-Column Genre Dropdown Box */
-.netflix-dropdown-wrap { position: relative; flex: 1 1 220px; min-width: 200px; }
+.netflix-dropdown-wrap { position: relative; width: 100%; min-width: 0; }
+.netflix-dropdown-label { font-size: 0.74rem; font-weight: 700; color: var(--secondary-glow); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
 .netflix-genre-trigger {
     width: 100%;
-    background: rgba(8, 4, 24, 0.92);
+    background: rgba(8, 4, 24, 0.94);
     border: 1.5px solid var(--secondary-glow);
-    border-radius: 16px;
-    padding: 10px 16px;
+    border-radius: 14px;
+    padding: 11px 16px;
     color: #fff;
     font-size: 0.86rem;
     font-weight: 700;
@@ -275,27 +252,47 @@ html[data-theme="light"] .custom-select option { background: #ede9fe; color: #1e
     justify-content: space-between;
     gap: 10px;
     cursor: pointer;
-    transition: 0.22s;
-    box-shadow: 0 4px 16px rgba(0, 242, 254, 0.2);
+    transition: all 0.22s ease;
+    box-shadow: 0 4px 16px rgba(0, 242, 254, 0.16);
+}
+.netflix-genre-trigger span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
 }
 html[data-theme="light"] .netflix-genre-trigger { background: #ffffff; color: #1e1b4b; }
-.netflix-genre-trigger:hover { border-color: var(--primary-glow); box-shadow: 0 0 20px rgba(217, 70, 239, 0.45); }
+.netflix-genre-trigger:hover, .netflix-dropdown-wrap.open .netflix-genre-trigger {
+    border-color: var(--primary-glow);
+    box-shadow: 0 0 20px rgba(217, 70, 239, 0.45);
+}
 .netflix-genre-menu {
     position: absolute;
     top: calc(100% + 8px);
     left: 0;
     width: 520px;
     max-width: 92vw;
-    background: rgba(8, 4, 24, 0.97);
+    background: rgba(8, 4, 24, 0.98);
     border: 1px solid var(--secondary-glow);
-    border-radius: 18px;
-    padding: 18px 20px;
+    border-radius: 16px;
+    padding: 16px 18px;
     display: none;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px 16px;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.92);
+    gap: 6px 14px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.95);
     backdrop-filter: blur(24px);
-    z-index: 120;
+    z-index: 140;
+    animation: netflixFadeIn 0.18s ease-out;
+}
+.netflix-genre-menu.single-col-menu {
+    width: 100%;
+    min-width: 210px;
+    grid-template-columns: 1fr;
+    padding: 10px;
+}
+@keyframes netflixFadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 html[data-theme="light"] .netflix-genre-menu { background: rgba(245, 242, 255, 0.98); }
 .netflix-genre-menu.open { display: grid; }
@@ -303,13 +300,13 @@ html[data-theme="light"] .netflix-genre-menu { background: rgba(245, 242, 255, 0
     font-size: 0.83rem;
     font-weight: 600;
     color: var(--text-muted);
-    padding: 7px 10px;
+    padding: 8px 12px;
     border-radius: 10px;
     cursor: pointer;
     transition: 0.18s;
     display: flex;
     align-items: center;
-    gap: 7px;
+    justify-content: space-between;
     white-space: nowrap;
 }
 .netflix-genre-item:hover, .netflix-genre-item.active {
@@ -319,8 +316,8 @@ html[data-theme="light"] .netflix-genre-menu { background: rgba(245, 242, 255, 0
 }
 
 .filter-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; }
-.filter-row-middle { justify-content: space-between; text-align: left; padding: 4px 0 12px 0; border-bottom: 1px solid rgba(0, 242, 254, 0.14); }
-.filter-label { font-size: 0.85rem; font-weight: 700; color: var(--secondary-glow); min-width: 110px; display: flex; align-items: center; gap: 6px; }
+.filter-row-middle { justify-content: space-between; text-align: left; padding: 2px 0 0 0; border-bottom: none; }
+.filter-label { font-size: 0.85rem; font-weight: 700; color: var(--secondary-glow); min-width: 90px; display: flex; align-items: center; gap: 6px; }
 .filter-pill { background: rgba(124, 58, 237, 0.08); border: 1px solid var(--glass-border); padding: 7px 15px; border-radius: 20px; font-size: 0.81rem; font-weight: 600; cursor: pointer; color: var(--text-muted); transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; user-select: none; }
 .filter-pill:hover, .filter-pill.active { background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); color: #fff; border-color: transparent; box-shadow: 0 0 18px rgba(0, 242, 254, 0.5); }
 .filter-pill.active i, .filter-pill:hover i { color: #fff !important; }
@@ -381,7 +378,6 @@ html[data-theme="light"] .netflix-genre-menu { background: rgba(245, 242, 255, 0
     pointer-events: none;
 }
 
-/* Quick "Not Interested" Button on Card Top-Left */
 .card-not-interested-btn {
     position: absolute;
     top: 10px;
@@ -462,7 +458,6 @@ html[data-theme="light"] .netflix-genre-menu { background: rgba(245, 242, 255, 0
     box-shadow: 0 4px 10px rgba(0,0,0,0.6);
 }
 
-/* Exact Genre Tags on Movie Card */
 .card-genres-tags {
     font-size: 0.7rem;
     font-weight: 700;
@@ -542,7 +537,7 @@ html[data-theme="light"] .top10-rank-num {
 }
 .infinite-loader { text-align: center; padding: 28px; color: var(--secondary-glow); font-weight: 700; font-size: 0.95rem; display: flex; justify-content: center; align-items: center; gap: 10px; }
 
-/* ---- Nova Tilting Animation (Matches Logo Tilt Motion!) ---- */
+/* ---- Nova Tilting Animation ---- */
 @keyframes novaFloat {
     0%, 100% { transform: translateY(0px) rotate(0deg); }
     50% { transform: translateY(-7px) rotate(3deg); }
@@ -634,10 +629,10 @@ html[data-theme="light"] .chat-tooltip { background: linear-gradient(135deg, #ff
 .nova-banner-clean { background: linear-gradient(135deg, rgba(217, 70, 239, 0.22), rgba(0, 242, 254, 0.22)); border: 1px solid var(--secondary-glow); border-radius: 24px; padding: 24px 28px; display: flex; align-items: center; justify-content: space-between; gap: 18px; backdrop-filter: blur(20px); flex-wrap: wrap; }
 .nova-banner-clean img { width: 66px; height: 66px; object-fit: contain; }
 
-/* ---- Modals, Exact Genres & Cast/Crew Box ---- */
+/* ---- Modals, Exact Genres & Cast/Crew WITH PICTURES ---- */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(8, 3, 24, 0.88); z-index: 200; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; backdrop-filter: blur(22px); padding: 16px; }
 .modal-overlay.active { opacity: 1; pointer-events: auto; }
-.modal-content { display: flex; gap: 24px; width: 960px; max-width: 100%; max-height: 92vh; background: var(--modal-bg); padding: 28px; border-radius: 26px; position: relative; border: 1px solid var(--glass-border-hover); box-shadow: var(--shadow-heavy); overflow-y: auto; }
+.modal-content { display: flex; gap: 24px; width: 980px; max-width: 100%; max-height: 92vh; background: var(--modal-bg); padding: 28px; border-radius: 26px; position: relative; border: 1px solid var(--glass-border-hover); box-shadow: var(--shadow-heavy); overflow-y: auto; }
 .modal-poster-wrap { position: relative; width: 235px; height: 355px; flex-shrink: 0; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.6); background: #160f38; }
 .modal-poster-wrap img { width: 100%; height: 100%; object-fit: cover; }
 .modal-info { display: flex; flex-direction: column; gap: 12px; flex: 1; min-width: 0; overflow-y: auto; padding-right: 4px; }
@@ -665,36 +660,38 @@ html[data-theme="light"] .chat-tooltip { background: linear-gradient(135deg, #ff
     flex-direction: column;
     gap: 10px;
 }
-.credits-crew-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 8px 14px;
-    font-size: 0.82rem;
-    border-bottom: 1px solid rgba(0, 242, 254, 0.16);
-    padding-bottom: 10px;
-}
-.credits-crew-item strong { color: var(--secondary-glow); display: block; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.5px; }
-.credits-cast-list {
+.person-photo-strip {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     overflow-x: auto;
-    padding-bottom: 4px;
+    padding: 4px 2px 8px 2px;
     -webkit-overflow-scrolling: touch;
 }
-.cast-chip {
-    background: rgba(12, 6, 34, 0.78);
+.person-card {
+    background: rgba(12, 6, 34, 0.82);
     border: 1px solid var(--glass-border);
-    border-radius: 12px;
+    border-radius: 14px;
     padding: 8px 12px;
-    min-width: 155px;
+    min-width: 170px;
+    max-width: 190px;
     flex-shrink: 0;
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    align-items: center;
+    gap: 10px;
 }
-html[data-theme="light"] .cast-chip { background: rgba(255, 255, 255, 0.85); }
-.cast-actor { font-size: 0.82rem; font-weight: 800; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.cast-character { font-size: 0.73rem; color: var(--secondary-glow); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html[data-theme="light"] .person-card { background: rgba(255, 255, 255, 0.90); }
+.person-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1.5px solid var(--secondary-glow);
+    flex-shrink: 0;
+    background: #190d48;
+}
+.person-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow: hidden; }
+.person-name { font-size: 0.8rem; font-weight: 800; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.person-role { font-size: 0.72rem; color: var(--secondary-glow); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .ai-rationale-box { background: rgba(0, 242, 254, 0.08); border: 1px solid rgba(0, 242, 254, 0.4); padding: 12px 16px; border-radius: 14px; display: flex; flex-direction: column; gap: 4px; }
 .ai-rationale-title { font-size: 0.82rem; font-weight: 700; color: var(--secondary-glow); display: flex; align-items: center; gap: 8px; }
@@ -757,8 +754,7 @@ html[data-theme="light"] .cast-chip { background: rgba(255, 255, 255, 0.85); }
     .hero-banner { padding: 24px 18px; min-height: 220px; border-radius: 22px; gap: 16px; }
     .hero-slide.poster-wall-slide { grid-template-columns: repeat(5, 1fr); }
     .filter-panel { padding: 14px 16px; border-radius: 20px; gap: 12px; }
-    .filter-dropdown-container { gap: 10px; }
-    .filter-select-wrapper, .netflix-dropdown-wrap { flex: 1 1 100%; }
+    .filter-dropdown-container { grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .netflix-genre-menu { grid-template-columns: repeat(2, 1fr); width: 100%; }
     .filter-row { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
     .filter-label { min-width: auto; font-size: 0.8rem; margin-right: 4px; flex-shrink: 0; }
@@ -772,8 +768,8 @@ html[data-theme="light"] .cast-chip { background: rgba(255, 255, 255, 0.85); }
     .hero-search-box { flex-direction: column; gap: 8px; }
     .search-input-wrap input { padding: 14px 18px 14px 46px; font-size: 0.9rem; }
     .search-btn-submit { padding: 13px; border-radius: 24px; width: 100%; }
-    .filter-dropdown-container { flex-direction: column; align-items: stretch; gap: 10px; }
-    .filter-select-wrapper, .netflix-dropdown-wrap { width: 100%; min-width: 0; }
+    .filter-dropdown-container { grid-template-columns: 1fr; gap: 10px; }
+    .netflix-dropdown-wrap { width: 100%; min-width: 0; }
     .row-title { font-size: 1.12rem; }
     .movie-row { gap: 12px; padding: 8px 4px 18px 4px; }
     .movie-card { min-width: 160px; width: 160px; height: 350px; border-radius: 16px; }
@@ -848,105 +844,67 @@ html[data-theme="light"] .cast-chip { background: rgba(255, 255, 255, 0.85); }
     </div>
 
     <div class="filter-panel" id="filterPanel">
-        <!-- 1. TOP: NETFLIX-STYLE GENRE DROPDOWN + STREAMING APP, ORIGIN COUNTRY & REGION -->
+        <!-- 1. TOP: UNIFIED NETFLIX-STYLE DROPDOWNS (GENRE, STREAMING APP, ORIGIN COUNTRY & REGION) -->
         <div class="filter-dropdown-container">
             <div class="netflix-dropdown-wrap" id="netflixGenreDropdownWrap">
+                <span class="netflix-dropdown-label"><i class="fa-solid fa-table-cells-large"></i> Genre</span>
                 <button type="button" class="netflix-genre-trigger" id="netflixGenreBtn">
-                    <span><i class="fa-solid fa-table-cells-large" style="color:var(--primary-glow); margin-right:6px;"></i> <span id="netflixGenreLabel">Browse Genres (Netflix Menu)</span></span>
+                    <span id="netflixGenreLabel">Browse Genres</span>
                     <i class="fa-solid fa-caret-down" style="color:var(--secondary-glow);"></i>
                 </button>
                 <div class="netflix-genre-menu" id="netflixGenreMenu"></div>
             </div>
 
-            <div class="filter-select-wrapper">
-                <label for="providerDropdown"><i class="fa-solid fa-circle-play"></i> Streaming App:</label>
-                <select id="providerDropdown" class="custom-select">
-                    <option value="">All Streaming Apps</option>
-                    <option value="8">Netflix</option>
-                    <option value="337">Disney+</option>
-                    <option value="119">Prime Video</option>
-                    <option value="1899">Max / HBO</option>
-                    <option value="350">Apple TV+</option>
-                    <option value="158">Viu</option>
-                </select>
+            <div class="netflix-dropdown-wrap" id="providerDropdownWrap">
+                <span class="netflix-dropdown-label"><i class="fa-solid fa-circle-play"></i> Streaming App</span>
+                <button type="button" class="netflix-genre-trigger" id="providerDropdownBtn">
+                    <span id="providerDropdownLabel">All Streaming Apps</span>
+                    <i class="fa-solid fa-caret-down" style="color:var(--secondary-glow);"></i>
+                </button>
+                <div class="netflix-genre-menu single-col-menu" id="providerDropdownMenu"></div>
             </div>
 
-            <div class="filter-select-wrapper">
-                <label for="countryDropdown"><i class="fa-solid fa-earth-asia"></i> Origin Country:</label>
-                <select id="countryDropdown" class="custom-select">
-                    <option value="">🌍 All Countries</option>
-                    <option value="PH">🇵🇭 Philippines</option>
-                    <option value="KR">🇰🇷 South Korea</option>
-                    <option value="TH">🇹🇭 Thailand</option>
-                    <option value="US">🇺🇸 USA</option>
-                    <option value="JP">🇯🇵 Japan</option>
-                    <option value="CN">🇨🇳 China</option>
-                    <option value="TW">🇹🇼 Taiwan</option>
-                    <option value="GB">🇬🇧 UK</option>
-                    <option value="ES">🇪🇸 Spain</option>
-                    <option value="FR">🇫🇷 France</option>
-                    <option value="IN">🇮🇳 India</option>
-                </select>
+            <div class="netflix-dropdown-wrap" id="countryDropdownWrap">
+                <span class="netflix-dropdown-label"><i class="fa-solid fa-earth-asia"></i> Origin Country</span>
+                <button type="button" class="netflix-genre-trigger" id="countryDropdownBtn">
+                    <span id="countryDropdownLabel">All Countries</span>
+                    <i class="fa-solid fa-caret-down" style="color:var(--secondary-glow);"></i>
+                </button>
+                <div class="netflix-genre-menu single-col-menu" id="countryDropdownMenu"></div>
             </div>
 
-            <div class="filter-select-wrapper">
-                <label for="regionDropdown"><i class="fa-solid fa-location-dot"></i> Streaming Region:</label>
-                <select id="regionDropdown" class="custom-select">
-                    <option value="PH">🇵🇭 Philippines</option>
-                    <option value="US">🇺🇸 USA</option>
-                    <option value="KR">🇰🇷 South Korea</option>
-                    <option value="JP">🇯🇵 Japan</option>
-                    <option value="GB">🇬🇧 UK</option>
-                    <option value="TH">🇹🇭 Thailand</option>
-                </select>
+            <div class="netflix-dropdown-wrap" id="regionDropdownWrap">
+                <span class="netflix-dropdown-label"><i class="fa-solid fa-location-dot"></i> Streaming Region</span>
+                <button type="button" class="netflix-genre-trigger" id="regionDropdownBtn">
+                    <span id="regionDropdownLabel">Philippines</span>
+                    <i class="fa-solid fa-caret-down" style="color:var(--secondary-glow);"></i>
+                </button>
+                <div class="netflix-genre-menu single-col-menu" id="regionDropdownMenu"></div>
             </div>
         </div>
 
-        <!-- 2. MIDDLE: FORMAT SELECTION & NOT-INTERESTED RESET -->
+        <!-- 2. FORMAT SELECTION & NOT-INTERESTED RESET (GENRE PILL LINE REMOVED) -->
         <div class="filter-row filter-row-middle" id="mediaFilterRow">
             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                 <span class="filter-label"><i class="fa-solid fa-layer-group"></i> Format:</span>
-                <button type="button" class="filter-pill active" data-media="all">🌌 All Formats</button>
-                <button type="button" class="filter-pill" data-media="movie">🎬 Movies Only</button>
-                <button type="button" class="filter-pill" data-media="tv">📺 TV Series, Shows & Dramas</button>
+                <button type="button" class="filter-pill active" data-media="all">All Formats</button>
+                <button type="button" class="filter-pill" data-media="movie">Movies Only</button>
+                <button type="button" class="filter-pill" data-media="tv">TV Series, Shows & Dramas</button>
             </div>
             <button type="button" class="filter-pill" id="resetDislikedBtn" style="display:none; border-color:#f43f5e; color:#fda4af;" title="Reset hidden 'Not Interested' concepts">
                 <i class="fa-solid fa-eye-slash"></i> <span id="dislikedCountText">0 Hidden</span> (Reset)
             </button>
         </div>
-
-        <!-- 3. BOTTOM: MULTI-GENRE & SPECIAL CATEGORY FILTER ROW -->
-        <div class="filter-row" id="genreFilterRow">
-            <span class="filter-label"><i class="fa-solid fa-film"></i> Genres:</span>
-            <button type="button" class="filter-pill active" data-genre="">All</button>
-            <button type="button" class="filter-pill" data-genre="BL">💙 Boys' Love (BL)</button>
-            <button type="button" class="filter-pill" data-genre="GL">💖 Girls' Love (GL)</button>
-            <button type="button" class="filter-pill" data-genre="ANIME">⛩️ Anime</button>
-            <button type="button" class="filter-pill" data-genre="KIDS">🧸 Kids & Family (Animated)</button>
-            <button type="button" class="filter-pill" data-genre="SPORTS">🏆 Sports (Real-Life)</button>
-            <button type="button" class="filter-pill" data-genre="99">🕵️ Documentaries</button>
-            <button type="button" class="filter-pill" data-genre="28">Action</button>
-            <button type="button" class="filter-pill" data-genre="12">Adventure</button>
-            <button type="button" class="filter-pill" data-genre="35">Comedy</button>
-            <button type="button" class="filter-pill" data-genre="80">Crime</button>
-            <button type="button" class="filter-pill" data-genre="18">Drama</button>
-            <button type="button" class="filter-pill" data-genre="14">Fantasy</button>
-            <button type="button" class="filter-pill" data-genre="27">Horror</button>
-            <button type="button" class="filter-pill" data-genre="9648">Mystery</button>
-            <button type="button" class="filter-pill" data-genre="10749">Romance</button>
-            <button type="button" class="filter-pill" data-genre="878">Sci-Fi</button>
-            <button type="button" class="filter-pill" data-genre="53">Thriller</button>
-        </div>
     </div>
 
     <div id="mainContainer" class="catalog-container"></div>
     <div id="infiniteSentinel" class="infinite-loader" style="display:none;">
-        <i class="fa-solid fa-spinner fa-spin"></i> Warping more unique galaxy streams...
+        <i class="fa-solid fa-spinner fa-spin"></i> Loading movies...
     </div>
 </main>
 </div>
 
-<!-- MOVIE / SERIES DETAILS MODAL (WITH FULL CAST, CHARACTERS, DIRECTOR, WRITERS & CREW + EXACT GENRES) -->
+<!-- MOVIE / SERIES DETAILS MODAL (WITH FULL CAST, CHARACTERS, DIRECTOR, WRITERS & CREW WITH PICTURES + EXACT GENRES) -->
 <div class="modal-overlay" id="movieModal">
 <div class="modal-content">
     <i class="fa-solid fa-xmark close-modal" id="closeModal"></i>
@@ -972,17 +930,16 @@ html[data-theme="light"] .cast-chip { background: rgba(255, 255, 255, 0.85); }
 
         <p class="modal-overview" id="modalOverview"></p>
 
-        <!-- Starring Cast, Characters, Director, Writers & Crew Box -->
+        <!-- Starring Cast, Characters, Director, Writers, Producers & Crew WITH PICTURES -->
         <div class="credits-box" id="modalCreditsBox">
-            <div class="credits-crew-grid" id="modalCrewGrid">
-                <div class="credits-crew-item"><strong>Director / Creator</strong><span>Loading...</span></div>
-                <div class="credits-crew-item"><strong>Writers</strong><span>Loading...</span></div>
-                <div class="credits-crew-item"><strong>Key Crew & Producers</strong><span>Loading...</span></div>
-            </div>
             <div style="font-size:0.78rem; font-weight:700; color:var(--secondary-glow);">
                 <i class="fa-solid fa-users"></i> Starring Cast & Characters:
             </div>
-            <div class="credits-cast-list" id="modalCastList"></div>
+            <div class="person-photo-strip" id="modalCastList"></div>
+            <div style="font-size:0.78rem; font-weight:700; color:var(--secondary-glow); margin-top:4px;">
+                <i class="fa-solid fa-clapperboard"></i> Director, Writers, Producers & Key Crew:
+            </div>
+            <div class="person-photo-strip" id="modalCrewList"></div>
         </div>
 
         <div class="modal-actions">
@@ -1010,7 +967,7 @@ html[data-theme="light"] .cast-chip { background: rgba(255, 255, 255, 0.85); }
         <h3 id="videoModalTitle" style="font-size: 1.05rem; font-weight:700; color:#fff;">Official Trailer</h3>
         <div style="display:flex; align-items:center; gap: 14px;">
             <a id="youtubeExternalBtn" href="#" target="_blank" rel="noopener noreferrer" class="btn-action btn-trailer" style="padding: 7px 14px; font-size: 0.8rem;">
-                <i class="fa-brands fa-youtube"></i> Open on YouTube ↗
+                <i class="fa-brands fa-youtube"></i> Open on YouTube
             </a>
             <i class="fa-solid fa-xmark close-modal" id="closeVideoModal" style="position:static; font-size:1.4rem; color:#fff;"></i>
         </div>
@@ -1021,7 +978,7 @@ html[data-theme="light"] .cast-chip { background: rgba(255, 255, 255, 0.85); }
 </div>
 </div>
 
-<!-- SMART PROFILE / AUTH MODAL -->
+<!-- SMART PROFILE / AUTH MODAL (WITH RBAC ADMIN AUDIT LOG VIEWER) -->
 <div class="modal-overlay" id="profileModal">
 <div class="profile-box" style="width: 480px; max-width: 100%; max-height: 92vh; overflow-y: auto; background: var(--modal-bg); padding: 30px; border-radius: 26px; border: 1px solid var(--glass-border-hover); box-shadow: var(--shadow-heavy); display: flex; flex-direction: column; gap: 16px; position: relative;">
     <i class="fa-solid fa-xmark close-modal" id="closeProfileModal" style="top:20px; right:22px;"></i>
@@ -1038,7 +995,7 @@ html[data-theme="light"] .cast-chip { background: rgba(255, 255, 255, 0.85); }
             <div style="width:54px; height:54px; border-radius:50%; background:linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); display:flex; align-items:center; justify-content:center; font-size:1.4rem; font-weight:800; color:#fff; flex-shrink:0;" id="accountAvatarInitial">U</div>
             <div style="display:flex; flex-direction:column; gap:3px;">
                 <span style="font-size:1.1rem; font-weight:800;" id="loggedInUsernameDisplay">@username</span>
-                <span style="font-size:0.76rem; color:#10b981; font-weight:700;"><i class="fa-solid fa-cloud-arrow-up"></i> Cloud Profile Active & Synced</span>
+                <span style="font-size:0.76rem; color:#10b981; font-weight:700;" id="loggedInRoleBadge"><i class="fa-solid fa-cloud-arrow-up"></i> Cloud Profile Active & Synced</span>
             </div>
         </div>
         <div class="user-stat-row">
@@ -1089,6 +1046,10 @@ html[data-theme="light"] .cast-chip { background: rgba(255, 255, 255, 0.85); }
     </div>
 
     <div id="loggedInActionButtons" style="display:none; flex-direction:column; gap:10px;">
+        <button type="button" class="btn-action" id="openAdminAuditBtn" style="display:none; width:100%; justify-content:center; background:linear-gradient(135deg,#10b981,#0284c7);">
+            <i class="fa-solid fa-shield-halved"></i> View Admin Security Audit Logs (RBAC)
+        </button>
+        <div id="adminAuditLogContainer" style="display:none; max-height:190px; overflow-y:auto; background:rgba(6,3,20,0.92); border:1px solid var(--secondary-glow); border-radius:12px; padding:10px; font-size:0.74rem; line-height:1.45;"></div>
         <button type="button" class="btn-action" id="saveUserGenresBtn" style="width:100%; justify-content:center;">
             <i class="fa-solid fa-floppy-disk"></i> Save Updated Genre Preferences
         </button>
@@ -1101,7 +1062,7 @@ html[data-theme="light"] .cast-chip { background: rgba(255, 255, 255, 0.85); }
 
 <!-- FLOATING NOVA AI ASSISTANT -->
 <div class="chat-wrapper" id="chatWrapper">
-    <div class="chat-tooltip" id="chatTooltip">Ask Nova AI ✨</div>
+    <div class="chat-tooltip" id="chatTooltip">Ask Nova AI</div>
     <div class="chat-modal" id="chatModal">
         <div class="chat-header">
             <div style="display:flex; align-items:center; gap:8px;">
@@ -1116,10 +1077,10 @@ html[data-theme="light"] .cast-chip { background: rgba(255, 255, 255, 0.85); }
         </div>
         <div class="chat-body" id="chatHistory"></div>
         <div class="quick-chips">
-            <span class="chip" onclick="sendQuickPrompt('Thai Boys Love series recommendations')">💙 Thai BL Hits</span>
-            <span class="chip" onclick="sendQuickPrompt('Girls Love GL series and movies')">💖 Best GL Picks</span>
-            <span class="chip" onclick="sendQuickPrompt('True crime documentaries like Jeffrey Dahmer')">🕵️ True Crime Docs</span>
-            <span class="chip" onclick="sendQuickPrompt('Real life sports documentaries like FIFA and Formula 1')">🏆 Real Sports</span>
+            <span class="chip" onclick="sendQuickPrompt('Thai Boys Love series recommendations')">Thai BL Hits</span>
+            <span class="chip" onclick="sendQuickPrompt('Girls Love GL series and movies')">Best GL Picks</span>
+            <span class="chip" onclick="sendQuickPrompt('True crime documentaries like Jeffrey Dahmer')">True Crime Docs</span>
+            <span class="chip" onclick="sendQuickPrompt('Real life sports documentaries like FIFA and Formula 1')">Real Sports</span>
         </div>
         <div class="chat-footer">
             <input type="text" id="chatInput" placeholder="Ask a movie question, country, plot, or mood..." autocomplete="off">
@@ -1130,15 +1091,13 @@ html[data-theme="light"] .cast-chip { background: rgba(255, 255, 255, 0.85); }
         <img src="nova.png" alt="Nova" onerror="this.src='CineMind-Logo.jpg'">
     </div>
 </div>
-
 <script>
 const TMDB_API_KEY = "7c7e21b0fe58e5868e262c9bd6b8e7e9";
 const BACKEND_URL = "https://cinemind-live.onrender.com";
 
 const NO_POSTER = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='500' height='750'><rect width='100%' height='100%' fill='%23160f38'/><text x='50%' y='50%' fill='%2394a3b8' font-size='28' text-anchor='middle' font-family='sans-serif'>CineMind Poster</text></svg>`;
 
-// Unboxed Transparent Fallback Logo (NO CIRCLE)
-const FALLBACK_LOGO_SVG = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><text x='50%' y='56%' font-size='78' text-anchor='middle' dominant-baseline='middle'>🧠</text></svg>`;
+const FALLBACK_LOGO_SVG = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><text x='50%' y='56%' fill='%2300f2fe' font-size='32' font-weight='bold' text-anchor='middle' dominant-baseline='middle' font-family='sans-serif'>CM</text></svg>`;
 const LOGO_CANDIDATES = ['CineMind-Logo.jpg', 'CineMind-Logo.png', 'logo.png', 'logo.jpg', 'assets/CineMind-Logo.jpg', 'assets/logo.png', FALLBACK_LOGO_SVG];
 let logoTryIdx = 0;
 const mainBrandLogo = document.getElementById('mainBrandLogo');
@@ -1161,12 +1120,13 @@ function triggerTiltAnimation(el) {
 
 let currentMovieData = null;
 let currentUser = localStorage.getItem('cinemind_auth_user') || null;
+let currentAuthToken = localStorage.getItem('cinemind_auth_token') || "";
+let currentUserRole = localStorage.getItem('cinemind_auth_role') || "guest";
 let watchlist = [];
 let favorites = [];
 let watchedMovies = JSON.parse(localStorage.getItem(`cinemind_watched_${currentUser || 'guest'}`) || '[]');
 let selectedRegion = localStorage.getItem('cinemind_region') || "PH";
 
-// "Not Interested" Concept Elimination State
 let notInterestedState = JSON.parse(localStorage.getItem(`cinemind_not_interested_${currentUser || 'guest'}`) || '{"ids":[],"keywords":[],"genrePairs":[],"titles":[]}');
 
 function saveNotInterestedState() {
@@ -1210,7 +1170,6 @@ let analyticsChartInstance = null;
 let displayedMovieIds = new Set();
 let r18Cache = new Map();
 let originCountryCache = new Map();
-let movieKeywordCache = new Map();
 
 let infiniteMode = "rows";
 let nextRowIndex = 0;
@@ -1221,17 +1180,45 @@ let searchTotalPages = 1;
 let isFetchingMore = false;
 
 const PROVIDER_NAMES = {
-    "8": "Netflix", "337": "Disney+", "119": "Prime Video",
-    "1899": "Max / HBO", "350": "Apple TV+", "158": "Viu"
+    "": "All Streaming Apps",
+    "8": "Netflix",
+    "337": "Disney+",
+    "119": "Prime Video",
+    "1899": "Max / HBO",
+    "350": "Apple TV+",
+    "158": "Viu"
 };
 
 const COUNTRY_NAMES = {
-    KR: "South Korea 🇰🇷", PH: "Philippines 🇵🇭", US: "USA 🇺🇸",
-    JP: "Japan 🇯🇵", GB: "UK 🇬🇧", IN: "India 🇮🇳",
-    FR: "France 🇫🇷", ES: "Spain 🇪🇸", TH: "Thailand 🇹🇭",
-    CN: "China 🇨🇳", HK: "Hong Kong 🇭🇰", TW: "Taiwan 🇹🇼",
-    ID: "Indonesia 🇮🇩", DE: "Germany 🇩🇪", IT: "Italy 🇮🇹",
-    MX: "Mexico 🇲🇽", CA: "Canada 🇨🇦", AU: "Australia 🇦🇺", BR: "Brazil 🇧🇷"
+    "": "All Countries",
+    PH: "Philippines",
+    KR: "South Korea",
+    TH: "Thailand",
+    US: "USA",
+    JP: "Japan",
+    CN: "China",
+    TW: "Taiwan",
+    GB: "UK",
+    ES: "Spain",
+    FR: "France",
+    IN: "India",
+    HK: "Hong Kong",
+    ID: "Indonesia",
+    DE: "Germany",
+    IT: "Italy",
+    MX: "Mexico",
+    CA: "Canada",
+    AU: "Australia",
+    BR: "Brazil"
+};
+
+const REGION_NAMES = {
+    PH: "Philippines",
+    US: "USA",
+    KR: "South Korea",
+    JP: "Japan",
+    GB: "UK",
+    TH: "Thailand"
 };
 
 const LANG_TO_COUNTRY = {
@@ -1241,25 +1228,24 @@ const LANG_TO_COUNTRY = {
     pt: "BR", en: "US"
 };
 
-// Complete Genre Lookup Map (Movies + TV + Custom Categories)
 const ALL_GENRE_LABELS = {
     "28": "Action", "12": "Adventure", "16": "Animation", "35": "Comedy",
     "80": "Crime", "99": "Documentary", "18": "Drama", "10751": "Kids & Family",
     "14": "Fantasy", "36": "History", "27": "Horror", "10402": "Music",
     "9648": "Mystery", "10749": "Romance", "878": "Sci-Fi", "53": "Thriller",
     "10752": "War", "37": "Western", "10759": "Action & Adventure",
-    "10762": "Kids", "10765": "Sci-Fi & Fantasy", "10768": "War & Politics",
+    "10762": "Kids & Family", "10765": "Sci-Fi & Fantasy", "10768": "War & Politics",
     "BL": "Boys' Love (BL)", "GL": "Girls' Love (GL)", "ANIME": "Anime",
     "KIDS": "Kids & Family", "SPORTS": "Sports"
 };
 
 const GENRE_OPTIONS = {
-    "BL": "💙 Boys' Love (BL)",
-    "GL": "💖 Girls' Love (GL)",
-    "ANIME": "⛩️ Anime",
-    "KIDS": "🧸 Kids & Family",
-    "SPORTS": "🏆 Sports (Real-Life)",
-    "99": "🕵️ Documentaries",
+    "BL": "Boys' Love (BL)",
+    "GL": "Girls' Love (GL)",
+    "ANIME": "Anime",
+    "KIDS": "Kids & Family",
+    "SPORTS": "Sports",
+    "99": "Documentaries",
     "28": "Action",
     "12": "Adventure",
     "35": "Comedy",
@@ -1273,7 +1259,6 @@ const GENRE_OPTIONS = {
     "53": "Thriller"
 };
 
-// Curated High-Precision Lists for BL, GL, Real-Life Sports & True-Crime Documentaries
 const CURATED_SPECIAL_TITLES = {
     BL: [
         { title: "KinnPorsche", media_type: "tv", year: 2022, why: "Hit Thai Boys' Love action-romance drama." },
@@ -1310,7 +1295,7 @@ const CURATED_SPECIAL_TITLES = {
         { title: "The Last Dance", media_type: "tv", year: 2020, why: "Iconic NBA basketball championship series." },
         { title: "Beckham", media_type: "tv", year: 2023, why: "Real-life football legend David Beckham series." },
         { title: "WWE Raw", media_type: "tv", year: 1993, why: "Live-action professional wrestling flagship show." },
-        { title: "Vince McMahon: Mr. McMahon", media_type: "tv", year: 2024, why: "Real-life WWE wrestling history series." },
+        { title: "Mr. McMahon", media_type: "tv", year: 2024, why: "Real-life WWE wrestling history series." },
         { title: "Sprint", media_type: "tv", year: 2024, why: "Real-life track & field world championship series." },
         { title: "Quarterback", media_type: "tv", year: 2023, why: "Real-life NFL football series." },
         { title: "Rush", media_type: "movie", year: 2013, why: "Live-action Formula 1 racing biographical drama." },
@@ -1335,7 +1320,45 @@ const CURATED_SPECIAL_TITLES = {
     ]
 };
 
-// Build Netflix Multi-Column Genre Menu
+// ---------------- UNIFIED NETFLIX DROPDOWN CONTROLLERS ----------------
+function setupNetflixSingleDropdown(wrapId, btnId, menuId, labelId, optionsMap, getSelected, onSelect) {
+    const wrap = document.getElementById(wrapId);
+    const btn = document.getElementById(btnId);
+    const menu = document.getElementById(menuId);
+    const labelEl = document.getElementById(labelId);
+    if (!wrap || !btn || !menu || !labelEl) return;
+
+    function render() {
+        const currentVal = getSelected();
+        labelEl.textContent = optionsMap[currentVal] || Object.values(optionsMap)[0];
+        menu.innerHTML = '';
+        Object.entries(optionsMap).forEach(([code, name]) => {
+            const item = document.createElement('div');
+            item.className = 'netflix-genre-item' + (String(currentVal) === String(code) ? ' active' : '');
+            item.textContent = name;
+            item.onclick = (e) => {
+                e.stopPropagation();
+                onSelect(code);
+                menu.classList.remove('open');
+                wrap.classList.remove('open');
+                render();
+            };
+            menu.appendChild(item);
+        });
+    }
+
+    btn.onclick = (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('.netflix-genre-menu.open').forEach(m => {
+            if (m !== menu) m.classList.remove('open');
+        });
+        menu.classList.toggle('open');
+        wrap.classList.toggle('open', menu.classList.contains('open'));
+    };
+    render();
+    return render;
+}
+
 const netflixGenreBtn = document.getElementById('netflixGenreBtn');
 const netflixGenreMenu = document.getElementById('netflixGenreMenu');
 const netflixGenreLabel = document.getElementById('netflixGenreLabel');
@@ -1345,7 +1368,7 @@ function renderNetflixGenreDropdown() {
     netflixGenreMenu.innerHTML = '';
     const allItem = document.createElement('div');
     allItem.className = 'netflix-genre-item' + (selectedGenres.size === 0 ? ' active' : '');
-    allItem.innerHTML = `<i class="fa-solid fa-globe"></i> All Genres`;
+    allItem.textContent = 'All Genres';
     allItem.onclick = () => {
         selectedGenres.clear();
         syncGenrePillsUI();
@@ -1370,20 +1393,9 @@ function renderNetflixGenreDropdown() {
 }
 
 function syncGenrePillsUI() {
-    const row = document.getElementById('genreFilterRow');
-    if (row) {
-        row.querySelectorAll('.filter-pill').forEach(btn => {
-            const g = btn.getAttribute('data-genre');
-            if (!g) {
-                btn.classList.toggle('active', selectedGenres.size === 0);
-            } else {
-                btn.classList.toggle('active', selectedGenres.has(g));
-            }
-        });
-    }
     if (netflixGenreLabel) {
         if (selectedGenres.size === 0) {
-            netflixGenreLabel.textContent = "Browse Genres (Netflix Menu)";
+            netflixGenreLabel.textContent = "Browse Genres";
         } else {
             const names = [...selectedGenres].map(k => GENRE_OPTIONS[k] || ALL_GENRE_LABELS[k] || k);
             netflixGenreLabel.textContent = names.join(' + ');
@@ -1394,16 +1406,31 @@ function syncGenrePillsUI() {
 
 netflixGenreBtn.onclick = (e) => {
     e.stopPropagation();
+    document.querySelectorAll('.netflix-genre-menu.open').forEach(m => {
+        if (m !== netflixGenreMenu) m.classList.remove('open');
+    });
     netflixGenreMenu.classList.toggle('open');
 };
-document.addEventListener('click', (e) => {
-    if (!document.getElementById('netflixGenreDropdownWrap').contains(e.target)) {
-        netflixGenreMenu.classList.remove('open');
-    }
+
+setupNetflixSingleDropdown('providerDropdownWrap', 'providerDropdownBtn', 'providerDropdownMenu', 'providerDropdownLabel',
+    PROVIDER_NAMES, () => selectedProvider, (val) => { selectedProvider = val; initEndlessNetflixHome(); });
+
+setupNetflixSingleDropdown('countryDropdownWrap', 'countryDropdownBtn', 'countryDropdownMenu', 'countryDropdownLabel',
+    COUNTRY_NAMES, () => selectedCountry, (val) => { selectedCountry = val; initEndlessNetflixHome(); });
+
+setupNetflixSingleDropdown('regionDropdownWrap', 'regionDropdownBtn', 'regionDropdownMenu', 'regionDropdownLabel',
+    REGION_NAMES, () => selectedRegion, (val) => {
+        selectedRegion = val;
+        localStorage.setItem('cinemind_region', selectedRegion);
+        initEndlessNetflixHome();
+    });
+
+document.addEventListener('click', () => {
+    document.querySelectorAll('.netflix-genre-menu.open').forEach(m => m.classList.remove('open'));
 });
 
 function resolveMovieOriginCountry(movie) {
-    if (!movie) return "USA 🇺🇸";
+    if (!movie) return "USA";
     const key = `${movie.media_type || 'movie'}_${movie.id}`;
     if (originCountryCache.has(key)) return originCountryCache.get(key);
 
@@ -1436,13 +1463,18 @@ function resolveMovieOriginCountry(movie) {
         const code = LANG_TO_COUNTRY[lang];
         return COUNTRY_NAMES[code] || code;
     }
-    return "Global 🌍";
+    return "Global";
 }
 
 function getExactGenreNames(movie) {
     if (!movie) return "Cinema";
     const names = [];
     if (movie._customGenreBadge) names.push(movie._customGenreBadge);
+    if (Array.isArray(movie.exact_genres) && movie.exact_genres.length) {
+        movie.exact_genres.forEach(g => {
+            if (g && !names.includes(g)) names.push(g);
+        });
+    }
     if (Array.isArray(movie.genres) && movie.genres.length) {
         movie.genres.forEach(g => {
             if (g && g.name && !names.includes(g.name)) names.push(g.name);
@@ -1461,10 +1493,9 @@ function getExactGenreNames(movie) {
         if (idx >= 0) names[idx] = "Anime";
         else if (!names.includes("Anime")) names.unshift("Anime");
     }
-    return names.length ? names.slice(0, 3).join(" • ") : "Drama • Cinema";
+    return names.length ? names.slice(0, 4).join(" • ") : "Drama • Cinema";
 }
 
-// Check if movie is Animated / Cartoon (Used to keep Sports & Documentaries strictly live-action)
 function isAnimatedOrCartoon(item) {
     if (!item) return false;
     const gids = (item.genre_ids || (item.genres || []).map(g => g.id)).map(Number);
@@ -1473,7 +1504,6 @@ function isAnimatedOrCartoon(item) {
     return /\b(anime|animated|cartoon|pixar|dreamworks|studio ghibli|looney tunes|spongebob)\b/i.test(text);
 }
 
-// Check if movie is eliminated by "Not Interested" Concept Filter
 function isEliminatedByNotInterested(movie) {
     if (!movie) return false;
     const mid = Number(movie.id);
@@ -1502,7 +1532,6 @@ function isEliminatedByNotInterested(movie) {
     return false;
 }
 
-// Mark a Movie as "Not Interested" & Eliminate Same-Concept Movies
 async function markMovieNotInterested(movie, cardEl = null) {
     if (!movie || !movie.id) return;
     const mid = Number(movie.id);
@@ -1518,7 +1547,6 @@ async function markMovieNotInterested(movie, cardEl = null) {
         if (!notInterestedState.genrePairs.includes(pairKey)) notInterestedState.genrePairs.push(pairKey);
     }
 
-    // Extract keywords from overview & TMDB keywords API
     const stopWords = new Set(["with", "from", "that", "this", "their", "they", "have", "were", "when", "where", "what", "into", "after", "before", "about", "movie", "series", "film", "life", "world", "young", "find", "finds", "must"]);
     const overviewWords = (movie.overview || "").toLowerCase().match(/\b[a-z]{5,14}\b/g) || [];
     overviewWords.filter(w => !stopWords.has(w)).slice(0, 5).forEach(w => {
@@ -1535,7 +1563,18 @@ async function markMovieNotInterested(movie, cardEl = null) {
 
     saveNotInterestedState();
 
-    // Close modal if open and remove matching concept cards from DOM
+    if (currentUser) {
+        fetch(`${BACKEND_URL}/api/user/not_interested`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username: currentUser,
+                movie: { id: mid, title: movie.title || movie.name, vote_average: movie.vote_average || 0 },
+                keywords: (notInterestedState.keywords || []).slice(-10)
+            })
+        }).catch(() => {});
+    }
+
     document.getElementById('movieModal').classList.remove('active');
     if (cardEl) cardEl.remove();
 
@@ -1560,30 +1599,30 @@ async function markMovieNotInterested(movie, cardEl = null) {
 }
 
 const COUNTRY_QUERY_KEYWORDS = {
-    "philippines": { code: "PH", lang: "tl", label: "Philippines 🇵🇭", preferredGenres: [18, 10749, 35, 27, 53] },
-    "philippine":  { code: "PH", lang: "tl", label: "Philippines 🇵🇭", preferredGenres: [18, 10749, 35, 27, 53] },
-    "filipino":    { code: "PH", lang: "tl", label: "Philippines 🇵🇭", preferredGenres: [18, 10749, 35, 27, 53] },
-    "pinoy":       { code: "PH", lang: "tl", label: "Philippines 🇵🇭", preferredGenres: [18, 10749, 35] },
-    "tagalog":     { code: "PH", lang: "tl", label: "Philippines 🇵🇭", preferredGenres: [18, 10749, 35] },
-    "korea":       { code: "KR", lang: "ko", label: "South Korea 🇰🇷", preferredGenres: [18, 10749, 53, 35, 28] },
-    "korean":      { code: "KR", lang: "ko", label: "South Korea 🇰🇷", preferredGenres: [18, 10749, 53, 35, 28] },
-    "kdrama":      { code: "KR", lang: "ko", label: "South Korea 🇰🇷", preferredGenres: [18, 10749, 35] },
-    "k-drama":     { code: "KR", lang: "ko", label: "South Korea 🇰🇷", preferredGenres: [18, 10749, 35] },
-    "japan":       { code: "JP", lang: "ja", label: "Japan 🇯🇵", preferredGenres: [16, 14, 27, 878, 18] },
-    "japanese":    { code: "JP", lang: "ja", label: "Japan 🇯🇵", preferredGenres: [16, 14, 27, 878, 18] },
-    "thailand":    { code: "TH", lang: "th", label: "Thailand 🇹🇭", preferredGenres: [27, 10749, 35, 28, 18] },
-    "thai":        { code: "TH", lang: "th", label: "Thailand 🇹🇭", preferredGenres: [27, 10749, 35, 28, 18] },
-    "spain":       { code: "ES", lang: "es", label: "Spain 🇪🇸", preferredGenres: [53, 80, 18] },
-    "spanish":     { code: "ES", lang: "es", label: "Spain 🇪🇸", preferredGenres: [53, 80, 18] },
-    "france":      { code: "FR", lang: "fr", label: "France 🇫🇷", preferredGenres: [18, 10749, 35] },
-    "french":      { code: "FR", lang: "fr", label: "France 🇫🇷", preferredGenres: [18, 10749, 35] },
-    "india":       { code: "IN", lang: "hi", label: "India 🇮🇳", preferredGenres: [28, 18, 10749, 35] },
-    "indian":      { code: "IN", lang: "hi", label: "India 🇮🇳", preferredGenres: [28, 18, 10749, 35] },
-    "bollywood":   { code: "IN", lang: "hi", label: "India 🇮🇳", preferredGenres: [28, 18, 10749] },
-    "uk":          { code: "GB", lang: "en", label: "UK 🇬🇧", preferredGenres: [18, 80, 9648] },
-    "british":     { code: "GB", lang: "en", label: "UK 🇬🇧", preferredGenres: [18, 80, 9648] },
-    "usa":         { code: "US", lang: "en", label: "USA 🇺🇸", preferredGenres: [28, 878, 35, 18] },
-    "american":    { code: "US", lang: "en", label: "USA 🇺🇸", preferredGenres: [28, 878, 35, 18] }
+    "philippines": { code: "PH", lang: "tl", label: "Philippines", preferredGenres: [18, 10749, 35, 27, 53] },
+    "philippine":  { code: "PH", lang: "tl", label: "Philippines", preferredGenres: [18, 10749, 35, 27, 53] },
+    "filipino":    { code: "PH", lang: "tl", label: "Philippines", preferredGenres: [18, 10749, 35, 27, 53] },
+    "pinoy":       { code: "PH", lang: "tl", label: "Philippines", preferredGenres: [18, 10749, 35] },
+    "tagalog":     { code: "PH", lang: "tl", label: "Philippines", preferredGenres: [18, 10749, 35] },
+    "korea":       { code: "KR", lang: "ko", label: "South Korea", preferredGenres: [18, 10749, 53, 35, 28] },
+    "korean":      { code: "KR", lang: "ko", label: "South Korea", preferredGenres: [18, 10749, 53, 35, 28] },
+    "kdrama":      { code: "KR", lang: "ko", label: "South Korea", preferredGenres: [18, 10749, 35] },
+    "k-drama":     { code: "KR", lang: "ko", label: "South Korea", preferredGenres: [18, 10749, 35] },
+    "japan":       { code: "JP", lang: "ja", label: "Japan", preferredGenres: [16, 14, 27, 878, 18] },
+    "japanese":    { code: "JP", lang: "ja", label: "Japan", preferredGenres: [16, 14, 27, 878, 18] },
+    "thailand":    { code: "TH", lang: "th", label: "Thailand", preferredGenres: [27, 10749, 35, 28, 18] },
+    "thai":        { code: "TH", lang: "th", label: "Thailand", preferredGenres: [27, 10749, 35, 28, 18] },
+    "spain":       { code: "ES", lang: "es", label: "Spain", preferredGenres: [53, 80, 18] },
+    "spanish":     { code: "ES", lang: "es", label: "Spain", preferredGenres: [53, 80, 18] },
+    "france":      { code: "FR", lang: "fr", label: "France", preferredGenres: [18, 10749, 35] },
+    "french":      { code: "FR", lang: "fr", label: "France", preferredGenres: [18, 10749, 35] },
+    "india":       { code: "IN", lang: "hi", label: "India", preferredGenres: [28, 18, 10749, 35] },
+    "indian":      { code: "IN", lang: "hi", label: "India", preferredGenres: [28, 18, 10749, 35] },
+    "bollywood":   { code: "IN", lang: "hi", label: "India", preferredGenres: [28, 18, 10749] },
+    "uk":          { code: "GB", lang: "en", label: "UK", preferredGenres: [18, 80, 9648] },
+    "british":     { code: "GB", lang: "en", label: "UK", preferredGenres: [18, 80, 9648] },
+    "usa":         { code: "US", lang: "en", label: "USA", preferredGenres: [28, 878, 35, 18] },
+    "american":    { code: "US", lang: "en", label: "USA", preferredGenres: [28, 878, 35, 18] }
 };
 
 function detectCountryInQuery(text = "") {
@@ -1621,11 +1660,10 @@ function detectGenresInQuery(text = "") {
 
 const MOVIE_TO_TV_GENRE = {
     "28": "10759", "12": "10759", "16": "16", "35": "35", "80": "80",
-    "99": "99", "10751": "10762,10751", "18": "18", "14": "10765",
+    "99": "99", "10751": "10762|10751", "18": "18", "14": "10765",
     "27": "9648", "9648": "9648", "10749": "18", "878": "10765", "53": "9648"
 };
 
-// ---------------- STRICT PORNOGRAPHIC & EROTIC FILM BLOCKER ----------------
 const PORN_BLOCK_WORDS = [
     "porn", "porno", "pornographic", "xxx", "erotic", "erotica", "hentai", "jav",
     "av idol", "sex tape", "playboy", "penthouse", "nude", "nudity", "stripper",
@@ -1769,33 +1807,6 @@ async function verifyCardMetadataAsync(movie, cardEl, badgeContainerEl, countryB
             detectedR18 = true;
         }
 
-        if (mType === 'movie' && d.release_dates && d.release_dates.results) {
-            for (const cEntry of d.release_dates.results) {
-                const iso = (cEntry.iso_3166_1 || '').toUpperCase();
-                if (!['US', 'PH'].includes(iso)) continue;
-                for (const rd of (cEntry.release_dates || [])) {
-                    const cert = (rd.certification || '').toUpperCase().trim();
-                    if (['NC-17', 'X'].includes(cert)) {
-                        r18Cache.set(key, "BLOCKED_PORN");
-                        if (cardEl) cardEl.remove();
-                        return;
-                    }
-                    if ((iso === 'PH' && ['R-18', 'R18'].includes(cert)) || (iso === 'US' && cert === 'R' && isGenuineR18(d))) {
-                        detectedR18 = true;
-                    }
-                }
-            }
-        } else if (mType === 'tv' && d.content_ratings && d.content_ratings.results) {
-            for (const cr of d.content_ratings.results) {
-                const iso = (cr.iso_3166_1 || '').toUpperCase();
-                if (!['US', 'PH', 'KR', 'TH'].includes(iso)) continue;
-                const rating = (cr.rating || '').toUpperCase().trim();
-                if (['TV-MA', 'R-18', 'R18', '19'].includes(rating)) {
-                    detectedR18 = true;
-                }
-            }
-        }
-
         r18Cache.set(key, detectedR18);
         movie._isR18 = detectedR18;
 
@@ -1805,7 +1816,6 @@ async function verifyCardMetadataAsync(movie, cardEl, badgeContainerEl, countryB
     } catch (e) {}
 }
 
-// ---------------- CLIENT-SIDE AI + TMDB SYNOPSIS PLOT ASSIST ----------------
 async function clientSidePlotAssist(userQuery) {
     const guesses = [];
     try {
@@ -1838,7 +1848,6 @@ async function clientSidePlotAssist(userQuery) {
     return guesses;
 }
 
-// Light / Dark Theme Toggle
 const savedTheme = localStorage.getItem('cinemind_theme') || 'dark';
 document.documentElement.setAttribute('data-theme', savedTheme);
 function updateThemeIcon() {
@@ -1857,21 +1866,21 @@ document.getElementById('themeToggleBtn').onclick = () => {
 };
 
 const ENDLESS_ROW_CATALOG = [
-    { title: "🔥 Blockbuster Movies Trending", media: "movie", path: "/discover/movie", params: "sort_by=popularity.desc&page=1" },
-    { title: "📺 Binge-Worthy TV Series & K-Dramas", media: "tv", path: "/discover/tv", params: "sort_by=popularity.desc&page=1" },
-    { title: "💙 Trending Boys' Love (BL) Series & Films", media: "tv", specialCategory: "BL" },
-    { title: "💖 Trending Girls' Love (GL) Series & Films", media: "tv", specialCategory: "GL" },
-    { title: "⛩️ Visionary Anime Series & Films (JP / KR / CN)", media: "tv", specialCategory: "ANIME" },
-    { title: "🧸 Kids, Family & Animated Adventures", media: "movie", specialCategory: "KIDS" },
-    { title: "🏆 Real-Life Sports Action (FIFA, F1, WWE & Legends)", media: "tv", specialCategory: "SPORTS" },
-    { title: "🕵️ True-Crime & Gripping Documentaries", media: "tv", specialCategory: "DOC" },
-    { title: "🇵🇭 Hit Filipino Dramas & Movies", media: "movie", path: "/discover/movie", params: "with_origin_country=PH&sort_by=popularity.desc&page=1" },
-    { title: "🇹🇭 Trending Thai Cinema & Series", media: "tv", path: "/discover/tv", params: "with_origin_country=TH&sort_by=popularity.desc&page=1" },
-    { title: "🧠 Mind-Bending Sci-Fi & Portals", media: "movie", path: "/discover/movie", params: "with_genres=878&sort_by=popularity.desc&page=1" },
-    { title: "🇰🇷 Hit Korean Dramas & Series", media: "tv", path: "/discover/tv", params: "with_origin_country=KR&sort_by=popularity.desc&page=1" },
-    { title: "💥 High-Octane Action Thrillers", media: "movie", path: "/discover/movie", params: "with_genres=28,53&sort_by=popularity.desc&page=1" },
-    { title: "💕 Heartfelt & Emotional Romances", media: "movie", path: "/discover/movie", params: "with_genres=10749&sort_by=popularity.desc&page=1" },
-    { title: "👻 Spine-Chilling Supernatural Horror", media: "movie", path: "/discover/movie", params: "with_genres=27&sort_by=popularity.desc&page=1" }
+    { title: "Blockbuster Movies Trending", media: "movie", path: "/discover/movie", params: "sort_by=popularity.desc&page=1" },
+    { title: "Binge-Worthy TV Series & K-Dramas", media: "tv", path: "/discover/tv", params: "sort_by=popularity.desc&page=1" },
+    { title: "Trending Boys' Love (BL) Series & Films", media: "tv", specialCategory: "BL" },
+    { title: "Trending Girls' Love (GL) Series & Films", media: "tv", specialCategory: "GL" },
+    { title: "Visionary Anime Series & Films", media: "tv", specialCategory: "ANIME" },
+    { title: "Kids & Family Adventures", media: "movie", specialCategory: "KIDS" },
+    { title: "Real-Life Sports Action (FIFA, F1, WWE & Legends)", media: "tv", specialCategory: "SPORTS" },
+    { title: "True-Crime & Gripping Documentaries", media: "tv", specialCategory: "DOC" },
+    { title: "Hit Filipino Dramas & Movies", media: "movie", path: "/discover/movie", params: "with_origin_country=PH&sort_by=popularity.desc&page=1" },
+    { title: "Trending Thai Cinema & Series", media: "tv", path: "/discover/tv", params: "with_origin_country=TH&sort_by=popularity.desc&page=1" },
+    { title: "Mind-Bending Sci-Fi & Portals", media: "movie", path: "/discover/movie", params: "with_genres=878&sort_by=popularity.desc&page=1" },
+    { title: "Hit Korean Dramas & Series", media: "tv", path: "/discover/tv", params: "with_origin_country=KR&sort_by=popularity.desc&page=1" },
+    { title: "High-Octane Action Thrillers", media: "movie", path: "/discover/movie", params: "with_genres=28,53&sort_by=popularity.desc&page=1" },
+    { title: "Heartfelt & Emotional Romances", media: "movie", path: "/discover/movie", params: "with_genres=10749&sort_by=popularity.desc&page=1" },
+    { title: "Spine-Chilling Supernatural Horror", media: "movie", path: "/discover/movie", params: "with_genres=27&sort_by=popularity.desc&page=1" }
 ];
 
 let userGenres = JSON.parse(localStorage.getItem('cinemind_genres') || '[]');
@@ -1915,29 +1924,6 @@ const filterPanel = document.getElementById('filterPanel');
 const heroBanner = document.getElementById('heroBanner');
 const navItems = document.querySelectorAll('.nav-item');
 
-const providerDropdown = document.getElementById('providerDropdown');
-const countryDropdown = document.getElementById('countryDropdown');
-const regionDropdown = document.getElementById('regionDropdown');
-
-if (regionDropdown) regionDropdown.value = selectedRegion;
-
-providerDropdown.onchange = (e) => {
-    selectedProvider = e.target.value;
-    initEndlessNetflixHome();
-};
-
-countryDropdown.onchange = (e) => {
-    selectedCountry = e.target.value;
-    initEndlessNetflixHome();
-};
-
-regionDropdown.onchange = (e) => {
-    selectedRegion = e.target.value;
-    localStorage.setItem('cinemind_region', selectedRegion);
-    initEndlessNetflixHome();
-};
-
-// ---------------- SLANTED RANDOM + RECENT HERO BANNER SLIDESHOW ----------------
 async function initHeroBannerSlideshow() {
     const slideshowContainer = document.getElementById('heroSlideshow');
     if (!slideshowContainer) return;
@@ -2027,7 +2013,7 @@ function saveNovaMemory() {
 
 function renderChatHistoryInto(container) {
     if (!container) return;
-    container.innerHTML = `<div class="chat-bubble ai-bubble">Hi ${escapeHTML(currentUser || 'Guest')}! 👽 I'm Nova. Ask me about Boys' Love (BL), Girls' Love (GL), real-life sports (FIFA, WWE, F1), true-crime documentaries like Jeffrey Dahmer, anime, or any movie plot!</div>`;
+    container.innerHTML = `<div class="chat-bubble ai-bubble">Hi ${escapeHTML(currentUser || 'Guest')}! I'm Nova. Ask me about Boys' Love (BL), Girls' Love (GL), real-life sports (FIFA, WWE, F1), true-crime documentaries like Jeffrey Dahmer, anime, or any movie plot!</div>`;
     conversationHistory.forEach(turn => {
         if (!turn || !turn.content) return;
         const div = document.createElement('div');
@@ -2095,6 +2081,9 @@ function updateProfileModalView() {
     const guestInputs = document.getElementById('guestAuthInputs');
     const guestBtns = document.getElementById('guestAuthButtons');
     const loggedInBtns = document.getElementById('loggedInActionButtons');
+    const roleBadge = document.getElementById('loggedInRoleBadge');
+    const adminBtn = document.getElementById('openAdminAuditBtn');
+    const adminBox = document.getElementById('adminAuditLogContainer');
 
     if (currentUser) {
         heading.innerText = "My CineMind Account";
@@ -2109,6 +2098,35 @@ function updateProfileModalView() {
         document.getElementById('accWatchlistCount').innerText = watchlist.length;
         document.getElementById('accFavoritesCount').innerText = favorites.length;
         document.getElementById('accWatchedCount').innerText = watchedMovies.length;
+
+        const isAdmin = currentUserRole === 'admin';
+        if (roleBadge) {
+            roleBadge.innerHTML = isAdmin
+                ? `<i class="fa-solid fa-shield-halved"></i> Role: Administrator (RBAC Active)`
+                : `<i class="fa-solid fa-cloud-arrow-up"></i> Role: Standard User (Cloud Synced)`;
+        }
+        if (adminBtn && adminBox) {
+            adminBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+            adminBox.style.display = 'none';
+            adminBtn.onclick = async () => {
+                try {
+                    const res = await fetch(`${BACKEND_URL}/api/admin/audit-logs?limit=40`, {
+                        headers: { 'Authorization': `Bearer ${currentAuthToken}` }
+                    });
+                    const d = await res.json();
+                    adminBox.style.display = 'block';
+                    if (d.success && d.audit_logs) {
+                        adminBox.innerHTML = `<strong>Total Registered Users: ${d.total_registered_users}</strong><hr style="border-color:var(--glass-border);margin:6px 0;">` +
+                            d.audit_logs.map(l => `<div>[${escapeHTML(l.timestamp)}] <strong>${escapeHTML(l.event_type)}</strong> (@${escapeHTML(l.username)}) - ${escapeHTML(l.details || '')}</div>`).join('');
+                    } else {
+                        adminBox.innerHTML = `<span style="color:#f43f5e;">${escapeHTML(d.message || 'Administrator token required.')}</span>`;
+                    }
+                } catch (e) {
+                    adminBox.style.display = 'block';
+                    adminBox.innerHTML = `<span style="color:#f43f5e;">Error loading audit logs.</span>`;
+                }
+            };
+        }
 
         const gNames = userGenres.map(id => GENRE_OPTIONS[id] || ALL_GENRE_LABELS[id]).filter(Boolean);
         document.getElementById('accGenresList').innerText = gNames.length ? gNames.join(' • ') : "All Genres";
@@ -2138,7 +2156,7 @@ async function syncCloudLibrary() {
         return;
     }
     profileDisplayName.innerText = currentUser;
-    profileSubText.innerText = userGenres.length ? `Synced • ${userGenres.length} Genres` : "Cloud Synced";
+    profileSubText.innerText = currentUserRole === 'admin' ? "Admin • Cloud Synced" : (userGenres.length ? `Synced • ${userGenres.length} Genres` : "Cloud Synced");
     welcomeName.innerText = currentUser;
     renderChatHistoryInto(chatHistory);
     try {
@@ -2146,6 +2164,10 @@ async function syncCloudLibrary() {
         const data = await res.json();
         watchlist = await repairSavedPosters(data.watchlist || []);
         favorites = await repairSavedPosters(data.favorites || []);
+        if (data.role) {
+            currentUserRole = data.role;
+            localStorage.setItem('cinemind_auth_role', currentUserRole);
+        }
         if (data.genres && data.genres.length >= 3 && userGenres.length === 0) {
             userGenres = data.genres.map(String);
             localStorage.setItem('cinemind_genres', JSON.stringify(userGenres));
@@ -2219,7 +2241,11 @@ document.getElementById('loginBtn').onclick = async () => {
         const data = await res.json();
         if(data.success) {
             currentUser = data.username;
+            currentAuthToken = data.token || "";
+            currentUserRole = data.role || "user";
             localStorage.setItem('cinemind_auth_user', currentUser);
+            localStorage.setItem('cinemind_auth_token', currentAuthToken);
+            localStorage.setItem('cinemind_auth_role', currentUserRole);
             if (signupGenres.size >= 3) userGenres = [...signupGenres];
             else if (data.genres && data.genres.length) userGenres = data.genres.map(String);
             localStorage.setItem(`cinemind_genres_${currentUser}`, JSON.stringify(userGenres));
@@ -2247,7 +2273,11 @@ document.getElementById('signupBtn').onclick = async () => {
             localStorage.setItem('cinemind_genres', JSON.stringify(userGenres));
             localStorage.setItem(`cinemind_genres_${u}`, JSON.stringify(userGenres));
             currentUser = u;
+            currentAuthToken = data.token || "";
+            currentUserRole = data.role || "user";
             localStorage.setItem('cinemind_auth_user', currentUser);
+            localStorage.setItem('cinemind_auth_token', currentAuthToken);
+            localStorage.setItem('cinemind_auth_role', currentUserRole);
             await syncCloudLibrary();
             profileModal.classList.remove('active');
             initEndlessNetflixHome();
@@ -2258,7 +2288,11 @@ document.getElementById('signupBtn').onclick = async () => {
 
 logoutBtn.onclick = () => {
     currentUser = null;
+    currentAuthToken = "";
+    currentUserRole = "guest";
     localStorage.removeItem('cinemind_auth_user');
+    localStorage.removeItem('cinemind_auth_token');
+    localStorage.removeItem('cinemind_auth_role');
     userGenres = [];
     signupGenres.clear();
     localStorage.removeItem('cinemind_genres');
@@ -2289,7 +2323,7 @@ function createMovieCard(movie, isAI = false, searchContext = "", rankNum = null
         <button type="button" class="card-not-interested-btn" title="Not Interested (Hide similar concepts)"><i class="fa-solid fa-ban"></i></button>
         <div class="badges-container">
             ${r18HTML}
-            <span class="media-badge">${mType === 'tv' ? '📺 SERIES' : '🎬 MOVIE'}</span>
+            <span class="media-badge">${mType === 'tv' ? 'SERIES' : 'MOVIE'}</span>
         </div>
         <span class="origin-country-badge"><i class="fa-solid fa-location-dot" style="color:var(--secondary-glow);"></i> ${escapeHTML(originLabel)}</span>
     `;
@@ -2362,7 +2396,7 @@ function buildRowElement(titleHTML, movies, isAI = false, isTop10 = false) {
         if (!isSafeNonPorn(m)) continue;
         if (!m.poster_path && !(m.poster && m.poster.startsWith('http'))) continue;
         const uniqueKey = `${m.media_type || 'movie'}_${m.id}`;
-        if (displayedMovieIds.has(uniqueKey)) continue;
+        if (!isTop10 && displayedMovieIds.has(uniqueKey)) continue;
         displayedMovieIds.add(uniqueKey);
         valid.push(m);
     }
@@ -2385,13 +2419,11 @@ function buildRowElement(titleHTML, movies, isAI = false, isTop10 = false) {
     return sec;
 }
 
-// Fetch Specialized Category Streams (BL, GL, Real-Life Sports, Documentaries, Anime, Kids & Family)
 async function fetchSpecialCategoryItems(categoryKey, page = 1) {
     const results = [];
     const countryFilter = selectedCountry ? `&with_origin_country=${selectedCountry}` : "";
     const provFilter = selectedProvider ? `&with_watch_providers=${selectedProvider}&watch_region=${selectedRegion}` : "";
 
-    // 1. Seed Page 1 with Verified Curated Hits for BL, GL, SPORTS, DOC
     if (page === 1 && CURATED_SPECIAL_TITLES[categoryKey]) {
         const curatedList = CURATED_SPECIAL_TITLES[categoryKey];
         const fetchedCurated = await Promise.all(curatedList.map(async (c) => {
@@ -2405,7 +2437,7 @@ async function fetchSpecialCategoryItems(categoryKey, page = 1) {
                     hit.rationale = c.why;
                     if (categoryKey === 'BL') hit._customGenreBadge = "Boys' Love (BL)";
                     if (categoryKey === 'GL') hit._customGenreBadge = "Girls' Love (GL)";
-                    if (categoryKey === 'SPORTS') hit._customGenreBadge = "Real-Life Sports";
+                    if (categoryKey === 'SPORTS') hit._customGenreBadge = "Sports";
                     if (categoryKey === 'DOC') hit._customGenreBadge = "Documentary";
                     return hit;
                 }
@@ -2415,7 +2447,6 @@ async function fetchSpecialCategoryItems(categoryKey, page = 1) {
         fetchedCurated.filter(Boolean).forEach(x => results.push(x));
     }
 
-    // 2. Discover API Queries tailored to each exact category
     try {
         if (categoryKey === "BL") {
             const originParam = selectedCountry ? `with_origin_country=${selectedCountry}` : `with_origin_country=TH|KR|JP|TW|PH`;
@@ -2433,15 +2464,13 @@ async function fetchSpecialCategoryItems(categoryKey, page = 1) {
             (tvRes.results || []).forEach(t => results.push({ ...t, media_type: 'tv', _customGenreBadge: "Girls' Love (GL)", rationale: "Girls' Love (GL) drama series." }));
             (movRes.results || []).forEach(m => results.push({ ...m, media_type: 'movie', _customGenreBadge: "Girls' Love (GL)", rationale: "Girls' Love (GL) cinema." }));
         } else if (categoryKey === "SPORTS") {
-            // Strictly Real-Life Sports (NO Animation genre 16, NO cartoons)
             const [movRes, tvRes] = await Promise.all([
                 selectedMedia === 'tv' ? { results: [] } : fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=6075|13042|6513|1721&without_genres=16,14&sort_by=popularity.desc&page=${page}${countryFilter}${provFilter}`).then(r => r.json()),
                 selectedMedia === 'movie' ? { results: [] } : fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=6075|13042|6513|1721&without_genres=16,10765&sort_by=popularity.desc&page=${page}${countryFilter}${provFilter}`).then(r => r.json())
             ]);
-            (movRes.results || []).filter(m => !isAnimatedOrCartoon(m)).forEach(m => results.push({ ...m, media_type: 'movie', _customGenreBadge: "Real-Life Sports", rationale: "Real-life sports film." }));
-            (tvRes.results || []).filter(t => !isAnimatedOrCartoon(t)).forEach(t => results.push({ ...t, media_type: 'tv', _customGenreBadge: "Real-Life Sports", rationale: "Real-life sports & championship series." }));
+            (movRes.results || []).filter(m => !isAnimatedOrCartoon(m)).forEach(m => results.push({ ...m, media_type: 'movie', _customGenreBadge: "Sports", rationale: "Real-life sports film." }));
+            (tvRes.results || []).filter(t => !isAnimatedOrCartoon(t)).forEach(t => results.push({ ...t, media_type: 'tv', _customGenreBadge: "Sports", rationale: "Real-life sports & championship series." }));
         } else if (categoryKey === "DOC" || categoryKey === "99") {
-            // Strictly Real-Life Documentaries & True-Crime Docuseries (NO Animation genre 16)
             const [tvRes, movRes] = await Promise.all([
                 selectedMedia === 'movie' ? { results: [] } : fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=99&without_genres=16,10762&sort_by=popularity.desc&page=${page}${countryFilter}${provFilter}`).then(r => r.json()),
                 selectedMedia === 'tv' ? { results: [] } : fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=99&without_genres=16,10751&sort_by=popularity.desc&page=${page}${countryFilter}${provFilter}`).then(r => r.json())
@@ -2449,7 +2478,6 @@ async function fetchSpecialCategoryItems(categoryKey, page = 1) {
             (tvRes.results || []).filter(t => !isAnimatedOrCartoon(t)).forEach(t => results.push({ ...t, media_type: 'tv', _customGenreBadge: "Documentary", rationale: "True-life documentary series." }));
             (movRes.results || []).filter(m => !isAnimatedOrCartoon(m)).forEach(m => results.push({ ...m, media_type: 'movie', _customGenreBadge: "Documentary", rationale: "Investigative & biographical documentary." }));
         } else if (categoryKey === "ANIME") {
-            // Strictly Japanese / Korean / Chinese Anime
             const originC = selectedCountry || "JP|KR|CN";
             const [tvRes, movRes] = await Promise.all([
                 selectedMedia === 'movie' ? { results: [] } : fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=16&with_origin_country=${originC}&sort_by=popularity.desc&page=${page}${provFilter}`).then(r => r.json()),
@@ -2458,12 +2486,11 @@ async function fetchSpecialCategoryItems(categoryKey, page = 1) {
             (tvRes.results || []).forEach(t => results.push({ ...t, media_type: 'tv', _customGenreBadge: "Anime", rationale: "Hit Anime series." }));
             (movRes.results || []).forEach(m => results.push({ ...m, media_type: 'movie', _customGenreBadge: "Anime", rationale: "Feature Anime film." }));
         } else if (categoryKey === "KIDS") {
-            // Kids, Family & Animated Movies (Pixar, Disney, DreamWorks, Family Adventures)
             const [movRes, tvRes] = await Promise.all([
                 selectedMedia === 'tv' ? { results: [] } : fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=10751|16&without_genres=27,53,80&sort_by=popularity.desc&page=${page}${countryFilter}${provFilter}`).then(r => r.json()),
                 selectedMedia === 'movie' ? { results: [] } : fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=10762|10751&without_genres=80,9648&sort_by=popularity.desc&page=${page}${countryFilter}${provFilter}`).then(r => r.json())
             ]);
-            (movRes.results || []).forEach(m => results.push({ ...m, media_type: 'movie', _customGenreBadge: "Kids & Family", rationale: "Kids, Family & Animated feature." }));
+            (movRes.results || []).forEach(m => results.push({ ...m, media_type: 'movie', _customGenreBadge: "Kids & Family", rationale: "Kids & Family feature." }));
             (tvRes.results || []).forEach(t => results.push({ ...t, media_type: 'tv', _customGenreBadge: "Kids & Family", rationale: "Kids & Family series." }));
         }
     } catch (e) {}
@@ -2476,7 +2503,7 @@ function getActiveFilterQueryParams(mediaType = "movie") {
     const standardGids = [...selectedGenres].filter(g => !["BL", "GL", "ANIME", "KIDS", "SPORTS"].includes(g));
     if (standardGids.length > 0) {
         const gArr = standardGids.map(gid => mediaType === "tv" ? (MOVIE_TO_TV_GENRE[gid] || gid) : gid);
-        q += `&with_genres=${[...new Set(gArr)].join(',')}`;
+        q += `&with_genres=${[...new Set(gArr)].join('|')}`;
         if (standardGids.includes("99")) {
             q += `&without_genres=16`;
         }
@@ -2488,14 +2515,13 @@ function getActiveFilterQueryParams(mediaType = "movie") {
     return q;
 }
 
-// ---------------- FAST ENDLESS NETFLIX ROWS ENGINE ----------------
+// ---------------- FAST PARALLEL ENDLESS NETFLIX ROWS ENGINE ----------------
 async function appendNextNetflixRowBatch(count = 3) {
     if (isFetchingMore || streamExhausted || currentView !== 'discover' || infiniteMode !== 'rows') return;
     isFetchingMore = true;
     infiniteSentinel.style.display = "flex";
-    infiniteSentinel.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Loading more galaxy titles...`;
+    infiniteSentinel.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Loading movies...`;
 
-    // Check if a Special Category Filter is active
     const specialActive = [...selectedGenres].find(g => ["BL", "GL", "ANIME", "KIDS", "SPORTS", "99"].includes(g));
     if (specialActive) {
         nextRowIndex++;
@@ -2508,7 +2534,7 @@ async function appendNextNetflixRowBatch(count = 3) {
             emptyBatchStreak = 0;
         } else {
             streamExhausted = true;
-            infiniteSentinel.innerHTML = `<i class="fa-solid fa-check-circle" style="color:#10b981;"></i> ✨ You've reached the end of the ${label} stream!`;
+            infiniteSentinel.innerHTML = `<span>There are no more movies to show.</span>`;
         }
         isFetchingMore = false;
         return;
@@ -2517,20 +2543,22 @@ async function appendNextNetflixRowBatch(count = 3) {
     const forceTV = selectedMedia === 'tv';
     const forceMovie = selectedMedia === 'movie';
 
-    let addedRowsCount = 0;
+    const tasks = [];
     for (let i = 0; i < count; i++) {
         const cycleIndex = nextRowIndex % ENDLESS_ROW_CATALOG.length;
         const pageOffset = Math.floor(nextRowIndex / ENDLESS_ROW_CATALOG.length) + 1;
         const template = ENDLESS_ROW_CATALOG[cycleIndex];
+        const rowIdxCopy = nextRowIndex + 1;
         nextRowIndex++;
 
         if (template.specialCategory && selectedGenres.size === 0) {
-            const specItems = await fetchSpecialCategoryItems(template.specialCategory, pageOffset);
-            const el = buildRowElement(`<i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> ${template.title}${pageOffset > 1 ? ` (Vol. ${pageOffset})` : ''}`, specItems, true);
-            if (el) {
-                mainContainer.appendChild(el);
-                addedRowsCount++;
-            }
+            tasks.push(
+                fetchSpecialCategoryItems(template.specialCategory, pageOffset).then(specItems => ({
+                    title: `${template.title}${pageOffset > 1 ? ` (Vol. ${pageOffset})` : ''}`,
+                    items: specItems,
+                    isAI: true
+                }))
+            );
             continue;
         }
 
@@ -2539,34 +2567,42 @@ async function appendNextNetflixRowBatch(count = 3) {
         const filterStr = getActiveFilterQueryParams(mType);
 
         let baseParams = selectedGenres.size > 0 || selectedCountry
-            ? `sort_by=popularity.desc&page=${nextRowIndex + 1}`
+            ? `sort_by=popularity.desc&page=${rowIdxCopy}`
             : (template.params || `sort_by=popularity.desc&page=${pageOffset}`);
         if (pageOffset > 1 && !(selectedGenres.size > 0 || selectedCountry)) {
             baseParams = baseParams.replace(/page=\d+/, `page=${pageOffset}`);
         }
 
         const url = `https://api.themoviedb.org/3${endpoint}?api_key=${TMDB_API_KEY}&${baseParams}${filterStr}`;
-        try {
-            const d = await fetch(url).then(r => r.json());
-            const list = (d.results || []).map(item => ({ ...item, media_type: mType }));
-            const genreNames = [...selectedGenres].map(g => GENRE_OPTIONS[g] || ALL_GENRE_LABELS[g]).filter(Boolean).join(' + ');
-            const rowLabel = (selectedGenres.size > 0 || selectedCountry)
-                ? `✨ ${genreNames || 'Filtered'} Stream (Page ${nextRowIndex})`
-                : `${template.title}${pageOffset > 1 ? ` (Vol. ${pageOffset})` : ''}`;
+        const genreNames = [...selectedGenres].map(g => GENRE_OPTIONS[g] || ALL_GENRE_LABELS[g]).filter(Boolean).join(' + ');
+        const rowLabel = (selectedGenres.size > 0 || selectedCountry)
+            ? `${genreNames || 'Filtered'} Stream (Page ${rowIdxCopy})`
+            : `${template.title}${pageOffset > 1 ? ` (Vol. ${pageOffset})` : ''}`;
 
-            const el = buildRowElement(`<i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> ${rowLabel}`, list);
-            if (el) {
-                mainContainer.appendChild(el);
-                addedRowsCount++;
-            }
-        } catch (e) {}
+        tasks.push(
+            fetch(url).then(r => r.json()).then(d => ({
+                title: rowLabel,
+                items: (d.results || []).map(item => ({ ...item, media_type: mType })),
+                isAI: false
+            })).catch(() => ({ title: rowLabel, items: [], isAI: false }))
+        );
     }
+
+    const batchResolved = await Promise.all(tasks);
+    let addedRowsCount = 0;
+    batchResolved.forEach(b => {
+        const el = buildRowElement(`<i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> ${b.title}`, b.items, b.isAI);
+        if (el) {
+            mainContainer.appendChild(el);
+            addedRowsCount++;
+        }
+    });
 
     if (addedRowsCount === 0) {
         emptyBatchStreak++;
-        if (emptyBatchStreak >= 2) {
+        if (emptyBatchStreak >= 1) {
             streamExhausted = true;
-            infiniteSentinel.innerHTML = `<i class="fa-solid fa-check-circle" style="color:#10b981;"></i> ✨ You've reached the end of the galaxy stream for this selection!`;
+            infiniteSentinel.innerHTML = `<span>There are no more movies to show.</span>`;
         }
     } else {
         emptyBatchStreak = 0;
@@ -2575,7 +2611,7 @@ async function appendNextNetflixRowBatch(count = 3) {
     isFetchingMore = false;
 }
 
-// ---------------- MASTER GALAXY HOME INITIALIZER ----------------
+// ---------------- MASTER GALAXY HOME INITIALIZER (FIXED TOP 10 PHILIPPINES) ----------------
 async function initEndlessNetflixHome() {
     if (currentView !== 'discover') return;
     infiniteMode = "rows";
@@ -2584,10 +2620,9 @@ async function initEndlessNetflixHome() {
     streamExhausted = false;
     displayedMovieIds.clear();
     infiniteSentinel.style.display = "flex";
-    infiniteSentinel.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Synchronizing Unique Galaxy Cinema & Series Streams...`;
+    infiniteSentinel.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Loading movies...`;
     mainContainer.innerHTML = '';
 
-    // Check if user selected BL, GL, SPORTS, DOC (99), ANIME, or KIDS
     const specialActive = [...selectedGenres].find(g => ["BL", "GL", "ANIME", "KIDS", "SPORTS", "99"].includes(g));
     if (specialActive) {
         const catKey = specialActive === "99" ? "DOC" : specialActive;
@@ -2597,9 +2632,9 @@ async function initEndlessNetflixHome() {
             fetchSpecialCategoryItems(catKey, 2)
         ]);
         mainContainer.innerHTML = '';
-        const topRow = buildRowElement(`<i class="fa-solid fa-trophy" style="color:#fbbf24;"></i> 🏆 Top 10 ${label} Today`, page1Items.slice(0, 12), true, true);
+        const topRow = buildRowElement(`<i class="fa-solid fa-trophy" style="color:#fbbf24;"></i> Top 10 ${label} Today`, page1Items.slice(0, 12), true, true);
         if (topRow) mainContainer.appendChild(topRow);
-        const featRow = buildRowElement(`<i class="fa-solid fa-flame" style="color:var(--primary-glow);"></i> ✨ Featured ${label} Catalog`, [...page1Items.slice(10), ...page2Items], true, false);
+        const featRow = buildRowElement(`<i class="fa-solid fa-flame" style="color:var(--primary-glow);"></i> Featured ${label} Catalog`, [...page1Items.slice(10), ...page2Items], true, false);
         if (featRow) mainContainer.appendChild(featRow);
         nextRowIndex = 2;
         return;
@@ -2609,52 +2644,19 @@ async function initEndlessNetflixHome() {
     const isMovieOnly = selectedMedia === 'movie';
     const appBadge = selectedProvider ? ` on ${PROVIDER_NAMES[selectedProvider]}` : "";
     const countryBadge = selectedCountry ? ` (${COUNTRY_NAMES[selectedCountry]})` : "";
+    const regionLabel = REGION_NAMES[selectedRegion] || selectedRegion;
     const activeGenreLabel = selectedGenres.size > 0
         ? ` • ${[...selectedGenres].map(g => GENRE_OPTIONS[g] || ALL_GENRE_LABELS[g]).filter(Boolean).join(' + ')}`
         : "";
 
     const specialRows = [];
 
-    if (watchedMovies.length > 0 && selectedGenres.size === 0 && !selectedCountry) {
-        const lastWatched = watchedMovies[0];
-        const lwType = lastWatched.media_type === 'tv' ? 'tv' : 'movie';
-        specialRows.push({
-            title: `<i class="fa-solid fa-robot" style="color: var(--primary-glow);"></i> 🤖 AI Recommended Because You Watched "${escapeHTML(lastWatched.title)}"`,
-            url: `https://api.themoviedb.org/3/${lwType}/${lastWatched.id}/recommendations?api_key=${TMDB_API_KEY}&page=1`,
-            mType: lwType,
-            isAI: true,
-            customRationale: `AI Recommended because you watched "${lastWatched.title}".`
-        });
-    }
-
-    if (selectedProvider || selectedGenres.size > 0 || selectedCountry) {
-        const pName = selectedProvider ? PROVIDER_NAMES[selectedProvider] : "Filtered Stream";
-        if (!isSeriesTab) {
-            specialRows.push({
-                title: `<i class="fa-solid fa-sliders" style="color: var(--secondary-glow);"></i> 🎯 Custom Filtered Movies (${pName}${activeGenreLabel}${countryBadge})`,
-                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams('movie')}&page=1`,
-                mType: 'movie',
-                isAI: true,
-                customRationale: `Matched to your active filter selection.`
-            });
-        }
-        if (!isMovieOnly) {
-            specialRows.push({
-                title: `<i class="fa-solid fa-tv" style="color: var(--primary-glow);"></i> 📺 Custom Filtered Series & Dramas (${pName}${activeGenreLabel}${countryBadge})`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams('tv')}&page=1`,
-                mType: 'tv',
-                isAI: true,
-                customRationale: `Series matched to your active filter selection.`
-            });
-        }
-    }
-
     if (!isSeriesTab) {
         const top10MovieUrl = (selectedProvider || selectedCountry || selectedGenres.size > 0)
-            ? `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams('movie')}&page=2`
-            : `https://api.themoviedb.org/3/trending/movie/day?api_key=${TMDB_API_KEY}`;
+            ? `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams('movie')}&page=1`
+            : `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&watch_region=${selectedRegion}&with_watch_monetization_types=flatrate&sort_by=popularity.desc&vote_count.gte=30&page=1`;
         specialRows.push({
-            title: `<i class="fa-solid fa-trophy" style="color: #fbbf24;"></i> 🏆 Top 10 Movies Today${appBadge}${activeGenreLabel}${countryBadge}`,
+            title: `<i class="fa-solid fa-trophy" style="color: #fbbf24;"></i> Top 10 Movies in ${regionLabel} Today${appBadge}${activeGenreLabel}${countryBadge}`,
             url: top10MovieUrl,
             mType: 'movie',
             isTop10: true
@@ -2662,13 +2664,25 @@ async function initEndlessNetflixHome() {
     }
     if (!isMovieOnly) {
         const top10TVUrl = (selectedProvider || selectedCountry || selectedGenres.size > 0)
-            ? `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams('tv')}&page=2`
-            : `https://api.themoviedb.org/3/trending/tv/day?api_key=${TMDB_API_KEY}`;
+            ? `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams('tv')}&page=1`
+            : `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&watch_region=${selectedRegion}&with_watch_monetization_types=flatrate&sort_by=popularity.desc&vote_count.gte=25&page=1`;
         specialRows.push({
-            title: `<i class="fa-solid fa-crown" style="color: var(--primary-glow);"></i> 🏆 Top 10 Series & Dramas Today${appBadge}${activeGenreLabel}${countryBadge}`,
+            title: `<i class="fa-solid fa-crown" style="color: var(--primary-glow);"></i> Top 10 Series in ${regionLabel} Today${appBadge}${activeGenreLabel}${countryBadge}`,
             url: top10TVUrl,
             mType: 'tv',
             isTop10: true
+        });
+    }
+
+    if (watchedMovies.length > 0 && selectedGenres.size === 0 && !selectedCountry) {
+        const lastWatched = watchedMovies[0];
+        const lwType = lastWatched.media_type === 'tv' ? 'tv' : 'movie';
+        specialRows.push({
+            title: `<i class="fa-solid fa-robot" style="color: var(--primary-glow);"></i> AI Recommended Because You Watched "${escapeHTML(lastWatched.title)}"`,
+            url: `https://api.themoviedb.org/3/${lwType}/${lastWatched.id}/recommendations?api_key=${TMDB_API_KEY}&page=1`,
+            mType: lwType,
+            isAI: true,
+            customRationale: `AI Recommended because you watched "${lastWatched.title}".`
         });
     }
 
@@ -2691,45 +2705,16 @@ async function initEndlessNetflixHome() {
     await appendNextNetflixRowBatch(3);
 }
 
-// Format & Genre Pill Click Handlers
-document.querySelectorAll('.filter-row').forEach(row => {
-    row.querySelectorAll('.filter-pill').forEach(pill => {
-        if (pill.id === 'resetDislikedBtn') return;
-        pill.onclick = (e) => {
-            const btn = e.currentTarget;
-
-            if (btn.hasAttribute('data-genre')) {
-                const gVal = btn.getAttribute('data-genre');
-                const isSpecial = ["BL", "GL", "ANIME", "KIDS", "SPORTS", "99"].includes(gVal);
-                if (!gVal) {
-                    selectedGenres.clear();
-                } else if (isSpecial) {
-                    if (selectedGenres.has(gVal)) selectedGenres.delete(gVal);
-                    else {
-                        selectedGenres.clear();
-                        selectedGenres.add(gVal);
-                    }
-                } else {
-                    ["BL", "GL", "ANIME", "KIDS", "SPORTS", "99"].forEach(sp => selectedGenres.delete(sp));
-                    if (selectedGenres.has(gVal)) selectedGenres.delete(gVal);
-                    else selectedGenres.add(gVal);
-                }
-                syncGenrePillsUI();
-                initEndlessNetflixHome();
-                return;
-            }
-
-            if (btn.hasAttribute('data-media')) {
-                row.querySelectorAll('.filter-pill[data-media]').forEach(p => p.classList.remove('active'));
-                btn.classList.add('active');
-                selectedMedia = btn.getAttribute('data-media');
-                initEndlessNetflixHome();
-            }
-        };
-    });
+document.querySelectorAll('#mediaFilterRow .filter-pill[data-media]').forEach(pill => {
+    pill.onclick = (e) => {
+        const btn = e.currentTarget;
+        document.querySelectorAll('#mediaFilterRow .filter-pill[data-media]').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        selectedMedia = btn.getAttribute('data-media');
+        initEndlessNetflixHome();
+    };
 });
 
-// ---------------- ENDLESS MULTI-SEARCH & COUNTRY+GENRE AI MATCHING ENGINE ----------------
 async function performSearch() {
     const query = searchInput.value.trim();
     if (currentView !== 'discover') {
@@ -2764,7 +2749,6 @@ async function performSearch() {
         let aiNote = "";
         let isAISearch = false;
 
-        // Instant detection for BL, GL, Real Sports, or Documentaries in Search Bar
         if (/\b(boys love|boy's love|bl series|thai bl|korean bl)\b/i.test(lowerQ)) {
             initialMovies = await fetchSpecialCategoryItems("BL", 1);
             aiNote = "Curated Boys' Love (BL) series and films.";
@@ -2896,7 +2880,7 @@ async function performSearch() {
             infiniteSentinel.style.display = "flex";
             infiniteSentinel.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Loading more matching titles...`;
         } else {
-            grid.innerHTML = `<p style="color: var(--text-muted);">No matching titles found for "${escapeHTML(query)}".</p>`;
+            grid.innerHTML = `<p style="color: var(--text-muted);">There are no more movies to show.</p>`;
             streamExhausted = true;
         }
         mainContainer.appendChild(grid);
@@ -2937,7 +2921,7 @@ async function appendMoreSearchResults() {
 
         if (added === 0) {
             streamExhausted = true;
-            infiniteSentinel.innerHTML = `<i class="fa-solid fa-check-circle" style="color:#10b981;"></i> ✨ You've reached the end of the search results!`;
+            infiniteSentinel.innerHTML = `<span>There are no more movies to show.</span>`;
         }
     } catch (e) {}
     isFetchingMore = false;
@@ -2954,7 +2938,6 @@ scrollObserver.observe(infiniteSentinel);
 searchSubmitBtn.onclick = performSearch;
 searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') performSearch(); });
 
-// ---------------- NAVIGATION ----------------
 navItems.forEach(item => {
     item.addEventListener('click', async () => {
         navItems.forEach(nav => nav.classList.remove('active'));
@@ -3005,7 +2988,7 @@ navItems.forEach(item => {
                         media_type: lwType,
                         rationale: `AI Recommended because you watched "${lw.title}".`
                     }));
-                    const simRow = buildRowElement(`<i class="fa-solid fa-robot" style="color:var(--primary-glow);"></i> 🤖 AI Picks Because You Watched "${escapeHTML(lw.title)}"`, simItems, true, false);
+                    const simRow = buildRowElement(`<i class="fa-solid fa-robot" style="color:var(--primary-glow);"></i> AI Picks Because You Watched "${escapeHTML(lw.title)}"`, simItems, true, false);
                     if (simRow) mainContainer.appendChild(simRow);
                 } catch (e) {}
             }
@@ -3023,7 +3006,6 @@ navItems.forEach(item => {
     });
 });
 
-// ---------------- ANALYTICS HUB ----------------
 async function renderDataAnalyticsDashboard() {
     let insights = {
         total_recommendations_viewed: watchedMovies.length,
@@ -3119,7 +3101,6 @@ async function renderDataAnalyticsDashboard() {
     });
 }
 
-// ---------------- ENLARGED NOVA AI HUB ----------------
 function renderEnlargedNovaView() {
     mainContainer.innerHTML = `
         <div class="nova-view-container" style="display:flex; flex-direction:column; gap:22px;">
@@ -3136,10 +3117,10 @@ function renderEnlargedNovaView() {
             <div class="nova-chat-box-large glass-panel" style="border-radius: 28px; padding: 26px; display: flex; flex-direction: column; gap: 18px; background: var(--panel-bg); border: 1px solid var(--glass-border);">
                 <div class="nova-history-large" id="novaEnlargedHistory" style="height: 290px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; background: var(--chat-history-bg); padding: 20px; border-radius: 20px; border: 1px solid var(--glass-border);"></div>
                 <div class="quick-chips">
-                    <span class="chip" onclick="sendEnlargedPrompt('Best Thai Boys Love BL dramas')">💙 "Best Thai BL Dramas"</span>
-                    <span class="chip" onclick="sendEnlargedPrompt('Top Girls Love GL series like GAP and The Secret of Us')">💖 "Top GL Series"</span>
-                    <span class="chip" onclick="sendEnlargedPrompt('Documentaries like Jeffrey Dahmer')">🕵️ "Docs like Jeffrey Dahmer"</span>
-                    <span class="chip" onclick="sendEnlargedPrompt('Real life sports shows like FIFA, WWE, and Formula 1')">🏆 "Real-Life Sports (FIFA/WWE)"</span>
+                    <span class="chip" onclick="sendEnlargedPrompt('Best Thai Boys Love BL dramas')">Best Thai BL Dramas</span>
+                    <span class="chip" onclick="sendEnlargedPrompt('Top Girls Love GL series like GAP and The Secret of Us')">Top GL Series</span>
+                    <span class="chip" onclick="sendEnlargedPrompt('Documentaries like Jeffrey Dahmer')">Docs like Jeffrey Dahmer</span>
+                    <span class="chip" onclick="sendEnlargedPrompt('Real life sports shows like FIFA, WWE, and Formula 1')">Real-Life Sports (FIFA/WWE)</span>
                 </div>
                 <div class="nova-input-row" style="display: flex; gap: 10px;">
                     <input type="text" id="novaEnlargedInput" placeholder="Ask a movie question, country, plot, or follow-up..." autocomplete="off" style="flex: 1; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 26px; padding: 14px 20px; outline: none; font-size: 0.95rem; color: var(--text-main);">
@@ -3172,7 +3153,7 @@ function renderEnlargedNovaView() {
     window.sendEnlargedPrompt = (p) => executeEnlargedChat(p);
 }
 
-// ---------------- MODAL DETAILS, EXACT GENRES, CAST/CHARACTERS/DIRECTOR/CREW, TRAILER & SIMILAR PICKS ----------------
+// ---------------- MODAL DETAILS, EXACT GENRES & CAST/CREW WITH PICTURES ----------------
 async function loadModalSimilarRecommendations(id, mType, title) {
     const box = document.getElementById('modalSimilarBox');
     const strip = document.getElementById('modalSimilarStrip');
@@ -3199,13 +3180,18 @@ async function loadModalSimilarRecommendations(id, mType, title) {
 }
 
 function renderModalCreditsAndGenres(item, originMovie) {
-    // 1. Render Exact Genres
     const exactGenresEl = document.getElementById('modalExactGenres');
     const genreList = [];
     if (originMovie && originMovie._customGenreBadge) genreList.push(originMovie._customGenreBadge);
     if (Array.isArray(item.genres)) {
         item.genres.forEach(g => {
             if (g && g.name && !genreList.includes(g.name)) genreList.push(g.name);
+        });
+    }
+    if (Array.isArray(item.genre_ids)) {
+        item.genre_ids.forEach(gid => {
+            const lbl = ALL_GENRE_LABELS[String(gid)];
+            if (lbl && !genreList.includes(lbl)) genreList.push(lbl);
         });
     }
     const lang = (item.original_language || "").toLowerCase();
@@ -3217,48 +3203,67 @@ function renderModalCreditsAndGenres(item, originMovie) {
     exactGenresEl.innerHTML = `<span style="font-size:0.8rem; font-weight:700; color:var(--secondary-glow); margin-right:4px;"><i class="fa-solid fa-tags"></i> Exact Genres:</span>` +
         genreList.map(g => `<span class="exact-genre-pill">${escapeHTML(g)}</span>`).join('');
 
-    // 2. Render Director, Writers, Crew & Cast with Character Names
+    const avatarFallback = (name) => `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100%' height='100%' fill='%23221352'/><text x='50%' y='54%' fill='%2300f2fe' font-size='38' font-weight='bold' text-anchor='middle' dominant-baseline='middle' font-family='sans-serif'>${encodeURIComponent((name || 'C').charAt(0).toUpperCase())}</text></svg>`;
+
     const credits = item.credits || {};
-    const cast = (credits.cast || []).slice(0, 12);
+    const cast = (credits.cast || []).slice(0, 20);
     const crew = credits.crew || [];
 
-    const directors = crew.filter(c => c.job === 'Director').map(c => c.name);
-    if (directors.length === 0 && Array.isArray(item.created_by) && item.created_by.length) {
-        item.created_by.forEach(c => directors.push(c.name));
+    const keyCrew = [];
+    const seenCrew = new Set();
+    if (Array.isArray(item.created_by)) {
+        item.created_by.forEach(c => {
+            keyCrew.push({ name: c.name, job: 'Creator', profile_path: c.profile_path });
+            seenCrew.add(`${c.name}_Creator`);
+        });
     }
-    if (directors.length === 0) {
-        crew.filter(c => c.department === 'Directing').slice(0, 2).forEach(c => directors.push(c.name));
-    }
-
-    const writers = [...new Set(crew.filter(c => ['Writer', 'Screenplay', 'Story', 'Series Composition', 'Creator'].includes(c.job) || c.department === 'Writing').map(c => c.name))].slice(0, 4);
-    const producersAndCrew = [...new Set(crew.filter(c => ['Producer', 'Executive Producer', 'Original Music Composer', 'Director of Photography'].includes(c.job)).map(c => `${c.name} (${c.job})`))].slice(0, 4);
-
-    const crewGrid = document.getElementById('modalCrewGrid');
-    crewGrid.innerHTML = `
-        <div class="credits-crew-item">
-            <strong><i class="fa-solid fa-clapperboard"></i> Director / Creator</strong>
-            <span>${escapeHTML(directors.slice(0, 3).join(', ') || 'Featured Studio Director')}</span>
-        </div>
-        <div class="credits-crew-item">
-            <strong><i class="fa-solid fa-pen-nib"></i> Writers</strong>
-            <span>${escapeHTML(writers.join(', ') || 'Original Screenplay Team')}</span>
-        </div>
-        <div class="credits-crew-item">
-            <strong><i class="fa-solid fa-gears"></i> Producers & Key Crew</strong>
-            <span>${escapeHTML(producersAndCrew.join(' • ') || 'Production Ensemble')}</span>
-        </div>
-    `;
+    const priorityJobs = ['Director', 'Writer', 'Screenplay', 'Story', 'Producer', 'Executive Producer', 'Original Music Composer', 'Director of Photography', 'Editor'];
+    crew.forEach(c => {
+        if (priorityJobs.includes(c.job) || c.department === 'Directing' || c.department === 'Writing') {
+            const k = `${c.name}_${c.job}`;
+            if (!seenCrew.has(k)) {
+                seenCrew.add(k);
+                keyCrew.push(c);
+            }
+        }
+    });
 
     const castListEl = document.getElementById('modalCastList');
     if (cast.length > 0) {
-        castListEl.innerHTML = cast.map(actor => `
-            <div class="cast-chip">
-                <span class="cast-actor">${escapeHTML(actor.name)}</span>
-                <span class="cast-character">as ${escapeHTML(actor.character || 'Lead Role')}</span>
-            </div>
-        `).join('');
+        castListEl.innerHTML = cast.map(actor => {
+            const imgUrl = actor.profile_path ? `https://image.tmdb.org/t/p/w185${actor.profile_path}` : avatarFallback(actor.name);
+            return `
+                <div class="person-card">
+                    <img class="person-avatar" src="${imgUrl}" alt="${escapeHTML(actor.name)}" loading="lazy" onerror="this.onerror=null;this.src='${avatarFallback(actor.name)}'">
+                    <div class="person-meta">
+                        <span class="person-name" title="${escapeHTML(actor.name)}">${escapeHTML(actor.name)}</span>
+                        <span class="person-role" title="as ${escapeHTML(actor.character || 'Role')}">as ${escapeHTML(actor.character || 'Lead Role')}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
     } else {
-        castListEl.innerHTML = `<span style="font-size:0.8rem; color:var(--text-muted);">Cast details updating for this release.</span>`;
+        castListEl.innerHTML = `<span style="font-size:0.8rem; color:var(--text-muted);">No cast records listed.</span>`;
+    }
+
+    const crewListEl = document.getElementById('modalCrewList');
+    if (crewListEl) {
+        if (keyCrew.length > 0) {
+            crewListEl.innerHTML = keyCrew.slice(0, 14).map(c => {
+                const imgUrl = c.profile_path ? `https://image.tmdb.org/t/p/w185${c.profile_path}` : avatarFallback(c.name);
+                return `
+                    <div class="person-card">
+                        <img class="person-avatar" src="${imgUrl}" alt="${escapeHTML(c.name)}" loading="lazy" onerror="this.onerror=null;this.src='${avatarFallback(c.name)}'">
+                        <div class="person-meta">
+                            <span class="person-name" title="${escapeHTML(c.name)}">${escapeHTML(c.name)}</span>
+                            <span class="person-role" title="${escapeHTML(c.job)}">${escapeHTML(c.job)}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            crewListEl.innerHTML = `<span style="font-size:0.8rem; color:var(--text-muted);">Production ensemble.</span>`;
+        }
     }
 }
 
@@ -3309,7 +3314,7 @@ async function fetchAndOpenModal(title, fallbackPoster, customRationale, movieId
 
         document.getElementById('modalPosterBadges').innerHTML = `
             ${certR18 ? `<span class="r18-badge">R-18</span>` : ''}
-            <span class="media-badge">${mType === 'tv' ? '📺 SERIES' : '🎬 MOVIE'}</span>
+            <span class="media-badge">${mType === 'tv' ? 'SERIES' : 'MOVIE'}</span>
         `;
 
         document.getElementById('modalTitle').innerText = currentMovieData.title;
@@ -3326,15 +3331,15 @@ async function fetchAndOpenModal(title, fallbackPoster, customRationale, movieId
         document.getElementById('modalPoster').src = currentMovieData.poster;
         document.getElementById('modalRationale').innerText = customRationale || `Matched via CineMind neural collaborative filters for ${currentUser || 'Guest'}.`;
 
-        // Populate Exact Genres + Cast, Characters, Director, Writers & Crew
         renderModalCreditsAndGenres(item, originMovie);
 
         fetch(`${BACKEND_URL}/api/omdb?title=${encodeURIComponent(currentMovieData.title)}&year=${year}`)
             .then(r => r.json())
             .then(o => {
                 const b = document.getElementById('omdbBadge');
-                if (b && o.imdbRating && o.imdbRating !== "N/A") {
-                    b.innerHTML = `<i class="fa-brands fa-imdb" style="color:#f5c518; font-size:1.1rem;"></i> ${o.imdbRating} IMDb`;
+                const imdbVal = o.imdbrating || o.imdbRating;
+                if (b && imdbVal && imdbVal !== "N/A") {
+                    b.innerHTML = `<i class="fa-brands fa-imdb" style="color:#f5c518; font-size:1.1rem;"></i> ${imdbVal} IMDb`;
                 }
             }).catch(() => {});
 
@@ -3466,7 +3471,6 @@ document.getElementById('watchedBtn').onclick = () => {
     else if (currentView === 'discover') initEndlessNetflixHome();
 };
 
-// ---------------- UNIFIED SUPER-NOVA CHAT ENGINE (WITH TILTING MOTION ON TAP) ----------------
 const chatWrapper = document.getElementById('chatWrapper');
 const chatToggle = document.getElementById('chatToggle');
 const chatModal = document.getElementById('chatModal');
