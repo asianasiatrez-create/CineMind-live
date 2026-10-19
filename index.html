@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
@@ -1565,7 +1567,7 @@ function parseSearchIntent(query = "") {
     }
     const dec = rest.match(/\b(19|20)(\d)0s\b/);
     const yr = rest.match(/\b(19\d{2}|20\d{2})\b/);
-    if (dec) { intent.yearFrom = Number(`dec[1]{dec[2]}0`); intent.yearTo = intent.yearFrom + 9; rest = rest.replace(dec[0], ' '); }
+    if (dec) { intent.yearFrom = Number(`${dec[1]}${dec[2]}0`); intent.yearTo = intent.yearFrom + 9; rest = rest.replace(dec[0], ' '); }
     else if (yr) { intent.yearFrom = intent.yearTo = Number(yr[1]); rest = rest.replace(yr[0], ' '); }
     const cm = query.match(/\b(?:starring|stars?|featuring|with)\s+([A-Z][\w'.-]+(?:\s+[A-Z][\w'.-]+){0,2})/);
     if (cm) { intent.castName = cm[1]; rest = rest.replace(cm[0].toLowerCase(), ' '); }
@@ -1582,7 +1584,7 @@ function describeIntent(i) {
     if (i.country) parts.push((COUNTRY_NAMES[i.country.code] || i.country.code).replace(/\s*\p{Regional_Indicator}+/gu, ''));
     if (i.genreIds.length) parts.push(i.genreIds.map(g => GENRE_OPTIONS[g]).filter(Boolean).join(' + '));
     if (i.language) parts.push(`language: ${i.language}`);
-    if (i.yearFrom) parts.push(i.yearFrom === i.yearTo ? `i.yearFrom`:`{i.yearFrom}s`);
+    if (i.yearFrom) parts.push(i.yearFrom === i.yearTo ? `${i.yearFrom}` : `${i.yearFrom}s`);
     if (i.castName) parts.push(`starring ${i.castName}`);
     return parts.join(' • ');
 }
@@ -1591,7 +1593,7 @@ async function resolveIntentEntities(intent) {
     const T = 'https://api.themoviedb.org/3';
     if (intent.castName && !intent.cast) {
         try {
-            const d = await fetchJSON(`T/search/person?apikey={TMDB_API_KEY}&query=${encodeURIComponent(intent.castName)}`);
+            const d = await fetchJSON(`${T}/search/person?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(intent.castName)}`);
             const p = (d.results || [])[0];
             if (p) intent.cast = { id: p.id, name: p.name };
         } catch (e) {}
@@ -1601,7 +1603,7 @@ async function resolveIntentEntities(intent) {
         if (TV_NATIVE_GENRES.has(gid) || TV_GENRE_EQ[gid] || intent.tvKeywordIds[gid]) continue;
         const name = (GENRE_OPTIONS[gid] || '').toLowerCase();
         try {
-            const d = await fetchJSON(`T/search/keyword?apikey={TMDB_API_KEY}&query=${encodeURIComponent(name)}`);
+            const d = await fetchJSON(`${T}/search/keyword?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(name)}`);
             const hit = (d.results || []).find(k => (k.name || '').toLowerCase() === name);
             if (hit) intent.tvKeywordIds[gid] = hit.id;
         } catch (e) {}
@@ -1616,7 +1618,7 @@ function buildIntentSources(intent) {
         if (intent.language) p.push(`with_original_language=${intent.language}`);
         if (intent.yearFrom) {
             const f = type === 'tv' ? 'first_air_date' : 'primary_release_date';
-            p.push(`f.gte={intent.yearFrom}-01-01`, `f.lte={intent.yearTo}-12-31`);
+            p.push(`${f}.gte=${intent.yearFrom}-01-01`, `${f}.lte=${intent.yearTo}-12-31`);
         }
         if (type === 'movie') {
             if (intent.genreIds.length) p.push(`with_genres=${intent.genreIds.join(',')}`);
@@ -1634,7 +1636,7 @@ function buildIntentSources(intent) {
             if (kw.length) p.push(`with_keywords=${kw.join(',')}`);
         }
         return page => ({
-            url: `https://api.themoviedb.org/3/discover/type?apikey={TMDB_API_KEY}&p.join('&')&page={page}`,
+            url: `https://api.themoviedb.org/3/discover/${type}?api_key=${TMDB_API_KEY}&${p.join('&')}&page=${page}`,
             mType: type, origin: intent.country ? intent.country.code : undefined,
             rationale: `Verified match: ${describeIntent(intent)}.`
         });
@@ -2294,7 +2296,7 @@ function fetchJSON(url) {
 }
 
 // One URL per title, shared (and cached) by the R-18 check, the modal and Nova
-const detailsUrl = (type, id) => `https://api.themoviedb.org/3/type/{id}?api_key=TMDBAPIKEY&appendtoresponse={type === 'tv' ? 'content_ratings,keywords,credits,aggregate_credits' : 'release_dates,keywords,credits'}`;
+const detailsUrl = (type, id) => `https://api.themoviedb.org/3/${type}/${id}?api_key=${TMDB_API_KEY}&append_to_response=${type === 'tv' ? 'content_ratings,keywords,credits,aggregate_credits' : 'release_dates,keywords,credits'}`;
 
 function setFeedStatus(state, msg = '') {
     feedState = state;
@@ -2407,19 +2409,19 @@ function buildNetflixRowConfigs(startIndex, count) {
             const page = Math.floor(i / types) + 1;
             mType = forceTV ? 'tv' : (forceMovie ? 'movie' : (i % 2 ? 'tv' : 'movie'));
             baseParams = `sort_by=popularity.desc&page=${page}`;
-            title = `More genreNames{appLabel}${countryLabel} • Vol. ${page}`;
+            title = `More ${genreNames}${appLabel}${countryLabel} • Vol. ${page}`;
         } else {
             const catalog = browseCatalog();
             const template = catalog[i % catalog.length];
             const page = Math.floor(i / catalog.length) + 1;
             mType = forceTV ? 'tv' : (forceMovie ? 'movie' : template.media);
             baseParams = template.params.replace(/page=\d+/, `page=${page}`);
-            title = `template.title{appLabel}countryLabel{page > 1 ? ` (Vol. ${page})` : ''}`;
+            title = `${template.title}${appLabel}${countryLabel}${page > 1 ? ` (Vol. ${page})` : ''}`;
         }
         const endpoint = mType === 'tv' ? '/discover/tv' : '/discover/movie';
         configs.push({
             title, mType,
-            url: `https://api.themoviedb.org/3endpoint?apikey={TMDB_API_KEY}&baseParams{getActiveFilterQueryParams(mType)}`
+            url: `https://api.themoviedb.org/3${endpoint}?api_key=${TMDB_API_KEY}&${baseParams}${getActiveFilterQueryParams(mType)}`
         });
     }
     return configs;
@@ -2743,10 +2745,10 @@ async function initHeroBannerSlideshow() {
         const jobs = [];
         if (!hasFilters) {
             const tk = selectedMedia === 'all' ? 'all' : selectedMedia;
-            jobs.push(getResults(`api/trending/{tk}/week?api_key=${TMDB_API_KEY}&page=1`, tk === 'all' ? null : tk));
+            jobs.push(getResults(`${api}/trending/${tk}/week?api_key=${TMDB_API_KEY}&page=1`, tk === 'all' ? null : tk));
         }
         kinds.forEach(kind => jobs.push(getResults(
-            `api/discover/{kind}?api_key=TMDBAPIKEY&sortby=popularity.desc{hasFilters ? getActiveFilterQueryParams(kind) : '&include_adult=false'}&page=${page}`, kind)));
+            `${api}/discover/${kind}?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${hasFilters ? getActiveFilterQueryParams(kind) : '&include_adult=false'}&page=${page}`, kind)));
         const lists = await Promise.all(jobs);
         if (run !== heroRun) return;                      // a newer selection replaced this request
 
@@ -2912,7 +2914,7 @@ async function repairSavedPosters(list) {
         if (item.id) {
             const mType = item.media_type === 'tv' ? 'tv' : 'movie';
             try {
-                const r = await fetch(`https://api.themoviedb.org/3/mType/{item.id}?api_key=${TMDB_API_KEY}`);
+                const r = await fetch(`https://api.themoviedb.org/3/${mType}/${item.id}?api_key=${TMDB_API_KEY}`);
                 const d = await r.json();
                 if (d && d.poster_path) item.poster = `https://image.tmdb.org/t/p/w500${d.poster_path}`;
             } catch (e) {}
@@ -2965,7 +2967,7 @@ function renderProfileCard() {
             }
             auditBox.innerHTML = `<strong>Total users: ${escapeHTML(data.total_registered_users)}</strong>` +
                 (Array.isArray(data.audit_logs) ? data.audit_logs : []).map(log =>
-                    `<div>[escapeHTML(log.timestamp)]<b>{escapeHTML(log.event_type)}</b> (@${escapeHTML(log.username)}) ${escapeHTML(log.details || '')}</div>`
+                    `<div>[${escapeHTML(log.timestamp)}] <b>${escapeHTML(log.event_type)}</b> (@${escapeHTML(log.username)}) ${escapeHTML(log.details || '')}</div>`
                 ).join('');
         } catch (error) {
             console.error('Could not load admin audit logs.', error);
@@ -2996,7 +2998,7 @@ async function syncCloudLibrary() {
     renderChatHistoryInto(chatHistory);
     renderProfileCard();            
     try {
-        const res = await fetch(`BACKENDURL/api/user/library?username={encodeURIComponent(currentUser)}`);
+        const res = await fetch(`${BACKEND_URL}/api/user/library?username=${encodeURIComponent(currentUser)}`);
         const data = await res.json();
         if (data.role) {
             currentUserRole = data.role;
@@ -3199,7 +3201,7 @@ function createMovieCard(movie, isAI = false, searchContext = "", rankNum = null
             <div class="top10-inner">
                 <div class="card-poster-wrap">
                     ${badgesHTML}
-                    <img src="poster"alt="{escapeHTML(title)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=NO_POSTER">
+                    <img src="${poster}" alt="${escapeHTML(title)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=NO_POSTER">
                 </div>
                 <div class="movie-info">
                     <div class="movie-title">${escapeHTML(title)}</div>
@@ -3229,7 +3231,7 @@ function createMovieCard(movie, isAI = false, searchContext = "", rankNum = null
     card.innerHTML = `
         <div class="card-poster-wrap">
             ${badgesHTML}
-            <img src="poster"alt="{escapeHTML(title)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=NO_POSTER">
+            <img src="${poster}" alt="${escapeHTML(title)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=NO_POSTER">
         </div>
         <div class="movie-info">
             <div class="movie-title">${escapeHTML(title)}</div>
@@ -3319,7 +3321,7 @@ async function fetchSpecialCategoryItems(categoryKey, page = 1) {
     if (!selectedTitles.length) return [];
 
     const searches = await Promise.allSettled(selectedTitles.map(title =>
-        fetchJSON(`https://api.themoviedb.org/3/search/multi?api_key=TMDBAPIKEY&includeadult=false&query={encodeURIComponent(title)}`)
+        fetchJSON(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&include_adult=false&query=${encodeURIComponent(title)}`)
     ));
     const failedSearches = searches.filter(result => result.status === 'rejected');
     if (failedSearches.length === searches.length) {
@@ -3332,7 +3334,7 @@ async function fetchSpecialCategoryItems(categoryKey, page = 1) {
     const items = [];
     searches.forEach((result, index) => {
         if (result.status !== 'fulfilled') {
-            console.warn(`Could not search curated categoryKeytitle"{selectedTitles[index]}".`, result.reason);
+            console.warn(`Could not search curated ${categoryKey} title "${selectedTitles[index]}".`, result.reason);
             return;
         }
         const expectedTitle = normalize(selectedTitles[index]);
@@ -3411,7 +3413,7 @@ function getActiveFilterQueryParams(mediaType = "movie") {
 
     if (selectedCountry) q += `&with_origin_country=${selectedCountry}`;
     if (selectedProvider) {
-        q += `&with_watch_providers=selectedProvider&watchregion={selectedRegion}`;
+        q += `&with_watch_providers=${selectedProvider}&watch_region=${selectedRegion}`;
     }
     return q;
 }
@@ -3443,7 +3445,7 @@ async function initEndlessNetflixHome() {
     const extraProviderCountryOnly = (() => {
         let q = "";
         if (selectedCountry) q += `&with_origin_country=${selectedCountry}`;
-        if (selectedProvider) q += `&with_watch_providers=selectedProvider&watchregion={selectedRegion}`;
+        if (selectedProvider) q += `&with_watch_providers=${selectedProvider}&watch_region=${selectedRegion}`;
         return q;
     })();
 
@@ -3453,24 +3455,24 @@ async function initEndlessNetflixHome() {
     if (hasAnime) {
         if (!isMovieOnly) {
             specialRows.push({
-                title: `<i class="fa-solid fa-wand-sparkles" style="color: #00f2fe;"></i> 🎌 Japanese Anime Series (Shonen, Seinen, Fantasy & Sci-Fi)appBadge{countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=TMDBAPIKEY&includeadult=true&withgenres=16&withorigincountry={selectedCountry || 'JP'}&sort_by=popularity.desc${selectedProvider ? `&with_watch_providers=${selectedProvider}&watch_region=${selectedRegion}` : ''}&page=1`,
+                title: `<i class="fa-solid fa-wand-sparkles" style="color: #00f2fe;"></i> 🎌 Japanese Anime Series (Shonen, Seinen, Fantasy & Sci-Fi)${appBadge}${countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=true&with_genres=16&with_origin_country=${selectedCountry || 'JP'}&sort_by=popularity.desc${selectedProvider ? `&with_watch_providers=${selectedProvider}&watch_region=${selectedRegion}` : ''}&page=1`,
                 mType: 'tv',
                 isAI: true,
                 allowCross: true,
                 customRationale: "Official Japanese Anime Series classification."
             });
             specialRows.push({
-                title: `<i class="fa-solid fa-earth-asia" style="color: #d946ef;"></i> 🎌 Global Anime & International Donghua / Webtoon SeriesappBadge{countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=TMDBAPIKEY&includeadult=true&withgenres=16&withkeywords={ANIME_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-earth-asia" style="color: #d946ef;"></i> 🎌 Global Anime & International Donghua / Webtoon Series${appBadge}${countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=true&with_genres=16&with_keywords=${ANIME_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'tv',
                 isAI: true,
                 allowCross: true,
                 customRationale: "Japanese & International Animation matching the Anime classification."
             });
             specialRows.push({
-                title: `<i class="fa-solid fa-basketball" style="color: #fbbf24;"></i> 🎌🏆 Sports Anime Series & Tournament ActionappBadge{countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=TMDBAPIKEY&includeadult=false&withgenres=16&withkeywords={SPORTS_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-basketball" style="color: #fbbf24;"></i> 🎌🏆 Sports Anime Series & Tournament Action${appBadge}${countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=16&with_keywords=${SPORTS_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'tv',
                 isAI: true,
                 allowCross: true,
@@ -3479,8 +3481,8 @@ async function initEndlessNetflixHome() {
         }
         if (!isSeriesTab) {
             specialRows.push({
-                title: `<i class="fa-solid fa-film" style="color: #00f2fe;"></i> 🎌 Iconic Anime Movies & Feature FilmsappBadge{countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/movie?api_key=TMDBAPIKEY&includeadult=true&withgenres=16&withorigincountry={selectedCountry || 'JP'}&sort_by=popularity.desc${selectedProvider ? `&with_watch_providers=${selectedProvider}&watch_region=${selectedRegion}` : ''}&page=1`,
+                title: `<i class="fa-solid fa-film" style="color: #00f2fe;"></i> 🎌 Iconic Anime Movies & Feature Films${appBadge}${countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=true&with_genres=16&with_origin_country=${selectedCountry || 'JP'}&sort_by=popularity.desc${selectedProvider ? `&with_watch_providers=${selectedProvider}&watch_region=${selectedRegion}` : ''}&page=1`,
                 mType: 'movie',
                 isAI: true,
                 allowCross: true,
@@ -3493,8 +3495,8 @@ async function initEndlessNetflixHome() {
     if (hasAnimation && !hasAnime && !hasKidsFamily) {
         if (!isSeriesTab) {
             specialRows.push({
-                title: `<i class="fa-solid fa-palette" style="color: #00f2fe;"></i> 🎨 Animated Feature Films (Across All Genres)appBadge{countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/movie?api_key=TMDBAPIKEY&includeadult=true&withgenres=16{extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-palette" style="color: #00f2fe;"></i> 🎨 Animated Feature Films (Across All Genres)${appBadge}${countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=true&with_genres=16${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'movie',
                 isAI: true,
                 allowCross: true,
@@ -3503,8 +3505,8 @@ async function initEndlessNetflixHome() {
         }
         if (!isMovieOnly) {
             specialRows.push({
-                title: `<i class="fa-solid fa-fire-flame-curved" style="color: #f43f5e;"></i> 🎨 Teen & Adult Animated Series (Sci-Fi, Action & Comedy)appBadge{countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=TMDBAPIKEY&includeadult=true&withgenres=16&withoutgenres=10762,10751{extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-fire-flame-curved" style="color: #f43f5e;"></i> 🎨 Teen & Adult Animated Series (Sci-Fi, Action & Comedy)${appBadge}${countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=true&with_genres=16&without_genres=10762,10751${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'tv',
                 isAI: true,
                 allowCross: true,
@@ -3517,8 +3519,8 @@ async function initEndlessNetflixHome() {
     if (hasKidsFamily) {
         if (!isSeriesTab) {
             specialRows.push({
-                title: `<i class="fa-solid fa-child-reaching" style="color: #fbbf24;"></i> 🧸 Kids & Family Movies (All-Ages Live-Action & Animated Favorites)appBadge{countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/movie?api_key=TMDBAPIKEY&includeadult=false&withgenres=10751&withoutgenres=27,80,53&certificationcountry=US&certification.lte=PG{extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-child-reaching" style="color: #fbbf24;"></i> 🧸 Kids & Family Movies (All-Ages Live-Action & Animated Favorites)${appBadge}${countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=10751&without_genres=27,80,53&certification_country=US&certification.lte=PG${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'movie',
                 isAI: true,
                 allowCross: true,
@@ -3527,8 +3529,8 @@ async function initEndlessNetflixHome() {
         }
         if (!isMovieOnly) {
             specialRows.push({
-                title: `<i class="fa-solid fa-tv" style="color: #38bdf8;"></i> 🧸 Kids & Family TV Shows & Animated CartoonsappBadge{countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=TMDBAPIKEY&includeadult=false&withgenres=10762|10751&withoutgenres=80,9648,10768{extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-tv" style="color: #38bdf8;"></i> 🧸 Kids & Family TV Shows & Animated Cartoons${appBadge}${countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=10762|10751&without_genres=80,9648,10768${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'tv',
                 isAI: true,
                 allowCross: true,
@@ -3541,8 +3543,8 @@ async function initEndlessNetflixHome() {
     if (hasDocs) {
         if (!isSeriesTab) {
             specialRows.push({
-                title: `<i class="fa-solid fa-video" style="color: #10b981;"></i> 🎥 Acclaimed Documentary FilmsappBadge{countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/movie?api_key=TMDBAPIKEY&includeadult=false&withgenres=99{extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-video" style="color: #10b981;"></i> 🎥 Acclaimed Documentary Films${appBadge}${countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=99${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'movie',
                 isAI: true,
                 allowCross: true,
@@ -3551,8 +3553,8 @@ async function initEndlessNetflixHome() {
         }
         if (!isMovieOnly) {
             specialRows.push({
-                title: `<i class="fa-solid fa-earth-americas" style="color: #10b981;"></i> 🎥 Binge-Worthy Docuseries & True StoriesappBadge{countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=TMDBAPIKEY&includeadult=false&withgenres=99{extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-earth-americas" style="color: #10b981;"></i> 🎥 Binge-Worthy Docuseries & True Stories${appBadge}${countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=99${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'tv',
                 isAI: true,
                 allowCross: true,
@@ -3565,8 +3567,8 @@ async function initEndlessNetflixHome() {
     if (hasSports) {
         if (!isSeriesTab) {
             specialRows.push({
-                title: `<i class="fa-solid fa-medal" style="color: #fbbf24;"></i> 🏆 Sports Movies, Dramas & Championship StoriesappBadge{countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/movie?api_key=TMDBAPIKEY&includeadult=false&withkeywords={SPORTS_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-medal" style="color: #fbbf24;"></i> 🏆 Sports Movies, Dramas & Championship Stories${appBadge}${countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${SPORTS_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'movie',
                 isAI: true,
                 allowCross: true,
@@ -3575,8 +3577,8 @@ async function initEndlessNetflixHome() {
         }
         if (!isMovieOnly) {
             specialRows.push({
-                title: `<i class="fa-solid fa-basketball" style="color: #f97316;"></i> 🏆 Sports Series, Sports Anime & DocuseriesappBadge{countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=TMDBAPIKEY&includeadult=false&withkeywords={SPORTS_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-basketball" style="color: #f97316;"></i> 🏆 Sports Series, Sports Anime & Docuseries${appBadge}${countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${SPORTS_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'tv',
                 isAI: true,
                 allowCross: true,
@@ -3589,8 +3591,8 @@ async function initEndlessNetflixHome() {
     if (hasBL) {
         if (!isMovieOnly) {
             specialRows.push({
-                title: `<i class="fa-solid fa-heart" style="color: #38bdf8;"></i> 💙 Boys' Love (BL) Series & Shows — Boys Love BoysappBadge{countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=TMDBAPIKEY&includeadult=true&withkeywords={BL_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-heart" style="color: #38bdf8;"></i> 💙 Boys' Love (BL) Series & Shows — Boys Love Boys${appBadge}${countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=true&with_keywords=${BL_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'tv',
                 isAI: true,
                 allowCross: true,
@@ -3599,8 +3601,8 @@ async function initEndlessNetflixHome() {
         }
         if (!isSeriesTab) {
             specialRows.push({
-                title: `<i class="fa-solid fa-film" style="color: #38bdf8;"></i> 💙 Boys' Love (BL) Movies & Romance — Boys Love BoysappBadge{countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/movie?api_key=TMDBAPIKEY&includeadult=true&withkeywords={BL_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-film" style="color: #38bdf8;"></i> 💙 Boys' Love (BL) Movies & Romance — Boys Love Boys${appBadge}${countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=true&with_keywords=${BL_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'movie',
                 isAI: true,
                 allowCross: true,
@@ -3612,8 +3614,8 @@ async function initEndlessNetflixHome() {
     if (hasGL) {
         if (!isSeriesTab) {
             specialRows.push({
-                title: `<i class="fa-solid fa-heart" style="color: #f43f5e;"></i> 💖 Girls' Love (GL) Movies & Romance — Girls Love GirlsappBadge{countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/movie?api_key=TMDBAPIKEY&includeadult=true&withkeywords={GL_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-heart" style="color: #f43f5e;"></i> 💖 Girls' Love (GL) Movies & Romance — Girls Love Girls${appBadge}${countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=true&with_keywords=${GL_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'movie',
                 isAI: true,
                 allowCross: true,
@@ -3622,8 +3624,8 @@ async function initEndlessNetflixHome() {
         }
         if (!isMovieOnly) {
             specialRows.push({
-                title: `<i class="fa-solid fa-tv" style="color: #f43f5e;"></i> 💖 Girls' Love (GL) Series & Shows — Girls Love GirlsappBadge{countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=TMDBAPIKEY&includeadult=true&withkeywords={GL_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-tv" style="color: #f43f5e;"></i> 💖 Girls' Love (GL) Series & Shows — Girls Love Girls${appBadge}${countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=true&with_keywords=${GL_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'tv',
                 isAI: true,
                 allowCross: true,
@@ -3637,8 +3639,8 @@ async function initEndlessNetflixHome() {
         const pName = selectedProvider ? PROVIDER_NAMES[selectedProvider] : "Multi-Genre Stream";
         if (!isSeriesTab) {
             specialRows.push({
-                title: `<i class="fa-solid fa-sliders" style="color: var(--secondary-glow);"></i> 🎯 Custom Filtered Movies (pName{activeGenreLabel}${countryBadge})`,
-                url: `https://api.themoviedb.org/3/discover/movie?api_key=TMDBAPIKEY&sortby=popularity.desc{getActiveFilterQueryParams('movie')}&page=1`,
+                title: `<i class="fa-solid fa-sliders" style="color: var(--secondary-glow);"></i> 🎯 Custom Filtered Movies (${pName}${activeGenreLabel}${countryBadge})`,
+                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams('movie')}&page=1`,
                 mType: 'movie',
                 isAI: true,
                 allowCross: true,
@@ -3647,8 +3649,8 @@ async function initEndlessNetflixHome() {
         }
         if (!isMovieOnly) {
             specialRows.push({
-                title: `<i class="fa-solid fa-tv" style="color: var(--primary-glow);"></i> 📺 Custom Filtered Series & Dramas (pName{activeGenreLabel}${countryBadge})`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=TMDBAPIKEY&sortby=popularity.desc{getActiveFilterQueryParams('tv')}&page=1`,
+                title: `<i class="fa-solid fa-tv" style="color: var(--primary-glow);"></i> 📺 Custom Filtered Series & Dramas (${pName}${activeGenreLabel}${countryBadge})`,
+                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams('tv')}&page=1`,
                 mType: 'tv',
                 isAI: true,
                 allowCross: true,
@@ -3663,7 +3665,7 @@ async function initEndlessNetflixHome() {
         const lwType = lastWatched.media_type === 'tv' ? 'tv' : 'movie';
         specialRows.push({
             title: `<i class="fa-solid fa-robot" style="color: var(--primary-glow);"></i> 🤖 AI Recommended Because You Watched "${escapeHTML(lastWatched.title)}"`,
-            url: `https://api.themoviedb.org/3/lwType/{lastWatched.id}/recommendations?api_key=${TMDB_API_KEY}&page=1`,
+            url: `https://api.themoviedb.org/3/${lwType}/${lastWatched.id}/recommendations?api_key=${TMDB_API_KEY}&page=1`,
             mType: lwType,
             isAI: true,
             customRationale: `AI Recommended because you watched "${lastWatched.title}".`
@@ -3672,10 +3674,10 @@ async function initEndlessNetflixHome() {
 
     if (!isSeriesTab) {
         const top10MovieUrl = (selectedProvider || selectedCountry || selectedGenres.size > 0)
-            ? `https://api.themoviedb.org/3/discover/movie?api_key=TMDBAPIKEY&sortby=popularity.desc{getActiveFilterQueryParams('movie')}&page=2`
-            : `https://api.themoviedb.org/3/discover/movie?api_key=TMDBAPIKEY&includeadult=false&watchregion={selectedRegion}&with_watch_monetization_types=flatrate&sort_by=popularity.desc&vote_count.gte=30&page=1`;
+            ? `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams('movie')}&page=2`
+            : `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&watch_region=${selectedRegion}&with_watch_monetization_types=flatrate&sort_by=popularity.desc&vote_count.gte=30&page=1`;
         specialRows.push({
-            title: `<i class="fa-solid fa-trophy" style="color: #fbbf24;"></i> Top 10 Movies in selectedRegionToday{appBadge}activeGenreLabel{countryBadge}`,
+            title: `<i class="fa-solid fa-trophy" style="color: #fbbf24;"></i> Top 10 Movies in ${selectedRegion} Today${appBadge}${activeGenreLabel}${countryBadge}`,
             url: top10MovieUrl,
             mType: 'movie',
             isTop10: true,
@@ -3684,10 +3686,10 @@ async function initEndlessNetflixHome() {
     }
     if (!isMovieOnly) {
         const top10TVUrl = (selectedProvider || selectedCountry || selectedGenres.size > 0)
-            ? `https://api.themoviedb.org/3/discover/tv?api_key=TMDBAPIKEY&sortby=popularity.desc{getActiveFilterQueryParams('tv')}&page=2`
-            : `https://api.themoviedb.org/3/discover/tv?api_key=TMDBAPIKEY&includeadult=false&watchregion={selectedRegion}&with_watch_monetization_types=flatrate&sort_by=popularity.desc&vote_count.gte=25&page=1`;
+            ? `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams('tv')}&page=2`
+            : `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&watch_region=${selectedRegion}&with_watch_monetization_types=flatrate&sort_by=popularity.desc&vote_count.gte=25&page=1`;
         specialRows.push({
-            title: `<i class="fa-solid fa-crown" style="color: var(--primary-glow);"></i> Top 10 Series in selectedRegionToday{appBadge}activeGenreLabel{countryBadge}`,
+            title: `<i class="fa-solid fa-crown" style="color: var(--primary-glow);"></i> Top 10 Series in ${selectedRegion} Today${appBadge}${activeGenreLabel}${countryBadge}`,
             url: top10TVUrl,
             mType: 'tv',
             isTop10: true,
@@ -3699,7 +3701,7 @@ async function initEndlessNetflixHome() {
         specialRows.push(
             {
                 title: `<i class="fa-solid fa-ticket" style="color: #f43f5e;"></i> 🍿 Now Showing in Theaters`,
-                url: `https://api.themoviedb.org/3/movie/now_playing?api_key=TMDBAPIKEY&region={selectedRegion}&page=1`,
+                url: `https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_API_KEY}&region=${selectedRegion}&page=1`,
                 mType: 'movie',
                 customRationale: "Currently playing in theaters now."
             },
@@ -3711,7 +3713,7 @@ async function initEndlessNetflixHome() {
             },
             {
                 title: `<i class="fa-solid fa-calendar-star" style="color: #a855f7;"></i> 🗓️ Upcoming & Coming Soon`,
-                url: `https://api.themoviedb.org/3/movie/upcoming?api_key=TMDBAPIKEY&region={selectedRegion}&page=1`,
+                url: `https://api.themoviedb.org/3/movie/upcoming?api_key=${TMDB_API_KEY}&region=${selectedRegion}&page=1`,
                 mType: 'movie',
                 customRationale: "Upcoming theatrical & streaming release."
             }
@@ -3735,8 +3737,8 @@ async function initEndlessNetflixHome() {
         const kwParam = kwParts.length ? `&with_keywords=${kwParts.join('|')}` : '';
 
         specialRows.push({
-            title: `<i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary-glow);"></i> 💜 Picked For Your Genre Taste (gNames.join('+')){appBadge}`,
-            url: `https://api.themoviedb.org/3/discover/movie?api_key=TMDBAPIKEY&includeadult=true{gParam}${kwParam}&sort_by=popularity.desc&page=1`,
+            title: `<i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary-glow);"></i> 💜 Picked For Your Genre Taste (${gNames.join(' + ')})${appBadge}`,
+            url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=true${gParam}${kwParam}&sort_by=popularity.desc&page=1`,
             mType: 'movie',
             isAI: true,
             allowCross: true,
@@ -3836,7 +3838,7 @@ async function performSearch() {
     const BASE = 'https://api.themoviedb.org/3';
     const SORT = 'sort_by=popularity.desc';
     const disc = (type, qs, rationale, origin) => page => ({
-        url: `BASE/discover/{type}?api_key=TMDBAPIKEY&{qs}&page=${page}`,
+        url: `${BASE}/discover/${type}?api_key=${TMDB_API_KEY}&${qs}&page=${page}`,
         mType: type, rationale, origin
     });
 
@@ -3846,24 +3848,24 @@ async function performSearch() {
     let isPlainSearch = false;
 
     if (isBLQuery || isGLQuery) {
-        const kw = isBLQuery && isGLQuery ? `BLTMDBKEYWORDS|{GL_TMDB_KEYWORDS}` : (isBLQuery ? BL_TMDB_KEYWORDS : GL_TMDB_KEYWORDS);
+        const kw = isBLQuery && isGLQuery ? `${BL_TMDB_KEYWORDS}|${GL_TMDB_KEYWORDS}` : (isBLQuery ? BL_TMDB_KEYWORDS : GL_TMDB_KEYWORDS);
         const label = isBLQuery && isGLQuery ? "Boys' Love (BL) & Girls' Love (GL)" : (isBLQuery ? "Boys' Love (BL — Boys Love Boys)" : "Girls' Love (GL — Girls Love Girls)");
         sources = [
-            disc('tv', `include_adult=true&with_keywords=kw&{SORT}`, `Matched ${label} series.`),
-            disc('movie', `include_adult=true&with_keywords=kw&{SORT}`, `Matched ${label} romance movie.`)
+            disc('tv', `include_adult=true&with_keywords=${kw}&${SORT}`, `Matched ${label} series.`),
+            disc('movie', `include_adult=true&with_keywords=${kw}&${SORT}`, `Matched ${label} romance movie.`)
         ];
         aiNote = `Showing official <strong>${label}</strong> movies and series.`;
     } else if (isAnimeQuery) {
         sources = [
             disc('tv', `include_adult=true&with_genres=16&with_origin_country=JP&${SORT}`, "Official Japanese Anime Series."),
-            disc('tv', `include_adult=true&with_genres=16&with_keywords=ANIMETMDBKEYWORDS&{SORT}`, "Global Anime Series classification."),
+            disc('tv', `include_adult=true&with_genres=16&with_keywords=${ANIME_TMDB_KEYWORDS}&${SORT}`, "Global Anime Series classification."),
             disc('movie', `include_adult=true&with_genres=16&with_origin_country=JP&${SORT}`, "Official Anime Feature Film.")
         ];
         aiNote = `Showing <strong>Japanese & Global Anime</strong> movies and series across Action, Fantasy, Sports, and Sci-Fi.`;
     } else if (isSportsQuery) {
         sources = [
-            disc('movie', `include_adult=false&with_keywords=SPORTSTMDBKEYWORDS&{SORT}`, "Official Sports Movie."),
-            disc('tv', `include_adult=false&with_keywords=SPORTSTMDBKEYWORDS&{SORT}`, "Official Sports Series / Anime.")
+            disc('movie', `include_adult=false&with_keywords=${SPORTS_TMDB_KEYWORDS}&${SORT}`, "Official Sports Movie."),
+            disc('tv', `include_adult=false&with_keywords=${SPORTS_TMDB_KEYWORDS}&${SORT}`, "Official Sports Series / Anime.")
         ];
         aiNote = `Showing <strong>Sports</strong> movies, series, and sports anime.`;
     } else if (isKidsQuery) {
@@ -3921,7 +3923,7 @@ async function performSearch() {
             isPlainSearch = true;
             const kind = selectedMedia === 'all' ? 'multi' : selectedMedia;
             sources = [page => ({
-                url: `BASE/search/{kind}?api_key=TMDBAPIKEY&includeadult=true&query={encodeURIComponent(query)}&page=${page}`,
+                url: `${BASE}/search/${kind}?api_key=${TMDB_API_KEY}&include_adult=true&query=${encodeURIComponent(query)}&page=${page}`,
                 mType: kind === 'multi' ? undefined : kind
             })];
         }
@@ -3936,7 +3938,7 @@ async function performSearch() {
             if (isPlainSearch && results.length) {
                 try {
                     const top = results[0];
-                    const rec = await fetchJSON(`BASE/{top.media_type}/top.id/recommendations?apikey={TMDB_API_KEY}&page=1`);
+                    const rec = await fetchJSON(`${BASE}/${top.media_type}/${top.id}/recommendations?api_key=${TMDB_API_KEY}&page=1`);
                     (rec.results || []).forEach(rm => {
                         if (rm.poster_path && isSafeNonPorn(rm)) {
                             results.push({ ...rm, media_type: top.media_type, rationale: `Recommended because you searched for "${top.title || top.name}".` });
@@ -3951,7 +3953,7 @@ async function performSearch() {
 
         mainContainer.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-                <h3 class="row-title"><i class="fa-solid fa-magnifying-glass-chart" style="color: var(--secondary-glow);"></i> ${intent.structured ? `AI Matches: escapeHTML(describeIntent(intent))`:`Search&AIAnswerfor"{escapeHTML(query)}"`}</h3>
+                <h3 class="row-title"><i class="fa-solid fa-magnifying-glass-chart" style="color: var(--secondary-glow);"></i> ${intent.structured ? `AI Matches: ${escapeHTML(describeIntent(intent))}` : `Search & AI Answer for "${escapeHTML(query)}"`}</h3>
                 <button type="button" class="filter-pill" onclick="searchInput.value='';performSearch();"><i class="fa-solid fa-arrow-left"></i> Back to Galaxy Stream</button>
             </div>
         `;
@@ -4038,7 +4040,7 @@ navItems.forEach(item => {
                 try {
                     const lw = watchedMovies[0];
                     const lwType = lw.media_type === 'tv' ? 'tv' : 'movie';
-                    const simRes = await fetch(`https://api.themoviedb.org/3/lwType/{lw.id}/recommendations?api_key=${TMDB_API_KEY}&page=1`).then(r => r.json());
+                    const simRes = await fetch(`https://api.themoviedb.org/3/${lwType}/${lw.id}/recommendations?api_key=${TMDB_API_KEY}&page=1`).then(r => r.json());
                     const simItems = (simRes.results || []).map(m => ({
                         ...m,
                         media_type: lwType,
@@ -4085,7 +4087,7 @@ async function renderDataAnalyticsDashboard() {
     };
     if (currentUser) {
         try {
-            const res = await fetch(`BACKENDURL/api/user/insights?username={encodeURIComponent(currentUser)}`);
+            const res = await fetch(`${BACKEND_URL}/api/user/insights?username=${encodeURIComponent(currentUser)}`);
             const d = await res.json();
             insights.total_liked = Math.max(favorites.length, d.total_liked || 0);
             insights.total_watchlist = Math.max(watchlist.length, d.total_watchlist || 0);
@@ -4244,7 +4246,7 @@ async function loadModalSimilarRecommendations(id, mType, title) {
     box.style.display = 'none';
     strip.innerHTML = '';
     try {
-        const r = await fetch(`https://api.themoviedb.org/3/mType/{id}/recommendations?api_key=${TMDB_API_KEY}&page=1`);
+        const r = await fetch(`https://api.themoviedb.org/3/${mType}/${id}/recommendations?api_key=${TMDB_API_KEY}&page=1`);
         const d = await r.json();
         const recs = (d.results || []).filter(x => x.poster_path && isSafeNonPorn(x) && !isBlockedByNotInterested(x, false)).slice(0, 8);
         if (!recs.length) return;
@@ -4257,7 +4259,7 @@ async function loadModalSimilarRecommendations(id, mType, title) {
             item.onclick = () => {
                 fetchAndOpenModal(sTitle, sPoster, `AI Recommended because you viewed "${title}".`, sim.id, 94, mType, sim);
             };
-            item.innerHTML = `<img src="sPoster"alt="{escapeHTML(sTitle)}"><span>${escapeHTML(sTitle)}</span>`;
+            item.innerHTML = `<img src="${sPoster}" alt="${escapeHTML(sTitle)}"><span>${escapeHTML(sTitle)}</span>`;
             strip.appendChild(item);
         });
     } catch (e) {}
@@ -4340,7 +4342,7 @@ function renderModalGenresAndCredits(item, mType) {
         } else if (job.includes('producer')) {
             if (!producers.includes(name)) producers.push(name);
         } else if (job.includes('director of photography') || job.includes('cinematography') || job.includes('original music composer') || job === 'editor') {
-            const label = `name({member.job})`;
+            const label = `${name} (${member.job})`;
             if (!keyCrew.includes(label)) keyCrew.push(label);
         }
     });
@@ -4389,8 +4391,8 @@ function renderModalGenresAndCredits(item, mType) {
         const card = document.createElement('div');
         card.className = 'cast-member-card';
         card.innerHTML = `
-            <img src="profileImg"alt="{escapeHTML(actorName)}" loading="lazy" onerror="this.onerror=null;this.src=NO_AVATAR">
-            <div class="cast-actor-name" title="escapeHTML(actorName)">{escapeHTML(actorName)}</div>
+            <img src="${profileImg}" alt="${escapeHTML(actorName)}" loading="lazy" onerror="this.onerror=null;this.src=NO_AVATAR">
+            <div class="cast-actor-name" title="${escapeHTML(actorName)}">${escapeHTML(actorName)}</div>
             <div class="cast-char-name" title="as ${escapeHTML(charName)}">as ${escapeHTML(charName)}</div>
         `;
         castStrip.appendChild(card);
@@ -4408,7 +4410,7 @@ async function fetchAndOpenModal(title, fallbackPoster, customRationale, movieId
             } catch (error) { console.warn('Detail request failed, trying title search.', error); }
         }
         if (!item) {
-            const r = await fetch(`https://api.themoviedb.org/3/search/mType?apikey={TMDB_API_KEY}&include_adult=true&query=${encodeURIComponent(title)}`);
+            const r = await fetch(`https://api.themoviedb.org/3/search/${mType}?api_key=${TMDB_API_KEY}&include_adult=true&query=${encodeURIComponent(title)}`);
             const d = await r.json();
             const firstHit = d.results && d.results[0];
             if (firstHit && firstHit.id) {
@@ -4489,7 +4491,7 @@ async function fetchAndOpenModal(title, fallbackPoster, customRationale, movieId
         // Render Complete Genres, Cast (Characters + Actors), and Crew
         renderModalGenresAndCredits(item, mType);
 
-        fetch(`BACKENDURL/api/omdb?title={encodeURIComponent(currentMovieData.title)}&year=${year}`)
+        fetch(`${BACKEND_URL}/api/omdb?title=${encodeURIComponent(currentMovieData.title)}&year=${year}`)
             .then(r => r.json())
             .then(o => {
                 const b = document.getElementById('omdbBadge');
@@ -4500,12 +4502,12 @@ async function fetchAndOpenModal(title, fallbackPoster, customRationale, movieId
             }).catch(() => {});
 
         document.getElementById('modalProviders').innerHTML = `<i class="fa-solid fa-tv"></i> <span>Checking streaming apps (${selectedRegion})...</span>`;
-        fetch(`https://api.themoviedb.org/3/mType/{currentMovieData.id}/watch/providers?api_key=${TMDB_API_KEY}`)
+        fetch(`https://api.themoviedb.org/3/${mType}/${currentMovieData.id}/watch/providers?api_key=${TMDB_API_KEY}`)
             .then(r => r.json())
             .then(provData => {
                 const provs = provData.results && (provData.results[selectedRegion] || provData.results.US);
                 const flat = provs && provs.flatrate ? provs.flatrate.map(p => p.provider_name).join(', ') : null;
-                document.getElementById('modalProviders').innerHTML = `<i class="fa-solid fa-tv"></i> <span>Streaming in selectedRegion:<strong>{flat || 'Available on Digital / VOD'}</strong></span>`;
+                document.getElementById('modalProviders').innerHTML = `<i class="fa-solid fa-tv"></i> <span>Streaming in ${selectedRegion}: <strong>${flat || 'Available on Digital / VOD'}</strong></span>`;
             }).catch(() => {
                 document.getElementById('modalProviders').innerHTML = `<i class="fa-solid fa-tv"></i> <span>Streaming on: <strong>Global VOD Catalog</strong></span>`;
             });
@@ -4523,7 +4525,7 @@ async function fetchAndOpenModal(title, fallbackPoster, customRationale, movieId
 
 async function fetchAndPlayTrailer(id, title, mType = 'movie') {
     try {
-        const res = await fetch(`https://api.themoviedb.org/3/mType/{id}/videos?api_key=${TMDB_API_KEY}`);
+        const res = await fetch(`https://api.themoviedb.org/3/${mType}/${id}/videos?api_key=${TMDB_API_KEY}`);
         const data = await res.json();
         const videos = (data.results || []).filter(v => v.site === 'YouTube');
         const trailer = videos.find(v => v.type === 'Trailer' && v.official)
@@ -4533,7 +4535,7 @@ async function fetchAndPlayTrailer(id, title, mType = 'movie') {
         const extBtn = document.getElementById('youtubeExternalBtn');
         if (trailer && trailer.key) {
             const origin = window.location.origin.startsWith('http') ? `&origin=${encodeURIComponent(window.location.origin)}` : '';
-            document.getElementById('youtubeIframe').src = `https://www.youtube-nocookie.com/embed/trailer.key?autoplay=1&rel=0{origin}`;
+            document.getElementById('youtubeIframe').src = `https://www.youtube-nocookie.com/embed/${trailer.key}?autoplay=1&rel=0${origin}`;
             extBtn.href = `https://www.youtube.com/watch?v=${trailer.key}`;
             document.getElementById('videoModalTitle').innerText = `${title} – Official Trailer`;
             document.getElementById('videoModal').classList.add('active');
@@ -4983,7 +4985,7 @@ async function findMoviesByPlot(query) {
     const api = 'https://api.themoviedb.org/3';
     const norm = s => String(s || '').toLowerCase().trim();
     const lookups = await Promise.allSettled(queries.map(x =>
-        fetchJSON(`api/search/keyword?apikey={TMDB_API_KEY}&query=${encodeURIComponent(x.q)}`)));
+        fetchJSON(`${api}/search/keyword?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(x.q)}`)));
     const ids = { phrase: [], alias: [], single: [] };
     lookups.forEach((r, i) => {
         if (r.status !== 'fulfilled') return;
@@ -5009,7 +5011,7 @@ async function findMoviesByPlot(query) {
     const pool = [], seen = new Set();
     for (const expr of attempts) {
         const res = await Promise.allSettled(types.map(t =>
-            fetchJSON(`api/discover/{t}?api_key=TMDBAPIKEY&includeadult=false&withkeywords={expr}&sort_by=popularity.desc&page=1`)));
+            fetchJSON(`${api}/discover/${t}?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${expr}&sort_by=popularity.desc&page=1`)));
         const lists = types.map(() => []);
         res.forEach((r, i) => {
             if (r.status !== 'fulfilled') return;
@@ -5034,8 +5036,8 @@ async function lookupKbTitle(e) {
     const type = e.k === 'tv' ? 'tv' : 'movie';
     const norm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     const search = async withYear => {
-        const yp = withYear ? `&type==='tv'?'firstairdateyear':'year'={e.y}` : '';
-        const d = await fetchJSON(`api/search/{type}?api_key=TMDBAPIKEY&includeadult=false&query={encodeURIComponent(e.t)}${yp}`);
+        const yp = withYear ? `&${type === 'tv' ? 'first_air_date_year' : 'year'}=${e.y}` : '';
+        const d = await fetchJSON(`${api}/search/${type}?api_key=${TMDB_API_KEY}&include_adult=false&query=${encodeURIComponent(e.t)}${yp}`);
         return (d.results || []).filter(r => r.poster_path);
     };
     try {
@@ -5075,7 +5077,7 @@ async function resolveReplyTitles(reply, limit = 3) {
     const yr = r => (r.release_date || r.first_air_date || '').slice(0, 4);
     const out = await Promise.all(found.map(async ({ t, y }) => {
         try {
-            const d = await fetchJSON(`api/search/{kind}?api_key=TMDBAPIKEY&includeadult=false&query={encodeURIComponent(t)}`);
+            const d = await fetchJSON(`${api}/search/${kind}?api_key=${TMDB_API_KEY}&include_adult=false&query=${encodeURIComponent(t)}`);
             const hits = (d.results || []).filter(r =>
                 (kind !== 'multi' || r.media_type === 'movie' || r.media_type === 'tv')
                 && r.poster_path && norm(r.title || r.name) === norm(t));
@@ -5096,7 +5098,7 @@ async function fallbackRecommendations(want = 5) {
         const ids = [...new Set(userGenres.filter(g => /^\d+$/.test(String(g)))
             .flatMap(g => String(t === 'tv' ? (MOVIE_TO_TV_GENRE[g] || g) : g).split(',')))];
         const gp = ids.length ? `&with_genres=${ids.join('|')}` : '';
-        return fetchJSON(`api/discover/{t}?api_key=TMDBAPIKEY&includeadult=false&sortby=voteaverage.desc&votecount.gte=1500&voteaverage.gte=7{gp}&page=${page}`);
+        return fetchJSON(`${api}/discover/${t}?api_key=${TMDB_API_KEY}&include_adult=false&sort_by=vote_average.desc&vote_count.gte=1500&vote_average.gte=7${gp}&page=${page}`);
     }));
     const pool = [];
     results.forEach((r, i) => {
@@ -5189,7 +5191,7 @@ function buildNovaRecList(movies, query = '', opts = {}) {
         const year = yearOf(m) || 'N/A';
         const rating = m.vote_average ? Number(m.vote_average).toFixed(1) : 'NR';
         const matchPct = calculateSimilarityMatch(m, query);
-        const rationale = m.rationale || (opts.best || opts.maybe ? `Matched to your description: "query".`:`RecommendedbyNovafor"{query}".`);
+        const rationale = m.rationale || (opts.best || opts.maybe ? `Matched to your description: "${query}".` : `Recommended by Nova for "${query}".`);
         const genres = getExactGenreNames(m);
         const originLabel = resolveMovieOriginCountry(m);
         const r18 = isGenuineR18(m);
@@ -5201,12 +5203,12 @@ function buildNovaRecList(movies, query = '', opts = {}) {
         const card = document.createElement('div');
         card.className = 'nova-rec-card';
         card.innerHTML = `
-            <div class="nova-rec-poster"><img src="escapeHTML(poster)"alt="{escapeHTML(title)}" loading="lazy"></div>
+            <div class="nova-rec-poster"><img src="${escapeHTML(poster)}" alt="${escapeHTML(title)}" loading="lazy"></div>
             <div class="nova-rec-info">
                 ${tag}
                 <div class="nova-rec-title">${escapeHTML(title)}</div>
                 <div class="nova-rec-meta">
-                    <span class="nova-rec-badges">r18?'<spanclass="r18-badge">R-18</span>':''<spanclass="media-badge">{mediaLabel(mType)}</span></span>
+                    <span class="nova-rec-badges">${r18 ? '<span class="r18-badge">R-18</span>' : ''}<span class="media-badge">${mediaLabel(mType)}</span></span>
                     <span><i class="fa-solid fa-calendar"></i> ${escapeHTML(year)}</span>
                     <span><i class="fa-solid fa-location-dot"></i> ${escapeHTML(originLabel)}</span>
                     <span class="rating-badge"><i class="fa-solid fa-star"></i> ${rating}</span>
@@ -5325,7 +5327,7 @@ async function sendToNovaEngine(message) {
         if (movies.length && plot) {
             const top = movies[0];
             replyText = plot.clear
-                ? `That sounds like top.title||top.name{yearOf(top) ? ` (${yearOf(top)})` : ''}. Here's the ${top.media_type === 'tv' ? 'series' : 'movie'} with a quick overview.`
+                ? `That sounds like ${top.title || top.name}${yearOf(top) ? ` (${yearOf(top)})` : ''}. Here's the ${top.media_type === 'tv' ? 'series' : 'movie'} with a quick overview.`
                 : `I found ${movies.length} possible matches for that description. Which one sounds right? If none do, tell me one more detail, like a character, a scene, or roughly when it came out.`;
         } else if (movies.length) {
             replyText = nIntent.structured
@@ -5401,3 +5403,4 @@ initEndlessNetflixHome();
 </script>
 </body>
 </html>
+
