@@ -1,4 +1,3 @@
-APP PY
 
 import os
 import re
