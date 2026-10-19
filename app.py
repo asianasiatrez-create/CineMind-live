@@ -9,13 +9,16 @@ import time
 from datetime import date, timedelta
 from functools import wraps
 
+
 import requests
 from flask import Flask, jsonify, request, g
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 
+
 app = Flask(__name__)
 CORS(app)
+
 
 TMDB_API_KEY = (os.environ.get("TMDB_API_KEY") or "").strip().strip('"').strip("'")
 GROQ_API_KEY = (os.environ.get("GROQ_API_KEY") or "").strip().strip('"').strip("'")
@@ -24,8 +27,10 @@ DB_NAME = os.environ.get("CINEMIND_DB", "cinemind.db")
 TMDB = "https://api.themoviedb.org/3"
 IMG = "https://image.tmdb.org/t/p"
 
+
 SECRET_KEY = os.environ.get("CINEMIND_SECRET") or "cinemind-secure-jwt-salt-2026"
 TOKEN_MAX_AGE = 60 * 60 * 8
+
 
 GENRES = {
     "action": 28, "adventure": 12, "animation": 16, "comedy": 35, "crime": 80,
@@ -49,6 +54,7 @@ MOVIE_TO_TV = {
 SPECIAL_CATEGORIES = ["bl", "boys love", "girls love", "gl", "anime", "kids", "sports", "documentary"]
 GENRE_LIST = ", ".join(list(GENRES.keys()) + SPECIAL_CATEGORIES)
 
+
 COUNTRY_DEFAULT_GENRES = {
     "PH": ["drama", "romance", "comedy", "horror"], "KR": ["drama", "thriller", "romance", "action"],
     "TH": ["horror", "romance", "action", "comedy"], "JP": ["animation", "fantasy", "sci-fi", "drama"],
@@ -57,6 +63,7 @@ COUNTRY_DEFAULT_GENRES = {
     "FR": ["drama", "romance", "comedy"], "GB": ["drama", "crime", "mystery"],
     "US": ["action", "sci-fi", "comedy", "drama"],
 }
+
 
 PORN_BLOCK_WORDS = [
     "porn", "porno", "pornographic", "xxx", "erotic", "erotica", "hentai", "jav",
@@ -78,8 +85,12 @@ KNOWN_R18_TITLES = {
 }
 
 
+
+
 def _cat(rows):
     return [{"title": t, "media_type": m, "year": y, "why": w} for (t, m, y, w) in rows]
+
+
 
 
 CURATED_SPECIAL_CATALOG = {
@@ -140,6 +151,7 @@ CURATED_SPECIAL_CATALOG = {
     ]),
 }
 
+
 KNOWN_PLOT_PATTERNS = [
     {
         "patterns": ["boxing in toy story", "toy story boxing", "rock em sock em", "rock 'em sock 'em"],
@@ -191,6 +203,7 @@ KNOWN_PLOT_PATTERNS = [
     },
 ]
 
+
 CURATED_KOREAN_ROMCOMS = _cat([
     ("Love Reset", "movie", 2023, "Couple on the verge of divorce both get amnesia."),
     ("20th Century Girl", "movie", 2022, "Nostalgic Korean teen romance."),
@@ -201,11 +214,15 @@ CURATED_KOREAN_ROMCOMS = _cat([
 ])
 
 
+
+
 def is_safe_non_porn(m):
     if not m or m.get("adult") is True:
         return False
     text = f"{m.get('title') or ''} {m.get('name') or ''} {m.get('original_title') or ''} {m.get('overview') or ''}".lower()
     return not any(bad in text for bad in PORN_BLOCK_WORDS)
+
+
 
 
 def is_animated_or_cartoon(m):
@@ -216,6 +233,8 @@ def is_animated_or_cartoon(m):
         return True
     text = f"{m.get('title') or ''} {m.get('name') or ''} {m.get('overview') or ''}".lower()
     return bool(re.search(r"\b(anime|animated|cartoon|pixar|dreamworks|studio ghibli|spongebob|looney tunes)\b", text))
+
+
 
 
 def is_genuine_r18(m):
@@ -229,6 +248,8 @@ def is_genuine_r18(m):
     return bool(any(x in gids for x in (27, 80, 53, 99)) and re.search(
         r"\b(murder|serial killer|brutal|blood|gore|cartel|massacre|psychopath|torture|slasher|cannibal|dahmer)\b",
         f"{title_l} {overview}"))
+
+
 
 
 def format_exact_genres(m, custom_badge=None):
@@ -248,10 +269,14 @@ def format_exact_genres(m, custom_badge=None):
     return names if names else ["Drama"]
 
 
+
+
 def get_db_conn():
     conn = sqlite3.connect(DB_NAME, timeout=15.0)
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
+
+
 
 
 def init_db():
@@ -319,7 +344,11 @@ def init_db():
         pass
 
 
+
+
 init_db()
+
+
 
 
 def log_audit_event(username, event_type, details=""):
@@ -337,6 +366,8 @@ def log_audit_event(username, event_type, details=""):
         pass
 
 
+
+
 def get_user_role(username):
     if not username:
         return "guest"
@@ -347,6 +378,8 @@ def get_user_role(username):
         return row[0] if row and row[0] else "guest"
     except Exception:
         return "guest"
+
+
 
 
 def seed_admin():
@@ -366,7 +399,11 @@ def seed_admin():
         pass
 
 
+
+
 seed_admin()
+
+
 
 
 def issue_token(username):
@@ -374,6 +411,8 @@ def issue_token(username):
     b64 = base64.urlsafe_b64encode(payload).decode("ascii")
     sig = hmac.new(SECRET_KEY.encode("utf-8"), b64.encode("ascii"), hashlib.sha256).hexdigest()
     return f"{b64}.{sig}"
+
+
 
 
 def current_identity():
@@ -396,6 +435,8 @@ def current_identity():
         return None
 
 
+
+
 def require_role(required):
     def deco(fn):
         @wraps(fn)
@@ -413,10 +454,14 @@ def require_role(required):
     return deco
 
 
+
+
 @app.route("/", methods=["GET"])
 def home():
     return jsonify({"status": "CineMind Engine Live", "version": "20.1-Secure-RBAC",
                     "database_tables": ["users", "watchlist", "favorites", "not_interested", "interactions", "audit_logs"]})
+
+
 
 
 @app.route("/api/signup", methods=["POST"])
@@ -443,6 +488,8 @@ def signup():
     except sqlite3.IntegrityError:
         log_audit_event(username, "SIGNUP_DUPLICATE", "Attempted duplicate username registration")
         return jsonify({"success": False, "message": "Username already exists."}), 400
+
+
 
 
 @app.route("/api/login", methods=["POST"])
@@ -480,6 +527,8 @@ def login():
     return jsonify({"success": False, "message": "Invalid username or password."}), 401
 
 
+
+
 @app.route("/api/user/library", methods=["GET"])
 def get_library():
     username = request.args.get("username", "").strip().lower()
@@ -505,6 +554,8 @@ def get_library():
             pass
         role = g_row[1] or "user"
     return jsonify({"watchlist": wl, "favorites": fav, "not_interested": ni, "genres": saved, "role": role})
+
+
 
 
 @app.route("/api/user/library/toggle", methods=["POST"])
@@ -541,6 +592,8 @@ def toggle_library():
     return jsonify({"success": True, "action": action})
 
 
+
+
 @app.route("/api/user/not_interested", methods=["POST"])
 def mark_not_interested():
     data = request.get_json() or {}
@@ -563,6 +616,8 @@ def mark_not_interested():
     conn.close()
     log_audit_event(username, "NOT_INTERESTED_HIDE", f"Eliminated concept '{title}' ({movie_id})")
     return jsonify({"success": True, "action": "hidden"})
+
+
 
 
 @app.route("/api/admin/audit-logs", methods=["GET"])
@@ -588,6 +643,8 @@ def admin_audit_logs():
     return jsonify({"success": True, "role": "admin", "total_registered_users": total_users, "audit_logs": logs})
 
 
+
+
 @app.route("/api/admin/users", methods=["GET"])
 @require_role("admin")
 def admin_users():
@@ -595,6 +652,8 @@ def admin_users():
     rows = conn.execute("SELECT username, role, created_at FROM users ORDER BY id").fetchall()
     conn.close()
     return jsonify({"success": True, "users": [{"username": r[0], "role": r[1], "created_at": r[2]} for r in rows]})
+
+
 
 
 @app.route("/api/user/insights", methods=["GET"])
@@ -619,6 +678,8 @@ def get_insights():
     })
 
 
+
+
 def tmdb(path, **params):
     params["api_key"] = TMDB_API_KEY
     params.setdefault("include_adult", "false")
@@ -627,6 +688,8 @@ def tmdb(path, **params):
         return r.json() if r.status_code == 200 else {}
     except Exception:
         return {}
+
+
 
 
 def card(m, media, badge=None):
@@ -639,6 +702,8 @@ def card(m, media, badge=None):
         "original_language": m.get("original_language", ""),
         "origin_country": m.get("origin_country") or [], "r18": is_genuine_r18(m),
     }
+
+
 
 
 @app.route("/api/omdb", methods=["GET"])
@@ -655,6 +720,8 @@ def omdb_info():
     return jsonify({})
 
 
+
+
 CREW_GROUPS = {
     "directors": {"Director"},
     "writers": {"Writer", "Screenplay", "Story", "Novel", "Characters", "Teleplay"},
@@ -663,8 +730,12 @@ CREW_GROUPS = {
 }
 
 
+
+
 def _photo(path):
     return f"{IMG}/w185{path}" if path else None
+
+
 
 
 @app.route("/api/credits", methods=["GET"])
@@ -707,6 +778,8 @@ def movie_credits():
     })
 
 
+
+
 @app.route("/api/top10", methods=["GET"])
 def top10():
     region = (request.args.get("region") or "PH").upper()[:2]
@@ -732,6 +805,8 @@ def top10():
     return jsonify({"success": True, "region": region, "items": items})
 
 
+
+
 SPECIAL_DISCOVER = {
     "BL": ("Boys' Love (BL)", {"with_keywords": "286407|250606|158718", "without_genres": "16"}, {"with_keywords": "286407|250606|158718", "without_genres": "16"}),
     "GL": ("Girls' Love (GL)", {"with_keywords": "264386|9840|158718", "without_genres": "16"}, {"with_keywords": "264386|9840", "without_genres": "16"}),
@@ -739,6 +814,8 @@ SPECIAL_DISCOVER = {
     "KIDS": ("Kids & Family", {"with_genres": "10762|10751", "without_genres": "80,9648"}, {"with_genres": "10751", "without_genres": "27,53,80"}),
     "SPORTS": ("Real-Life Sports", {"with_keywords": "6075|13042|6513|1721", "without_genres": "16,10765"}, {"with_keywords": "6075|13042|6513|1721", "without_genres": "16,14"}),
 }
+
+
 
 
 @app.route("/api/discover", methods=["GET"])
@@ -785,6 +862,8 @@ def discover():
     return jsonify({"success": True, "page": page, "items": items, "has_more": bool(pages) and page < max(pages) and bool(items)})
 
 
+
+
 PARSE_PROMPT = f"""You are Nova, an expert AI cinema and TV assistant.
 Return ONLY a valid JSON object with these keys:
 {{"intent": "recommend"|"similar_to"|"plot_search"|"chitchat"|"question",
@@ -794,6 +873,8 @@ Return ONLY a valid JSON object with these keys:
 "min_rating": null, "language": "ISO 639-1 or null", "origin_country": "ISO 3166-1 or null",
 "sort": "popularity"|"rating"|"newest", "mood_keywords": [], "similar_to": [], "exclude_titles": [],
 "direct_reply": "short natural reply. Sports must be real live-action only; documentaries real-life only."}}"""
+
+
 
 
 def groq_json(system, user, temperature=0.2, timeout=10):
@@ -814,6 +895,8 @@ def groq_json(system, user, temperature=0.2, timeout=10):
     return None
 
 
+
+
 def detect_special_category(text=""):
     lower = (text or "").lower()
     if re.search(r"\b(boys love|boy's love|boys' love|bl series|bl drama|thai bl|korean bl|japanese bl|yaoi)\b", lower):
@@ -829,6 +912,8 @@ def detect_special_category(text=""):
     if re.search(r"\b(kids|children|family movie|pixar|disney animated|dreamworks|cartoon)\b", lower):
         return "KIDS"
     return None
+
+
 
 
 def deep_plot_detective(message):
@@ -872,6 +957,8 @@ def deep_plot_detective(message):
     return [], None
 
 
+
+
 COUNTRY_MAP = {
     "korean": ("KR", "ko", "South Korean"), "korea": ("KR", "ko", "South Korean"),
     "k-drama": ("KR", "ko", "South Korean"), "kdrama": ("KR", "ko", "South Korean"),
@@ -896,6 +983,8 @@ MOOD_GENRES = [
     (["scary", "horror", "ghost", "creepy", "haunted"], ["horror"]),
     (["action", "explosive", "fight", "blockbuster"], ["action"]),
 ]
+
+
 
 
 def smart_local_nlp_parse(message, history, username="Guest", fav_genres=None):
@@ -949,6 +1038,8 @@ def smart_local_nlp_parse(message, history, username="Guest", fav_genres=None):
             "language": language, "mood_keywords": [], "similar_to": [], "direct_reply": direct_reply}
 
 
+
+
 def extract_intent(message, history, username="Guest", fav_genres=None, client_guesses=None):
     local = smart_local_nlp_parse(message, history, username, fav_genres)
     ctx = "\n".join(f"{'User' if h.get('role') == 'user' else 'Nova'}: {h.get('content')}"
@@ -964,6 +1055,8 @@ def extract_intent(message, history, username="Guest", fav_genres=None, client_g
             combined.append(gg)
     merged["plot_guesses"] = combined
     return merged
+
+
 
 
 def search_tmdb_title(title, year=None, preferred_media=None):
@@ -983,9 +1076,13 @@ def search_tmdb_title(title, year=None, preferred_media=None):
     return None
 
 
+
+
 def find_movie_id(title):
     hit = search_tmdb_title(title)
     return (hit["id"], hit.get("media_type", "movie")) if hit else (None, "movie")
+
+
 
 
 def keyword_ids(words):
@@ -995,6 +1092,8 @@ def keyword_ids(words):
         if r:
             ids.append(str(r[0]["id"]))
     return ids
+
+
 
 
 def plot_search(p):
@@ -1035,6 +1134,8 @@ def plot_search(p):
     return results
 
 
+
+
 def find_movies(intent):
     special_cat = intent.get("special_category")
     strict_no_animation = special_cat in ("SPORTS", "DOC") or "documentary" in (intent.get("genres") or [])
@@ -1047,6 +1148,7 @@ def find_movies(intent):
     target_country = (intent.get("origin_country") or "").upper() or None
     badge = {"BL": "Boys' Love (BL)", "GL": "Girls' Love (GL)", "SPORTS": "Real-Life Sports",
              "DOC": "Documentary", "ANIME": "Anime", "KIDS": "Kids & Family"}.get(special_cat)
+
 
     def add(movies, bonus=0, why_note=None, enforce_country=False, default_media="movie"):
         for m in movies:
@@ -1071,12 +1173,14 @@ def find_movies(intent):
             else:
                 cands[key]["_bonus"] = max(cands[key].get("_bonus", 0), bonus)
 
+
     for idx, gg in enumerate((intent.get("plot_guesses") or [])[:12]):
         if not isinstance(gg, dict) or not gg.get("title"):
             continue
         hit = search_tmdb_title(gg["title"], gg.get("year"), gg.get("media_type"))
         if hit:
             add([hit], bonus=45.0 - idx * 2.0, why_note=gg.get("why"), default_media=hit.get("media_type", "movie"))
+
 
     if special_cat in SPECIAL_DISCOVER:
         _, tvp, mvp = SPECIAL_DISCOVER[special_cat]
@@ -1086,10 +1190,12 @@ def find_movies(intent):
         add(tmdb("/discover/tv", with_genres="99", without_genres="16,10762", sort_by="popularity.desc").get("results", []), bonus=22.0, default_media="tv")
         add(tmdb("/discover/movie", with_genres="99", without_genres="16,10751", sort_by="popularity.desc").get("results", []), bonus=20.0, default_media="movie")
 
+
     for t in (intent.get("similar_to") or [])[:2]:
         mid, m_type = find_movie_id(t)
         if mid:
             add(tmdb(f"/{m_type}/{mid}/recommendations").get("results", []), bonus=15.0, why_note=f"Recommended based on '{t}'.", default_media=m_type)
+
 
     if not special_cat:
         gids = [str(GENRES[x.lower()]) for x in (intent.get("genres") or []) if x.lower() in GENRES]
@@ -1106,11 +1212,17 @@ def find_movies(intent):
             p["with_original_language"] = target_lang
         if target_country:
             p["with_origin_country"] = target_country
-        for page in (1, 2):
-            add(tmdb("/discover/movie", page=page, **p).get("results", []), bonus=10.0, enforce_country=True)
-        if target_country:
-            add(tmdb("/discover/tv", page=1, **p).get("results", []), bonus=10.0, enforce_country=True, default_media="tv")
+        if intent.get("_media") != "tv":
+            for page in (1, 2):
+                add(tmdb("/discover/movie", page=page, **p).get("results", []), bonus=10.0, enforce_country=True)
+        if target_country or intent.get("_media") == "tv":
+            tv_p = dict(p)
+            if gids:
+                tv_p["with_genres"] = "|".join(MOVIE_TO_TV.get(x, x) for x in gids[:3])
+            add(tmdb("/discover/tv", page=1, **tv_p).get("results", []), bonus=10.0, enforce_country=True, default_media="tv")
     return list(cands.values())
+
+
 
 
 def get_seen_and_disliked(username):
@@ -1135,8 +1247,12 @@ def get_seen_and_disliked(username):
     return ids, kws
 
 
+
+
 def norm(t):
     return re.sub(r"[^a-z0-9]", "", (t or "").lower())
+
+
 
 
 def rank(cands, intent, seen_ids, disliked_titles=None, disliked_keywords=None):
@@ -1178,6 +1294,8 @@ def rank(cands, intent, seen_ids, disliked_titles=None, disliked_keywords=None):
     return top
 
 
+
+
 def explain(message, username, movies, intent):
     listing = [{"id": m["id"], "title": m.get("title") or m.get("name"),
                 "year": (m.get("release_date") or m.get("first_air_date") or "")[:4],
@@ -1188,6 +1306,8 @@ def explain(message, username, movies, intent):
     return groq_json(system, f"User Request: {message}\nTitles: {json.dumps(listing)}", temperature=0.3) or {}
 
 
+
+
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.get_json() or {}
@@ -1195,14 +1315,16 @@ def chat():
     profile = data.get("profile") or {}
     username = profile.get("name", "Guest")
     fav_genres = profile.get("favorite_genres") or []
-    disliked_titles = profile.get("disliked_titles") or []
+    disliked_titles = profile.get("not_interested_titles") or profile.get("disliked_titles") or []
     selected_country = (profile.get("origin_country") or "").strip().upper()
     history = data.get("history") or []
     region = (data.get("region") or "").upper() or None
+    media_filter = data.get("media") if data.get("media") in ("movie", "tv") else None
     if not message:
         return jsonify({"reply": f"Hey {username}! Tell me a plot, mood, genre or country.", "movies": []})
     log_audit_event(username, "NOVA_AI_QUERY", f"Query: {message[:120]}")
     intent = extract_intent(message, history, username, fav_genres, data.get("client_guesses") or [])
+    intent["_media"] = media_filter
     intent_type = intent.get("intent", "recommend")
     if intent_type in ("chitchat", "question") and not intent.get("plot_guesses") and not intent.get("genres") and not intent.get("special_category"):
         return jsonify({"reply": intent.get("direct_reply") or f"I'm Nova, your AI cinema companion, {username}. Ask me any movie question.",
@@ -1218,6 +1340,8 @@ def chat():
     if not cands:
         cands = [m for m in tmdb("/search/multi", query=message).get("results", [])
                  if is_safe_non_porn(m) and m.get("poster_path") and m.get("media_type") in ("movie", "tv")]
+    if media_filter:
+        cands = [m for m in cands if (m.get("media_type") or "movie") == media_filter]
     seen_ids, disliked_keywords = get_seen_and_disliked(username)
     top = rank(cands, intent, seen_ids, disliked_titles, disliked_keywords) or cands[:12]
     if not top:
@@ -1236,10 +1360,14 @@ def chat():
     return jsonify({"reply": reply, "movies": movies, "intent": intent_type, "success": True})
 
 
+
+
 @app.route("/trends", methods=["GET"])
 def trends():
     return jsonify({"ai_forecast": "Regional charts, genre-accurate browsing and audit logging online.",
                     "trending_genres": ["Boys' Love (BL) and Girls' Love (GL)", "Real-Life Sports and True-Crime Docs", "Anime"]})
+
+
 
 
 if __name__ == "__main__":
