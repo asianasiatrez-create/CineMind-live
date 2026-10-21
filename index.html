@@ -2,7 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>CineMind | Neural Galaxy Cinema & Series Intelligence</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -414,25 +414,20 @@ html[data-theme="light"] .netflix-dropdown.open .netflix-dropdown-trigger {
 .row-title { font-size: 1.35rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
 .catalog-container { display: flex; flex-direction: column; gap: 34px; min-width: 0; min-height: 70vh; }
 .row-section { display: flex; flex-direction: column; gap: 12px; min-width: 0; content-visibility: auto; contain-intrinsic-size: auto 500px; }
-@media (max-width: 640px) {
-    /* ... existing 640px rules ... */
-    
-    /* FIX: Force 2x2 grid on mobile so it doesn't push movies off-screen */
-    .filter-dropdown-container { 
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important; 
-        gap: 10px 8px; 
-    }
-    .netflix-dropdown-trigger { 
-        height: 42px; 
-        min-height: 42px; 
-        font-size: 0.82rem; 
-        padding: 0 10px;
-        border-radius: 12px;
-    }
-    .filter-select-wrapper label {
-        font-size: 0.72rem;
-        margin-bottom: -2px;
-    }
+@media (max-width: 640px) { .row-section { contain-intrinsic-size: auto 400px; } }
+.movie-row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 20px;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 12px 8px 24px 8px;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+    scrollbar-color: var(--secondary-glow) transparent;
 }
 
 .movie-card {
@@ -1026,6 +1021,213 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
 .pw-toggle:hover { color: var(--secondary-glow); }
 .pw-toggle i { color: inherit; pointer-events: none; }
 #resetDislikedBtn { display: none !important; }
+
+/* ================= MOBILE & TOUCH OPTIMIZATION ================= */
+.app-layout { overflow-x: clip; }
+.chat-wrapper { touch-action: auto; }
+.netflix-menu-done { display: none; }
+.movie-row, .cast-scroll-strip, .modal-similar-strip, .quick-chips { overscroll-behavior-x: contain; }
+
+@media (hover: none) {
+    .nav-item:hover, .netflix-dropdown-item:hover,
+    .btn-action:hover, .search-btn-submit:hover,
+    .account-top-btn:hover, .theme-toggle-btn:hover { transform: none; }
+    .netflix-dropdown-item:hover { text-decoration: none; }
+}
+
+/* ---------- Tablets & small laptops ---------- */
+@media (max-width: 1100px) {
+    .movie-card { min-width: 190px; width: 190px; }
+    .top10-card { min-width: 250px; width: 250px; }
+    .card-poster-wrap { height: auto; aspect-ratio: 2 / 3; }
+    .movie-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 16px; }
+    .movie-grid .movie-card { height: auto; }
+    .movie-grid .card-poster-wrap { height: auto; }
+    .movie-info { min-height: 128px; }
+    .nav-item, .filter-pill, .chip { min-height: 40px; }
+    .btn-action { min-height: 42px; }
+}
+
+/* ---------- Phones ---------- */
+@media (max-width: 640px) {
+    html { -webkit-text-size-adjust: 100%; }
+    .main-content { gap: 16px; padding-bottom: calc(140px + env(safe-area-inset-bottom)); }
+
+    /* --- Top bar --- */
+    .sidebar { padding: 10px 12px; border-radius: 18px; }
+    .sidebar-top-bar { gap: 8px; }
+    .logo-unboxed { width: 40px; max-height: 40px; }
+    .account-top-btn { min-height: 44px; padding: 8px 12px; }
+    .theme-toggle-btn { width: 44px; height: 44px; }
+
+    /* --- Bottom tab bar instead of a scrolling pill row --- */
+    .nav-links {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 120; width: auto;
+        flex-direction: row; justify-content: space-between; gap: 2px; overflow: visible;
+        padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+        background: var(--sidebar-bg); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+        border-top: 1px solid var(--glass-border);
+    }
+    .nav-item {
+        flex: 1 1 0; min-width: 0; min-height: 52px; flex-direction: column; justify-content: center;
+        gap: 3px; padding: 7px 2px; font-size: .62rem; text-align: center; border-radius: 12px;
+    }
+    .nav-item i { font-size: 1.15rem; }
+    .nav-item span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .nav-item.active { border-left: 1px solid transparent; box-shadow: inset 0 2px 0 var(--secondary-glow); }
+
+    /* --- Banner: same slanted poster slideshow, gentler tilt, readable text --- */
+    .hero-banner { padding: 20px 16px; min-height: 0; gap: 14px; border-radius: 20px; }
+    .welcome-title { font-size: 1.3rem; }
+    .hero-slideshow { transform: rotate(-4deg) skewX(-3deg); }
+    .hero-slideshow-overlay { background: linear-gradient(180deg, rgba(4,2,14,.90) 0%, rgba(4,2,14,.74) 50%, rgba(4,2,14,.92) 100%); }
+    html[data-theme="light"] .hero-slideshow-overlay { background: linear-gradient(180deg, rgba(230,224,255,.94) 0%, rgba(221,214,254,.80) 50%, rgba(230,224,255,.95) 100%); }
+    .search-input-wrap input { font-size: 16px; min-height: 48px; }
+    .search-btn-submit { min-height: 46px; }
+
+    /* --- Filters --- */
+    .filter-panel { padding: 14px 12px; gap: 14px; }
+    #mediaFilterRow { flex-wrap: wrap; overflow: visible; padding-top: 14px; gap: 8px; }
+    #mediaFilterRow .filter-label { width: 100%; }
+    #mediaFilterRow .filter-pill { flex: 1 1 auto; justify-content: center; min-height: 42px; }
+    .filter-dropdown-container { gap: 10px; }
+    .netflix-dropdown-trigger { height: 48px; min-height: 48px; padding: 0 16px; }
+
+    /* Dropdown menus become a bottom sheet that always fits the screen */
+    .netflix-dropdown-menu,
+    .filter-select-wrapper:last-child .netflix-dropdown-menu,
+    #netflixGenreDropdown .netflix-dropdown-menu {
+        position: fixed !important; left: 8px !important; right: 8px !important; top: auto !important;
+        bottom: calc(8px + env(safe-area-inset-bottom)) !important;
+        width: auto !important; min-width: 0 !important; max-width: none !important;
+        max-height: min(72vh, 560px); overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+        padding: 14px 12px 10px; border-radius: 20px; border-top-width: 1px; z-index: 1000;
+    }
+    .netflix-dropdown-menu { transform: translateY(24px); }
+    .netflix-dropdown.open .netflix-dropdown-menu { transform: none; }
+    .netflix-dropdown-menu::before { display: none; }
+    .netflix-dropdown-grid, .netflix-dropdown-grid.three-col { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 10px; }
+    .netflix-dropdown-grid.single-col { grid-template-columns: minmax(0, 1fr); }
+    .netflix-dropdown-item { min-height: 46px; padding: 10px 12px; font-size: .9rem; }
+    .netflix-menu-done {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        position: sticky; bottom: 0; width: 100%; min-height: 48px; margin-top: 10px; border: 0; border-radius: 16px;
+        background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow));
+        color: #fff; font-weight: 800; font-size: .95rem; cursor: pointer;
+    }
+    .netflix-menu-done i { color: #fff; }
+
+    /* --- Cards: true 2:3 posters, readable text --- */
+    .row-title { font-size: 1.1rem; line-height: 1.25; align-items: flex-start; }
+    .movie-row { gap: 12px; padding: 8px 4px 16px; }
+    .movie-card { min-width: 152px; width: 152px; height: 368px; }
+    .top10-card { min-width: 196px; width: 196px; height: 368px; padding-left: 46px; }
+    .movie-info { padding: 10px 11px; min-height: 0; }
+    .movie-title { font-size: .9rem; }
+    .card-genres-tags { font-size: .72rem; }
+    .card-rationale-preview { font-size: .74rem; min-height: 2.64em; }
+    .movie-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .movie-grid .movie-card { height: auto; }
+    .movie-grid .card-poster-wrap { height: auto; }
+    .movie-grid .movie-info { min-height: 134px; }
+    .badges-container { top: 8px; right: 8px; gap: 4px; max-width: calc(100% - 50px); flex-wrap: wrap; justify-content: flex-end; }
+    .media-badge, .r18-badge { font-size: .64rem; }
+    .card-not-interested-btn { top: 8px; left: 8px; width: 34px; height: 34px; }
+    .origin-country-badge { bottom: 6px; left: 6px; max-width: calc(100% - 12px); overflow: hidden; }
+    .feed-error-card { padding: 32px 16px; }
+
+    /* --- Movie details modal --- */
+    .modal-overlay { padding: 8px; }
+    .modal-content { padding: 12px 16px 20px; gap: 14px; max-height: 94vh; max-height: 94dvh; border-radius: 22px; }
+    #closeModal, #closeProfileModal {
+        position: sticky !important; top: 0 !important; right: auto !important; align-self: flex-end; flex: 0 0 auto;
+        width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+        border-radius: 50%; background: rgba(8, 3, 24, .88); border: 1px solid var(--glass-border);
+        font-size: 1.15rem !important; z-index: 20;
+    }
+    #closeVideoModal { padding: 10px; font-size: 1.5rem !important; }
+    .modal-poster-wrap { width: 150px; height: 225px; }
+    .modal-info { flex: none; overflow: visible; padding-right: 0; }
+    .modal-meta { font-size: .82rem; }
+    .modal-overview { font-size: .95rem; }
+    .modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .modal-actions .btn-action { justify-content: center; min-height: 46px; padding: 10px 8px; font-size: .82rem; }
+    #notInterestedModalBtn { grid-column: 1 / -1; }
+    .crew-grid { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+
+    /* --- Login / profile --- */
+    .profile-box { padding: 16px !important; gap: 14px !important; border-radius: 20px !important; max-height: 94vh !important; max-height: 94dvh !important; }
+    .profile-box input { font-size: 16px !important; min-height: 48px; }
+    .profile-box .btn-action { min-height: 48px; }
+    #signupGenres > div:first-child { flex-wrap: wrap; gap: 6px; }
+    #genrePicker .filter-pill { min-height: 40px; }
+    #accountView .analytics-stat-card { padding: 12px 6px; }
+
+    /* --- Nova: full-screen chat that follows the keyboard --- */
+    .chat-wrapper { right: 12px; bottom: calc(76px + env(safe-area-inset-bottom)); }
+    .nova-chathead { width: 64px; height: 64px; }
+    .chat-tooltip { font-size: .78rem; padding: 8px 14px; }
+    .chat-wrapper:has(.chat-modal.active) .nova-chathead,
+    .chat-wrapper:has(.chat-modal.active) .chat-tooltip { display: none; }
+    .chat-modal {
+        position: fixed !important; left: 0 !important; right: 0 !important; bottom: auto !important;
+        top: var(--vvt, 0px) !important; width: auto; max-width: none;
+        height: 100vh; height: 100dvh; height: var(--vvh, 100dvh);
+        border-radius: 0; border: 0;
+    }
+    .chat-modal:not(.active) { visibility: hidden; }
+    .chat-header { padding: calc(10px + env(safe-area-inset-top)) 14px 10px; }
+    .chat-header .close-chat, .chat-header .fa-broom { padding: 12px; font-size: 1.2rem !important; }
+    .chat-body { flex: 1 1 auto; height: auto; min-height: 0; padding: 12px; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+    .chat-bubble { max-width: 92%; font-size: .95rem; }
+    .quick-chips { flex: 0 0 auto; padding: 8px 12px; }
+    .chip { min-height: 38px; display: inline-flex; align-items: center; }
+    .chat-footer { padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); }
+    .chat-footer input { font-size: 16px; min-height: 46px; }
+    .send-btn { width: 46px; height: 46px; }
+    html:has(.chat-modal.active), html:has(.modal-overlay.active) { overflow-y: hidden; }
+
+    .nova-rec-card { padding: 10px; gap: 10px; }
+    .nova-rec-poster { width: 92px; }
+    .nova-rec-list.solo .nova-rec-poster { width: 108px; }
+    .nova-rec-title { font-size: .98rem; }
+    .nova-rec-overview { font-size: .82rem; }
+    .nova-rec-btn { min-height: 38px; padding: 6px 14px; font-size: .78rem; }
+
+    /* Nova page (sidebar > Nova AI) */
+    #novaEnlargedHistory { height: min(52vh, 460px) !important; padding: 12px !important; }
+    .nova-chat-box-large { padding: 12px !important; border-radius: 20px !important; }
+    .nova-input-row input { font-size: 16px !important; min-height: 46px; padding: 10px 16px !important; }
+    .nova-input-row .btn-action { min-height: 46px; }
+    .nova-banner-clean { padding: 16px; border-radius: 18px; }
+    .nova-banner-clean img { width: 48px; height: 48px; }
+    .nova-banner-clean h2 { font-size: 1.05rem; }
+
+    /* Analytics */
+    .cascade-header { padding: 14px 16px; font-size: .95rem; }
+    .cascade-item.active .cascade-body { padding: 16px; }
+    .analytics-grid-packed { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .analytics-stat-card { padding: 12px; }
+    .chart-box-wrapper { height: 240px; padding: 8px; }
+
+    /* Misc tap targets & toast above the tab bar */
+    .btn-action { min-height: 44px; }
+    .filter-pill { min-height: 38px; }
+    .cinemind-toast { bottom: calc(84px + env(safe-area-inset-bottom)); width: max-content; max-width: calc(100vw - 24px); white-space: normal; text-align: center; }
+}
+
+/* Very small phones */
+@media (max-width: 380px) {
+    .movie-card { min-width: 140px; width: 140px; height: 344px; }
+    .top10-card { min-width: 184px; width: 184px; height: 344px; padding-left: 44px; }
+    .welcome-title { font-size: 1.2rem; }
+    #mediaFilterRow .filter-pill { font-size: .74rem; padding: 6px 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cosmic-stars { animation: none; }
+    .hero-slide { transition: opacity .3s ease; }
+}
 </style>
 </head>
 <body>
@@ -1082,14 +1284,14 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
     </div>
 
     <div class="filter-panel" id="filterPanel">
-        <!-- 1. MEDIA FORMAT & QUICK CONTENT CATEGORY HUB (Documentaries, Kids & Family, Anime, Sports, BL, GL) -->
-     <div class="filter-row" id="mediaFilterRow">
+        <div class="filter-row" id="mediaFilterRow">
             <span class="filter-label"><i class="fa-solid fa-layer-group"></i> Browse:</span>
             <button type="button" class="filter-pill active" data-media="all"><i class="fa-solid fa-layer-group"></i> All Formats</button>
             <button type="button" class="filter-pill" data-media="movie"><i class="fa-solid fa-film"></i> Movies Only</button>
             <button type="button" class="filter-pill" data-media="tv"><i class="fa-solid fa-tv"></i> TV Series, Shows & Dramas</button>
             <button type="button" class="filter-pill" id="resetDislikedBtn" style="display:none;margin-left:auto;border-color:#f43f5e;color:#fda4af"><i class="fa-solid fa-eye-slash"></i> <span id="dislikedCountText"></span></button>
         </div>
+
         <!-- 2. NETFLIX-STYLE DROPDOWN SELECTORS: GENRES (MULTI) + STREAMING APP + ORIGIN COUNTRY + STREAMING REGION -->
         <div class="filter-dropdown-container">
             <div class="filter-select-wrapper">
@@ -1227,7 +1429,17 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
             <p style="font-size: 0.8rem; color: var(--text-muted);" id="authMsg">Sign up or log in to sync your library, or calibrate your tastes below:</p>
         </div>
     </div>
-   
+
+    <!-- LOGGED-OUT VIEW -->
+    <div id="authView" style="display:flex; flex-direction:column; gap:16px;">
+        <div class="pref-group" style="display:flex; flex-direction:column; gap:10px;">
+            <input type="text" id="authUsername" placeholder="Username..." style="width: 100%; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 14px; padding: 12px 16px; color: var(--text-main); outline: none; font-size: 0.92rem;">
+            <div class="pw-wrap">
+                <input type="password" id="authPassword" placeholder="Password (6+ chars)..." autocomplete="current-password" style="width: 100%; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 14px; padding: 12px 16px; color: var(--text-main); outline: none; font-size: 0.92rem;">
+                <button type="button" class="pw-toggle" data-pw-target="authPassword" aria-label="Show password"><i class="fa-solid fa-eye"></i></button>
+            </div>
+        </div>
+
         <div id="signupGenres" style="display:flex; flex-direction:column; gap:10px; background: rgba(124,58,237,0.08); padding: 14px; border-radius: 16px; border: 1px solid var(--glass-border);">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-size:0.84rem; font-weight:700; color:var(--secondary-glow);"><i class="fa-solid fa-sparkles"></i> Pick at least 3 Genres You Love:</span>
@@ -1240,16 +1452,6 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
             <button type="button" class="btn-action" id="loginBtn" style="flex:1; justify-content:center;"><i class="fa-solid fa-right-to-bracket"></i> Log In</button>
             <button type="button" class="btn-action btn-fav" id="signupBtn" style="flex:1; justify-content:center; border-color: var(--primary-glow);"><i class="fa-solid fa-user-plus"></i> Sign Up</button>
         </div>
-        <button type="button" class="filter-pill" id="toggleAdminLoginBtn" style="align-self:center;"><i class="fa-solid fa-shield-halved"></i> Administrator sign-in</button>
-        <div id="adminAuthBox" style="display:none; flex-direction:column; gap:10px; padding:14px; border:1px solid var(--secondary-glow); border-radius:16px;">
-            <input type="text" id="adminUsername" placeholder="Administrator username" autocomplete="username" style="width:100%; background:var(--input-bg); border:1px solid var(--glass-border); border-radius:14px; padding:12px 16px; color:var(--text-main); outline:none;">
-            <div class="pw-wrap">
-                <input type="password" id="adminPassword" placeholder="Administrator password" autocomplete="current-password" style="width:100%; background:var(--input-bg); border:1px solid var(--glass-border); border-radius:14px; padding:12px 16px; color:var(--text-main); outline:none;">
-                <button type="button" class="pw-toggle" data-pw-target="adminPassword" aria-label="Show password"><i class="fa-solid fa-eye"></i></button>
-            </div>
-            <button type="button" class="btn-action" id="adminLoginBtn" style="justify-content:center;"><i class="fa-solid fa-right-to-bracket"></i> Sign in as Administrator</button>
-        </div>
-
         <div style="display:flex; align-items:center; gap:10px; margin: 2px 0;">
             <div style="flex:1; height:1px; background:var(--glass-border);"></div>
             <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">OR</span>
@@ -1278,6 +1480,7 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
         <div>
             <div style="font-size:0.8rem; font-weight:700; color:var(--secondary-glow); margin-bottom:6px;">Your Genres</div>
             <div id="acctGenres" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+        </div>
         <button type="button" id="logoutBtn" class="btn-action btn-not-interested" style="width:100%; justify-content:center;">
             <i class="fa-solid fa-right-from-bracket"></i> Log Out
         </button>
@@ -1355,9 +1558,15 @@ function showToast(msg) {
 }
 
 let currentMovieData = null;
-let currentUser = localStorage.getItem('cinemind_auth_user') || null;
 let currentAuthToken = localStorage.getItem('cinemind_auth_token') || "";
-let currentUserRole = localStorage.getItem('cinemind_auth_role') || "guest";
+let currentUser = currentAuthToken ? (localStorage.getItem('cinemind_auth_user') || null) : null;
+if (!currentAuthToken) localStorage.removeItem('cinemind_auth_user');
+localStorage.removeItem('cinemind_auth_role');
+function authHeaders(headers = {}) {
+    const result = { 'Content-Type': 'application/json', ...headers };
+    if (currentAuthToken) result.Authorization = `Bearer ${currentAuthToken}`;
+    return result;
+}
 let watchlist = [];
 let favorites = [];
 let watchedMovies = JSON.parse(localStorage.getItem(`cinemind_watched_${currentUser || 'guest'}`) || '[]');
@@ -2595,7 +2804,13 @@ function syncGenreNetflixDropdownUI() {
             item.classList.toggle('selected', selectedGenres.has(g));
         }
     });
+}
 
+let genreRefreshTimer = null;
+function scheduleGenreRefresh() {
+    clearTimeout(genreRefreshTimer);
+    genreRefreshTimer = setTimeout(initEndlessNetflixHome, 500);
+}
 
 function initNetflixGenreDropdown() {
     const dd = document.getElementById('netflixGenreDropdown');
@@ -2610,6 +2825,7 @@ function initNetflixGenreDropdown() {
     allItem.innerHTML = `<span>All Genres</span>`;
     allItem.onclick = (ev) => {
         ev.stopPropagation();
+        clearTimeout(genreRefreshTimer);
         selectedGenres.clear();
         syncGenreNetflixDropdownUI();
         dd.classList.remove('open');
@@ -2627,10 +2843,20 @@ function initNetflixGenreDropdown() {
             if (selectedGenres.has(gid)) selectedGenres.delete(gid);
             else selectedGenres.add(gid);
             syncGenreNetflixDropdownUI();
-            initEndlessNetflixHome();
+            scheduleGenreRefresh();
         };
         grid.appendChild(item);
     });
+
+    const menu = dd.querySelector('.netflix-dropdown-menu');
+    if (menu && !menu.querySelector('.netflix-menu-done')) {
+        const done = document.createElement('button');
+        done.type = 'button';
+        done.className = 'netflix-menu-done';
+        done.innerHTML = '<i class="fa-solid fa-check"></i> Done';
+        done.onclick = (ev) => { ev.stopPropagation(); dd.classList.remove('open'); };
+        menu.appendChild(done);
+    }
 
     trigger.onclick = (ev) => {
         ev.stopPropagation();
@@ -2925,38 +3151,10 @@ function renderProfileCard() {
         document.getElementById('authUsername').value = '';
         document.getElementById('authPassword').value = '';
     }
-
-    const auditButton = document.getElementById('openAdminAuditBtn');
-    const auditBox = document.getElementById('adminAuditLogContainer');
-    auditButton.style.display = loggedIn && currentUserRole === 'admin' ? 'inline-flex' : 'none';
-    auditBox.style.display = 'none';
-    auditButton.onclick = async () => {
-        auditButton.disabled = true;
-        auditBox.style.display = 'block';
-        auditBox.textContent = 'Loading audit logs...';
-        try {
-            const response = await fetch(`${BACKEND_URL}/api/admin/audit-logs?limit=40`, {
-                headers: { Authorization: `Bearer ${currentAuthToken}` }
-            });
-            const data = await response.json();
-            if (!response.ok || !data.success) {
-                auditBox.textContent = data.message || `Could not load audit logs (HTTP ${response.status}).`;
-                return;
-            }
-            auditBox.innerHTML = `<strong>Total users: ${escapeHTML(data.total_registered_users)}</strong>` +
-                (Array.isArray(data.audit_logs) ? data.audit_logs : []).map(log =>
-                    `<div>[${escapeHTML(log.timestamp)}] <b>${escapeHTML(log.event_type)}</b> (@${escapeHTML(log.username)}) ${escapeHTML(log.details || '')}</div>`
-                ).join('');
-        } catch (error) {
-            console.error('Could not load admin audit logs.', error);
-            auditBox.textContent = 'Unable to load audit logs. Check the connection and ensure the backend provides /api/admin/audit-logs.';
-        } finally {
-            auditButton.disabled = false;
-        }
-    };
 }
 
 async function syncCloudLibrary() {
+    const user = currentUser;
     watchedMovies = JSON.parse(localStorage.getItem(`cinemind_watched_${currentUser || 'guest'}`) || '[]');
     notInterestedMovies = JSON.parse(localStorage.getItem(`cinemind_not_interested_${currentUser || 'guest'}`) || '[]');
     updateDislikedBadgeUI();
@@ -2976,31 +3174,27 @@ async function syncCloudLibrary() {
     renderChatHistoryInto(chatHistory);
     renderProfileCard();            
     try {
-        const res = await fetch(`${BACKEND_URL}/api/user/library?username=${encodeURIComponent(currentUser)}`);
+        const res = await fetch(`${BACKEND_URL}/api/user/library`, { headers: authHeaders() });
+        if (res.status === 401) { if (user === currentUser) await expireSession(); return; }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        if (data.role) {
-            currentUserRole = data.role;
-            localStorage.setItem('cinemind_auth_role', currentUserRole);
-        }
         watchlist = await repairSavedPosters(data.watchlist || []);
         favorites = await repairSavedPosters(data.favorites || []);
         if (data.genres && data.genres.length >= 3 && userGenres.length === 0) {
             userGenres = data.genres.map(String);
             localStorage.setItem('cinemind_genres', JSON.stringify(userGenres));
         }
-    } catch (e) {}
+    } catch (e) {
+        console.error('Could not sync cloud library.', e);
+    }
     renderProfileCard();                
 }
 syncCloudLibrary();
 
 window.addEventListener('DOMContentLoaded', () => {
-    if (currentUser) {
-        // Force the UI to remember the user immediately
-        renderProfileCard();
-    } else if (userGenres.length < 3) {
-        profileModal.classList.add('active');
-    }
+    if (!currentUser && userGenres.length < 3) profileModal.classList.add('active');
 });
+
 document.getElementById('homeLogoBtn').onclick = () => {
     triggerTiltAnimation(mainBrandLogo);
     searchInput.value = '';
@@ -3047,11 +3241,10 @@ document.getElementById('loginBtn').onclick = async () => {
         });
         const data = await res.json();
         if(data.success) {
+            if (!data.token) throw new Error("Login response did not include an authentication token.");
+            currentAuthToken = data.token;
             currentUser = data.username;
-            currentAuthToken = data.token || "";
-            currentUserRole = data.role || "user";
             localStorage.setItem('cinemind_auth_token', currentAuthToken);
-            localStorage.setItem('cinemind_auth_role', currentUserRole);
             localStorage.setItem('cinemind_auth_user', currentUser);
             if (signupGenres.size >= 3) userGenres = [...signupGenres];
             else if (data.genres && data.genres.length) userGenres = data.genres.map(String);
@@ -3062,36 +3255,6 @@ document.getElementById('loginBtn').onclick = async () => {
             initEndlessNetflixHome();
         } else alert(data.message);
     } catch(e) { alert("Authentication error."); }
-};
-
-document.getElementById('toggleAdminLoginBtn').onclick = () => {
-    const box = document.getElementById('adminAuthBox');
-    box.style.display = box.style.display === 'none' ? 'flex' : 'none';
-};
-document.getElementById('adminLoginBtn').onclick = async () => {
-    const u = document.getElementById('adminUsername').value.trim();
-    const p = document.getElementById('adminPassword').value;
-    if (!u || !p) return alert("Enter the administrator username and password.");
-    try {
-        const res = await fetch(`${BACKEND_URL}/api/login`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: u, password: p })
-        });
-        const data = await res.json();
-        if (!data.success) return alert(data.message || "Login failed.");
-        if (data.role !== 'admin') return alert("This account is not an administrator.");
-        currentUser = data.username;
-        currentAuthToken = data.token || "";
-        currentUserRole = 'admin';
-        localStorage.setItem('cinemind_auth_user', currentUser);
-        localStorage.setItem('cinemind_auth_token', currentAuthToken);
-        localStorage.setItem('cinemind_auth_role', 'admin');
-        document.getElementById('adminUsername').value = '';
-        document.getElementById('adminPassword').value = '';
-        await syncCloudLibrary();
-        profileModal.classList.remove('active');
-        initEndlessNetflixHome();
-    } catch (e) { alert("Authentication error."); }
 };
 
 document.getElementById('signupBtn').onclick = async () => {
@@ -3106,14 +3269,13 @@ document.getElementById('signupBtn').onclick = async () => {
         });
         const data = await res.json();
         if(data.success) {
+            if (!data.token) throw new Error("Signup response did not include an authentication token.");
+            currentAuthToken = data.token;
             userGenres = [...signupGenres];
             localStorage.setItem('cinemind_genres', JSON.stringify(userGenres));
             localStorage.setItem(`cinemind_genres_${u}`, JSON.stringify(userGenres));
             currentUser = u;
-            currentAuthToken = data.token || "";
-            currentUserRole = data.role || "user";
             localStorage.setItem('cinemind_auth_token', currentAuthToken);
-            localStorage.setItem('cinemind_auth_role', currentUserRole);
             localStorage.setItem('cinemind_auth_user', currentUser);
             await syncCloudLibrary();
             profileModal.classList.remove('active');
@@ -3123,10 +3285,9 @@ document.getElementById('signupBtn').onclick = async () => {
     } catch(e) { alert("Signup error."); }
 };
 
-logoutBtn.onclick = async () => {
+async function expireSession() {
     currentUser = null;
     currentAuthToken = "";
-    currentUserRole = "guest";
     localStorage.removeItem('cinemind_auth_user');
     localStorage.removeItem('cinemind_auth_token');
     localStorage.removeItem('cinemind_auth_role');
@@ -3140,7 +3301,9 @@ logoutBtn.onclick = async () => {
     document.getElementById('movieModal').classList.remove('active');
     if (currentView !== 'discover') navItems[0].click();   // leave Watchlist/Favorites views
     else initEndlessNetflixHome();
-};
+}
+
+logoutBtn.onclick = expireSession;
 
 // Card Builder with Synced R-18 Badge + Quick "Not Interested" Button on Every Movie Card
 function createMovieCard(movie, isAI = false, searchContext = "", rankNum = null) {
@@ -3762,21 +3925,13 @@ async function initEndlessNetflixHome() {
     await appendNextNetflixRowBatch(4);
 }
 
-// Format & Quick Content Category Pill Click Handlers
-document.querySelectorAll('#mediaFilterRow .filter-pill[data-media], #mediaFilterRow .filter-pill[data-quick-cat]').forEach(pill => {
+// Format pill click handlers (All / Movies / TV)
+document.querySelectorAll('#mediaFilterRow .filter-pill[data-media]').forEach(pill => {
     pill.onclick = (e) => {
         const btn = e.currentTarget;
-        if (btn.hasAttribute('data-quick-cat')) {
-            const cat = btn.getAttribute('data-quick-cat');
-            if (selectedGenres.has(cat)) selectedGenres.delete(cat);
-            else selectedGenres.add(cat);
-            syncGenreNetflixDropdownUI();
-            initEndlessNetflixHome();
-            return;
-        }
         document.querySelectorAll('#mediaFilterRow .filter-pill[data-media]').forEach(p => p.classList.remove('active'));
         btn.classList.add('active');
-        if (btn.hasAttribute('data-media')) selectedMedia = btn.getAttribute('data-media');
+        selectedMedia = btn.getAttribute('data-media');
         initEndlessNetflixHome();
     };
 });
@@ -4069,7 +4224,7 @@ async function renderDataAnalyticsDashboard() {
     };
     if (currentUser) {
         try {
-            const res = await fetch(`${BACKEND_URL}/api/user/insights?username=${encodeURIComponent(currentUser)}`);
+            const res = await fetch(`${BACKEND_URL}/api/user/insights`, { headers: authHeaders() });
             const d = await res.json();
             insights.total_liked = Math.max(favorites.length, d.total_liked || 0);
             insights.total_watchlist = Math.max(watchlist.length, d.total_watchlist || 0);
@@ -4568,9 +4723,10 @@ document.getElementById('watchlistBtn').onclick = async () => {
     if(!currentUser) { alert("Please log in to save items to your cloud watchlist."); profileModal.classList.add('active'); return; }
     try {
         const res = await fetch(`${BACKEND_URL}/api/user/library/toggle`, {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({username: currentUser, type: 'watchlist', movie: libraryPayload(currentMovieData)})
+            method: 'POST', headers: authHeaders(),
+            body: JSON.stringify({type: 'watchlist', movie: libraryPayload(currentMovieData)})
         });
+        if (res.status === 401) { document.getElementById('movieModal').classList.remove('active'); return expireSession(); }
         const data = await res.json();
         if(data.success) {
             await syncCloudLibrary();
@@ -4584,9 +4740,10 @@ document.getElementById('favoriteBtn').onclick = async () => {
     if(!currentUser) { alert("Please log in to save items to your cloud favorites."); profileModal.classList.add('active'); return; }
     try {
         const res = await fetch(`${BACKEND_URL}/api/user/library/toggle`, {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({username: currentUser, type: 'favorites', movie: libraryPayload(currentMovieData)})
+            method: 'POST', headers: authHeaders(),
+            body: JSON.stringify({type: 'favorites', movie: libraryPayload(currentMovieData)})
         });
+        if (res.status === 401) { document.getElementById('movieModal').classList.remove('active'); return expireSession(); }
         const data = await res.json();
         if(data.success) {
             await syncCloudLibrary();
@@ -4649,7 +4806,7 @@ function toggleNovaChatModal() {
     adjustChatModalPlacement();
     chatModal.classList.toggle('active');
     chatTooltip.style.display = chatModal.classList.contains('active') ? 'none' : 'block';
-    if (chatModal.classList.contains('active')) chatInput.focus();
+    if (chatModal.classList.contains('active') && !window.matchMedia('(pointer: coarse)').matches) chatInput.focus();
 }
 
 chatToggle.addEventListener('pointerdown', (e) => {
@@ -4845,7 +5002,7 @@ function plotMatchScore(m, query) {
     const quality = Math.min(10, Number(m.vote_average) || 0) + Math.min(6, Math.log10((m.vote_count || 0) + 1) * 2);
     return { terms: terms.length, hits, ratio, score: ratio * 100 + quality };
 }
-const plotIsMatch = s => s.terms > 0 && s.hits >= Math.min(2, s.terms) && s.ratio >= 0.55;
+const plotIsMatch = s => s.terms > 0 && s.hits >= Math.min(2, s.terms) && s.ratio >= 0.4;
 
 const PLOT_KB = [
     ["Parasite",2019,"movie","poor unemployed family infiltrates and cons their way into working for a wealthy rich family inside their mansion house, class divide, basement secret"],
@@ -4934,10 +5091,11 @@ function plotKbSearch(query, limit = 3) {
     return kb.docs.map(({ e, terms }) => {
         const hit = q.filter(t => terms.has(t));
         return { e, hits: hit.length, ratio: hit.reduce((s, t) => s + weight(t), 0) / total };
-    }).filter(x => x.hits >= 2 && x.ratio >= 0.60)
+    }).filter(x => x.hits >= 2 && x.ratio >= 0.45)
       .sort((a, b) => b.ratio - a.ratio || b.hits - a.hits)
       .slice(0, limit);
 }
+
 // Words that describe a plot but are not TMDB keywords themselves -> the keyword TMDB actually uses (extend freely)
 const PLOT_KEYWORD_ALIASES = {
     turns: 'transformation', turn: 'transformation', transforms: 'transformation', transformed: 'transformation',
@@ -5145,8 +5303,8 @@ async function resolvePlotMatches(query, backendCandidates, replyText = '') {
     }
 
     // Keep a title only if it fits the description. Trusted picks need a matching clue unless the KB is confident.
-    cconst ranked = [...cands.values()]
-        .filter(x => plotIsMatch(x.s) || (x.bonus >= 30 && (x.kb || (!kbStrong && x.s.hits >= 2)))) // Require at least 2 hits for non-KB
+    const ranked = [...cands.values()]
+        .filter(x => plotIsMatch(x.s) || (x.bonus >= 30 && (x.kb || (!kbStrong && x.s.hits >= 1))))
         .sort((a, b) => (b.s.score + b.bonus) - (a.s.score + a.bonus));
     if (!ranked.length) return { movies: [], clear: false };
 
@@ -5380,8 +5538,21 @@ chatInput.addEventListener('keydown', (e) => {
     }
 });
 
+// Keeps the full-screen Nova chat sized to what's actually visible (above the keyboard)
+(function syncVisualViewport() {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const root = document.documentElement;
+    const update = () => {
+        root.style.setProperty('--vvh', vv.height + 'px');
+        root.style.setProperty('--vvt', vv.offsetTop + 'px');
+    };
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    update();
+})();
+
 initEndlessNetflixHome();
 </script>
 </body>
 </html>
-
