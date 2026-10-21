@@ -1701,16 +1701,11 @@ function itemMediaType(m) {
 function matchesSelectedMedia(m) {
     return selectedMedia === 'all' || itemMediaType(m) === selectedMedia;
 }
-function matchesSelectedCategories(m) {
-    if (!selectedGenres.size) return true;
+function matchesSelectedCategories(m, genres = [...selectedGenres]) {
+    if (!genres.length) return true;
     const cats = getAllItemCategories(m);
-    return [...selectedGenres].some(g => {
-        if (g === 'ANIME') return isAnimeContent(m);
-        if (g === 'KIDS_FAMILY') return isKidsAndFamilyContent(m);
-        if (g === 'SPORTS' || g === 'BL' || g === 'GL') return true;   // keyword-based, see notes
-        const want = [String(g), ...String(MOVIE_TO_TV_GENRE[g] || '').split(/[,|]/)].filter(Boolean);
-        return want.some(w => cats.has(w));
-    });
+    const test = g => cats.has(String(g));
+    return GENRE_MATCH_MODE === 'all' ? genres.every(test) : genres.some(test);
 }
 function browseSummary() {
     const parts = [];
@@ -1725,7 +1720,9 @@ function browseNoteHTML() {
 }
 function browseEmptyHTML() {
     const s = browseSummary();
-    return `<div class="feed-error-card" style="grid-column:1/-1;"><i class="fa-solid fa-circle-info" style="color:var(--secondary-glow);"></i><p>${s ? `No titles match your Browse selection: <strong>${escapeHTML(s)}</strong>.` : 'No matching titles were found.'}<br>I won't fill this page with unrelated content. Try a different search, or change your Browse selection.</p></div>`;
+    const msg = selectedGenres.size ? 'No titles found for this genre right now.'
+        : (s ? `No titles match your Browse selection: <strong>${escapeHTML(s)}</strong>.` : 'No matching titles were found.');
+    return `<div class="feed-error-card" style="grid-column:1/-1;"><i class="fa-solid fa-circle-info" style="color:var(--secondary-glow);"></i><p>${msg}<br>I won't fill this page with unrelated content.</p></div>`;
 }
 // Only templates that are valid for the chosen type are used (so TV never receives movie genre IDs)
 function browseCatalog() {
@@ -1800,14 +1797,58 @@ function getExactGenreNames(movie) {
     return genres.slice(0, 4).join(' • ') || 'Cinema';
 }
 
-// Exact TMDB Keyword IDs exclusively for Boys' Love ("Boys Love Boys": BL, Yaoi, Male-Male Romance, Gay Romance, Danmei)
-const BL_TMDB_KEYWORDS = "289844|250606|10180|240377|316421|293198";
-// Exact TMDB Keyword IDs exclusively for Girls' Love ("Girls Love Girls": GL, Yuri, Female-Female Romance, Lesbian Romance, Sapphic, Baihe)
-const GL_TMDB_KEYWORDS = "264386|9840|240455|193681|290527|315999";
-// TMDB Keyword IDs for Anime (Japanese Anime, Shonen, Seinen, Shojo, Isekai, Mecha, Based on Manga/Light Novel/Webtoon, Donghua)
-const ANIME_TMDB_KEYWORDS = "210024|287501|293016|222243|13141|9914|310008|279876";
-// TMDB Keyword IDs for Sports (Sports, Basketball, Football/Soccer, Boxing, Baseball, Volleyball, Martial Arts Tournament, Racing, Tennis, Olympics)
-const SPORTS_TMDB_KEYWORDS = "6075|6496|13042|6078|159212|1721|9713|180491|579|191020|2702";
+// ===== STRICT GENRE INFRASTRUCTURE =====
+const GENRE_MATCH_MODE = 'any';   // 'any' = title may match any selected genre; 'all' = must match every one
+const normKw = s => String(s || '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+const KW_NAMES = {
+  BL: new Set(['boys love', 'boys love bl', 'bl', 'bl drama', 'yaoi', 'danmei']),
+  GL: new Set(['girls love', 'girls love gl', 'gl', 'gl drama', 'yuri', 'baihe']),
+  ANIME: new Set(['anime', 'donghua']),
+  SPORTS: new Set(['sport','sports','basketball','football','american football','soccer','baseball','boxing',
+    'mixed martial arts','wrestling','tennis','volleyball','swimming','rugby','ice hockey','golf',
+    'formula 1','auto racing','olympic games','marathon'])
+};
+const KW_IDS = { BL: new Set(), GL: new Set(), ANIME: new Set(), SPORTS: new Set() };
+// Template literals call toString(), so every existing `${BL_TMDB_KEYWORDS}` keeps working.
+// '0' matches nothing, so an unresolved list can never turn into an unfiltered query.
+const kwParam = key => ({ toString: () => [...KW_IDS[key]].join('|') || '0' });
+const BL_TMDB_KEYWORDS = kwParam('BL');
+const GL_TMDB_KEYWORDS = kwParam('GL');
+const ANIME_TMDB_KEYWORDS = kwParam('ANIME');
+const SPORTS_TMDB_KEYWORDS = kwParam('SPORTS');
+
+// Resolves real TMDB keyword IDs by EXACT name (cached 7 days)
+async function initKeywordIds() {
+  const KEY = 'cinemind_kw_ids_v2';
+  try {
+    const c = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (c && Date.now() - c.t < 7 * 864e5) { Object.keys(KW_IDS).forEach(k => (c.ids[k] || []).forEach(id => KW_IDS[k].add(id))); return; }
+  } catch (e) {}
+  await Promise.all(Object.entries(KW_NAMES).flatMap(([key, names]) => [...names].map(name =>
+    fetchJSON(`https://api.themoviedb.org/3/search/keyword?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(name)}`)
+      .then(d => (d.results || []).forEach(k => { if (names.has(normKw(k.name))) KW_IDS[key].add(k.id); }))
+      .catch(() => {}))));
+  const ids = Object.fromEntries(Object.entries(KW_IDS).map(([k, v]) => [k, [...v]]));
+  console.info('CineMind resolved keyword IDs:', ids);          // check this in the console
+  if (Object.values(KW_IDS).every(s => s.size)) localStorage.setItem(KEY, JSON.stringify({ t: Date.now(), ids }));
+}
+const kwList = m => (m.keywords && (m.keywords.keywords || m.keywords.results)) || [];
+const hasKeyword = (m, key) => kwList(m).some(k => KW_IDS[key].has(k.id) || KW_NAMES[key].has(normKw(k.name)));
+const genreIdsOf = m => (m.genres && m.genres.length ? m.genres.map(g => g.id) : (m.genre_ids || [])).map(Number);
+window.debugGenre = async (type, id) => {
+    const d = await fetchJSON(detailsUrl(type, id));
+    console.log([...getAllItemCategories({ ...d, media_type: type })], kwList(d).map(k => k.name));
+};
+
+// BL / GL: needs TMDB's dedicated keyword AND a story-type genre. Generic LGBTQ+, lesbian or gay tags do not count.
+function strictSameSexRomance(m, key) {
+  if (m._curatedGenre === key) return true;
+  if (!hasKeyword(m, key)) return false;
+  const g = genreIdsOf(m);
+  if ([99, 10763, 10764, 10767].some(x => g.includes(x))) return false;   // doc, news, reality, talk
+  return g.includes(10749) || g.includes(18) || g.includes(35);
+}
+const TV_KEYWORD_GENRES = { horror: 27, romance: 10749, thriller: 53, history: 36, music: 10402 };  // genres TV lacks
 
 const COUNTRY_QUERY_KEYWORDS = {
     "philippines": { code: "PH", label: "Philippine Cinema", preferredGenres: [18, 10749, 35, 27, 53] },
@@ -1981,7 +2022,7 @@ async function enrichAndVerify(items, intent) {
             const kws = ((d.keywords && (d.keywords.results || d.keywords.keywords)) || []).map(k => (k.name || '').toLowerCase());
             const codes = [...(d.production_countries || []).map(c => c.iso_3166_1), ...(d.origin_country || [])];
             if (intent.country && !codes.includes(intent.country.code)) return null;
-            if (!intent.genreIds.every(g => gids.includes(g) || gids.includes(TV_GENRE_EQ[g]) || kws.includes((GENRE_OPTIONS[g] || '').toLowerCase()))) return null;
+            if (!intent.genreIds.every(g => gids.includes(g) || (t === 'tv' && (gids.includes(TV_GENRE_EQ[g]) || kws.includes((GENRE_OPTIONS[g] || '').toLowerCase()))))) return null;
             if (intent.cast && !((d.credits && d.credits.cast) || []).some(c => c.id === intent.cast.id)) return null;
             return { ...m, ...d, media_type: t, genre_ids: gids, rationale: m.rationale || `Verified match: ${describeIntent(intent)}.` };
         } catch (e) { return null; }   // details unavailable -> cannot verify -> exclude
@@ -2044,26 +2085,9 @@ function isSafeNonPorn(item) {
 // ---------------- MULTI-GENRE & CONTENT-AWARE CLASSIFIER (ANIME vs ANIMATION vs KIDS & FAMILY vs SPORTS) ----------------
 function isAnimeContent(item) {
     if (!item) return false;
-    const gids = (item.genre_ids || (item.genres || []).map(g => g.id) || []).map(Number);
-    const hasAnimation = gids.includes(16);
-    const lang = (item.original_language || "").toLowerCase();
-    const countries = Array.isArray(item.origin_country) ? item.origin_country : [];
-    const kwList = (item.keywords && (item.keywords.keywords || item.keywords.results) || []);
-    const kwNames = kwList.map(k => (k.name || '').toLowerCase()).join(' | ');
-    const kwIds = new Set(kwList.map(k => String(k.id)));
-    const text = `${item.title || item.name || ''} ${item.original_title || item.original_name || ''} ${item.overview || ''} ${kwNames}`.toLowerCase();
-
-    // 1. Japanese animation is officially Anime
-    if (hasAnimation && (lang === 'ja' || countries.includes('JP'))) return true;
-    // 2. International animation (KR/CN/US/FR) that fits the Anime classification (Donghua, Manhwa/Webtoon adaptations, anime-styled series)
-    if (kwIds.has('210024') || kwIds.has('287501') || kwIds.has('293016') || kwIds.has('222243') || kwIds.has('310008')) return true;
-    if (hasAnimation && (lang === 'zh' || lang === 'ko' || countries.includes('CN') || countries.includes('KR')) && /\b(anime|donghua|manhwa|webtoon|cultivation|immortal|martial|demon|hunter|leveling|isekai|shinobi|ghoul|alchemist|titan|jujutsu|avatar|spirit|sect|realm)\b/i.test(text)) {
-        return true;
-    }
-    if (hasAnimation && /\b(anime|shonen|shounen|seinen|shojo|shoujo|isekai|manga|light novel|donghua|webtoon|manhwa|castlevania|arcane|blue eye samurai|avatar: the last airbender|korra|rwby|scott pilgrim|cyberpunk: edgerunners|solo leveling|tower of god|god of high school|lookism|link click|heaven official's blessing|mo dao zu shi|scumbag system|daily life of the immortal king)\b/i.test(text)) {
-        return true;
-    }
-    return false;
+    if (!genreIdsOf(item).includes(16)) return false;
+    const cc = [].concat(item.origin_country || []);
+    return (item.original_language || '').toLowerCase() === 'ja' || cc.includes('JP') || hasKeyword(item, 'ANIME');
 }
 
 function isAdultOrTeenAnimation(item) {
@@ -2089,11 +2113,7 @@ function isKidsAndFamilyContent(item) {
 }
 
 function isSportsContent(item) {
-    if (!item) return false;
-    const kwList = (item.keywords && (item.keywords.keywords || item.keywords.results) || []);
-    const kwNames = kwList.map(k => (k.name || '').toLowerCase()).join(' | ');
-    const text = `${item.title || item.name || ''} ${item.overview || ''} ${kwNames}`.toLowerCase();
-    return /\b(sport|sports|basketball|nba|football|soccer|baseball|volleyball|boxing|boxer|mma|wrestling|ufc|tennis|golf|olympic|olympics|formula 1|f1|racing|racer|marathon|swimming|skating|skateboard|ice hockey|rugby|badminton|billiards|tournament|championship|coach|athlete|slam dunk|haikyu|haikyuu|blue lock|kuroko|hajime no ippo|yuri on ice|free!|baki|megalo box|inazuma|captain tsubasa|ace of diamond|aoashi|sk8 the infinity|ping pong|chihayafuru|run with the wind|creed|rocky|rush|moneyball|air|challengers|king richard|coach carter|remember the titans|blind side|ted lasso|last dance|welcome to wrexham|drive to survive)\b/i.test(text);
+    return !!item && hasKeyword(item, 'SPORTS');
 }
 
 function isDocumentaryContent(item) {
@@ -2106,8 +2126,10 @@ function isDocumentaryContent(item) {
 function getAllItemCategories(item) {
     const cats = new Set();
     if (!item) return cats;
+    if (!item.keywords && Array.isArray(item._cats)) return new Set(item._cats);
+    if (item._curatedGenre) cats.add(item._curatedGenre === 'DOC' ? '99' : item._curatedGenre);
 
-    const rawGids = (item.genre_ids || (item.genres || []).map(g => g.id) || []).map(Number);
+    const rawGids = genreIdsOf(item);
     const adultOrTeenAnim = isAdultOrTeenAnimation(item);
 
     rawGids.forEach(gid => {
@@ -2143,19 +2165,13 @@ function getAllItemCategories(item) {
         cats.add('99');
     }
 
-    const kwList = (item.keywords && (item.keywords.keywords || item.keywords.results) || []);
-    const kwNames = kwList.map(k => (k.name || '').toLowerCase()).join(' | ');
-    const kwIds = new Set(kwList.map(k => String(k.id)));
-    const textCheck = `${item.title || item.name || ''} ${item.overview || ''} ${kwNames}`.toLowerCase();
-
-    if (kwIds.has('289844') || kwIds.has('250606') || kwIds.has('10180') || kwIds.has('240377') || /\b(boys' love|boys love|bl series|yaoi|gay romance|male romance|danmei)\b/i.test(textCheck)) {
-        cats.add('BL');
-        cats.add('10749');
+    if (strictSameSexRomance(item, 'BL')) { cats.add('BL'); cats.add('10749'); }
+    if (strictSameSexRomance(item, 'GL')) { cats.add('GL'); cats.add('10749'); }
+    if (itemMediaType(item) === 'tv') {
+        const names = new Set(kwList(item).map(k => normKw(k.name)));
+        Object.entries(TV_KEYWORD_GENRES).forEach(([n, gid]) => { if (names.has(n)) cats.add(String(gid)); });
     }
-    if (kwIds.has('264386') || kwIds.has('9840') || kwIds.has('240455') || kwIds.has('193681') || /\b(girls' love|girls love|gl series|yuri|lesbian romance|sapphic|baihe)\b/i.test(textCheck)) {
-        cats.add('GL');
-        cats.add('10749');
-    }
+    if (rawGids.includes(10768)) cats.add('10752');
 
     return cats;
 }
@@ -2477,14 +2493,14 @@ document.getElementById('themeToggleBtn').onclick = () => {
 const ENDLESS_ROW_CATALOG = [
     { title: "🔥 Blockbuster Movies Trending", media: "movie", path: "/discover/movie", params: "sort_by=popularity.desc&page=1" },
     { title: "📺 Binge-Worthy TV Series & K-Dramas", media: "tv", path: "/discover/tv", params: "sort_by=popularity.desc&page=1" },
-    { title: "🎌 Japanese & Global Anime Series", media: "tv", path: "/discover/tv", params: `with_genres=16&with_keywords=${ANIME_TMDB_KEYWORDS}&sort_by=popularity.desc&page=1` },
-    { title: "🎌 Acclaimed Anime Feature Films", media: "movie", path: "/discover/movie", params: `with_genres=16&with_keywords=${ANIME_TMDB_KEYWORDS}&sort_by=popularity.desc&page=1` },
-    { title: "🧸 Kids & Family Adventures (All-Ages)", media: "movie", path: "/discover/movie", params: "with_genres=10751&without_genres=27,80,53&certification_country=US&certification.lte=PG&sort_by=popularity.desc&page=1" },
-    { title: "🏆 High-Stakes Sports Movies & Anime", media: "movie", path: "/discover/movie", params: `with_keywords=${SPORTS_TMDB_KEYWORDS}&sort_by=popularity.desc&page=1` },
-    { title: "🎥 Acclaimed Documentaries & Docuseries", media: "tv", path: "/discover/tv", params: "with_genres=99&sort_by=popularity.desc&page=1" },
+    { title: "🎌 Japanese & Global Anime Series", media: "tv", path: "/discover/tv", get params() { return `with_genres=16&with_keywords=${ANIME_TMDB_KEYWORDS}&sort_by=popularity.desc&page=1`; }, verify: ['ANIME'] },
+    { title: "🎌 Acclaimed Anime Feature Films", media: "movie", path: "/discover/movie", get params() { return `with_genres=16&with_keywords=${ANIME_TMDB_KEYWORDS}&sort_by=popularity.desc&page=1`; }, verify: ['ANIME'] },
+    { title: "🧸 Kids & Family Adventures (All-Ages)", media: "movie", path: "/discover/movie", params: "with_genres=10751&without_genres=27,80,53&certification_country=US&certification.lte=PG&sort_by=popularity.desc&page=1", verify: ['KIDS_FAMILY'] },
+    { title: "🏆 High-Stakes Sports Movies & Anime", media: "movie", path: "/discover/movie", get params() { return `with_keywords=${SPORTS_TMDB_KEYWORDS}&sort_by=popularity.desc&page=1`; }, verify: ['SPORTS'] },
+    { title: "🎥 Acclaimed Documentaries & Docuseries", media: "tv", path: "/discover/tv", params: "with_genres=99&sort_by=popularity.desc&page=1", verify: ['99'] },
     { title: "🇵🇭 Popular from the Philippines", media: "movie", both: true, path: "/discover/movie", params: "with_origin_country=PH&sort_by=popularity.desc&page=1" },
-    { title: "💙 Trending Boys' Love (BL) Series & Cinema", media: "tv", path: "/discover/tv", params: `with_keywords=${BL_TMDB_KEYWORDS}&sort_by=popularity.desc&page=1` },
-    { title: "💖 Trending Girls' Love (GL) Series & Cinema", media: "movie", path: "/discover/movie", params: `with_keywords=${GL_TMDB_KEYWORDS}&sort_by=popularity.desc&page=1` },
+    { title: "💙 Trending Boys' Love (BL) Series & Cinema", media: "tv", path: "/discover/tv", get params() { return `with_keywords=${BL_TMDB_KEYWORDS}&sort_by=popularity.desc&page=1`; }, verify: ['BL'] },
+    { title: "💖 Trending Girls' Love (GL) Series & Cinema", media: "movie", path: "/discover/movie", get params() { return `with_keywords=${GL_TMDB_KEYWORDS}&sort_by=popularity.desc&page=1`; }, verify: ['GL'] },
     { title: "🧠 Mind-Bending Sci-Fi & Portals", media: "movie", path: "/discover/movie", params: "with_genres=878&sort_by=popularity.desc&page=1" },
     { title: "🇰🇷 Hit Korean Dramas & Series", media: "tv", path: "/discover/tv", params: "with_origin_country=KR&sort_by=popularity.desc&page=1" },
     { title: "✨ Critically Acclaimed Masterpieces", media: "movie", both: true, path: "/discover/movie", params: "sort_by=vote_average.desc&vote_count.gte=500&page=1" },
@@ -2574,6 +2590,7 @@ const API_TTL_MS = 5 * 60 * 1000;
 let feedGen = 0;            // bumped on every reset; stale async work checks it and bails out
 let feedState = 'hidden';   // hidden | idle | loading | end | error
 let emptyBatchStreak = 0;
+let feedTotals = { movie: Infinity, tv: Infinity };
 let searchPager = null;
 let searchItemFilter = null;
 const apiCache = new Map();
@@ -2596,6 +2613,44 @@ function fetchJSON(url) {
 // One URL per title, shared (and cached) by the R-18 check, the modal and Nova
 const detailsUrl = (type, id) => `https://api.themoviedb.org/3/${type}/${id}?api_key=${TMDB_API_KEY}&append_to_response=${type === 'tv' ? 'content_ratings,keywords,credits,aggregate_credits' : 'release_dates,keywords,credits'}`;
 
+async function mapLimit(list, n, fn) {
+    const out = new Array(list.length);
+    let i = 0;
+    await Promise.all(Array.from({ length: Math.min(n, list.length) }, async () => {
+        while (i < list.length) {
+            const k = i++;
+            out[k] = await fn(list[k]);
+        }
+    }));
+    return out;
+}
+
+const genreNeedsDetails = (g, t) => ['BL', 'GL', 'ANIME', 'SPORTS'].includes(g)
+    || (t === 'tv' && /^\d+$/.test(g) && !TV_NATIVE_GENRES.has(+g) && !TV_GENRE_EQ[+g]);
+
+async function verifyItems(items, genres = [...selectedGenres]) {
+    if (!genres.length) return items;
+    let attempted = 0, failed = 0;
+    const out = await mapLimit(items, 6, async m => {
+        const t = itemMediaType(m);
+        if (!t) return null;
+        let full = m;
+        if (genres.some(g => genreNeedsDetails(String(g), t))) {
+            attempted++;
+            try {
+                const d = await fetchJSON(detailsUrl(t, m.id));
+                full = { ...m, ...d, media_type: t, genre_ids: (d.genres || []).map(g => g.id), rationale: m.rationale, _verified: true };
+            } catch (e) {
+                failed++;
+                return null;
+            }
+        }
+        return matchesSelectedCategories(full, genres) && matchesActiveCategoryRules(full) ? full : null;
+    });
+    if (attempted && failed === attempted) throw new Error('Could not verify titles');
+    return out.filter(Boolean);
+}
+
 function setFeedStatus(state, msg = '') {
     feedState = state;
     const el = infiniteSentinel;
@@ -2605,7 +2660,7 @@ function setFeedStatus(state, msg = '') {
     if (state === 'loading') {
         el.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Loading more titles...`;
     } else if (state === 'end') {
-        el.innerHTML = `<i class="fa-solid fa-flag-checkered"></i> You've reached the end of the results.`;
+        el.innerHTML = `<i class="fa-solid fa-flag-checkered"></i> ${selectedGenres.size ? "You've reached the end of the available titles in this genre." : "You've reached the end of the results."}`;
     } else if (state === 'error') {
         el.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i><span>${escapeHTML(msg || "Couldn't load more titles.")}</span><button type="button" class="filter-pill" id="feedRetryBtn"><i class="fa-solid fa-rotate-right"></i> Retry</button>`;
         document.getElementById('feedRetryBtn').onclick = retryFeedLoad;
@@ -2622,6 +2677,7 @@ function resetFeed(mode) {
     infiniteMode = mode;             // 'rows' | 'search' | 'none'
     nextRowIndex = 0;
     emptyBatchStreak = 0;
+    feedTotals = { movie: Infinity, tv: Infinity };
     searchPager = null;
     searchItemFilter = null;
     displayedMovieIds.clear();
@@ -2685,13 +2741,13 @@ async function fetchPagerPage(pager) {
     pager.totalPages = maxPages;
     pager.exhausted = nextPage >= maxPages;
     const ok = items.filter(m => m.poster_path && isSafeNonPorn(m));
-    return pager.post ? await pager.post(ok) : ok;
+    const verified = await verifyItems(ok, pager.genres || [...selectedGenres]);
+    return pager.post ? await pager.post(verified) : verified;
 }
 
 // Builds the row requests for Galaxy Home (pure: no side effects)
 function buildNetflixRowConfigs(startIndex, count) {
-    const forceTV = selectedMedia === 'tv';
-    const forceMovie = selectedMedia === 'movie';
+    const forceTV = selectedMedia === 'tv', forceMovie = selectedMedia === 'movie';
     const filtered = selectedGenres.size > 0;
     const appLabel = selectedProvider ? ` on ${PROVIDER_NAMES[selectedProvider]}` : "";
     const countryLabel = selectedCountry ? ` • ${COUNTRY_NAMES[selectedCountry]}` : "";
@@ -2699,15 +2755,14 @@ function buildNetflixRowConfigs(startIndex, count) {
     const configs = [];
 
     for (let i = startIndex; i < startIndex + count && i < feedRowLimit(); i++) {
-        let mType, baseParams, title;
+        let mType, baseParams, title, genres = null, exhausted = false;
         if (filtered) {
-            // With genres selected every template collapses into the same query, so page through
-            // the filtered results instead of repeating one query.
             const types = (forceTV || forceMovie) ? 1 : 2;
             const page = Math.floor(i / types) + 1;
             mType = forceTV ? 'tv' : (forceMovie ? 'movie' : (i % 2 ? 'tv' : 'movie'));
             baseParams = `sort_by=popularity.desc&page=${page}`;
             title = `More ${genreNames}${appLabel}${countryLabel} • Vol. ${page}`;
+            exhausted = page > feedTotals[mType];
         } else {
             const catalog = browseCatalog();
             const template = catalog[i % catalog.length];
@@ -2715,55 +2770,62 @@ function buildNetflixRowConfigs(startIndex, count) {
             mType = forceTV ? 'tv' : (forceMovie ? 'movie' : template.media);
             baseParams = template.params.replace(/page=\d+/, `page=${page}`);
             title = `${template.title}${appLabel}${countryLabel}${page > 1 ? ` (Vol. ${page})` : ''}`;
+            genres = template.verify || null;
         }
         const endpoint = mType === 'tv' ? '/discover/tv' : '/discover/movie';
-        configs.push({
-            title, mType,
+        configs.push({ title, mType, genres, exhausted,
             url: `https://api.themoviedb.org/3${endpoint}?api_key=${TMDB_API_KEY}&${baseParams}${getActiveFilterQueryParams(mType)}`
         });
     }
     return configs;
 }
 
+function finishRows() {
+    setFeedStatus('end');
+    if (!mainContainer.querySelector('.row-section')) {
+        mainContainer.innerHTML = browseEmptyHTML();
+        setFeedStatus('hidden');
+    }
+}
+
 async function appendNextNetflixRowBatch(count = 3) {
     if (isFetchingMore || feedState === 'end' || currentView !== 'discover' || infiniteMode !== 'rows') return;
     const gen = feedGen;
     const startIndex = nextRowIndex;
-    const configs = buildNetflixRowConfigs(startIndex, count);
-    if (!configs.length) { setFeedStatus('end'); return; }
+    const all = buildNetflixRowConfigs(startIndex, count);
+    if (!all.length) return finishRows();
+    const configs = all.filter(c => !c.exhausted);
+    if (!configs.length) { nextRowIndex = startIndex + count; return finishRows(); }
 
     isFetchingMore = true;
     setFeedStatus('loading');
     try {
-        const settled = await Promise.allSettled(configs.map(c => fetchJSON(c.url)));
-        if (gen !== feedGen) return;                              // filters changed mid-flight: discard
-        if (settled.every(s => s.status === 'rejected')) {        // nextRowIndex not advanced -> Retry repeats this batch
-            setFeedStatus('error', "Couldn't load more titles. Check your connection and try again.");
-            return;
-        }
-        nextRowIndex = startIndex + configs.length;
+        const settled = await Promise.allSettled(configs.map(async c => {
+            const data = await fetchJSON(c.url);
+            if (selectedGenres.size) feedTotals[c.mType] = Math.min(feedTotals[c.mType], Math.min(data.total_pages || 1, 500));
+            const items = (data.results || []).map(m => ({ ...m, media_type: c.mType })).filter(isSafeNonPorn);
+            return verifyItems(items, c.genres || [...selectedGenres]);
+        }));
+        if (gen !== feedGen) return;
 
         const frag = document.createDocumentFragment();
         let added = 0;
         configs.forEach((cfg, i) => {
             if (settled[i].status !== 'fulfilled') return;
-            const items = (settled[i].value.results || []).map(m => ({ ...m, media_type: cfg.mType }));
-            // allowCross = false -> a title never repeats across rows
-            const el = buildRowElement(`<i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> ${cfg.title}`, items, false, false, false);
+            const el = buildRowElement(`<i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> ${cfg.title}`, settled[i].value, false, false, false);
             if (el) { el.classList.add('fade-in'); frag.appendChild(el); added++; }
         });
+        const failures = settled.filter(s => s.status === 'rejected').length;
+        if (failures && !added) {
+            setFeedStatus('error', "Couldn't load more titles. Check your connection and try again.");
+            return;
+        }
         mainContainer.appendChild(frag);
 
-        emptyBatchStreak = added ? 0 : emptyBatchStreak + 1;
-        if (emptyBatchStreak >= MAX_EMPTY_BATCHES || nextRowIndex >= feedRowLimit()) {
-            setFeedStatus('end');
-            if (!mainContainer.querySelector('.row-section')) {
-                mainContainer.innerHTML = browseEmptyHTML();
-                setFeedStatus('hidden');
-            }
-        } else {
-            setFeedStatus('idle');
-        }
+        nextRowIndex = startIndex + count;
+        emptyBatchStreak = (added || failures) ? 0 : emptyBatchStreak + 1;
+        if (emptyBatchStreak >= MAX_EMPTY_BATCHES || nextRowIndex >= feedRowLimit()) finishRows();
+        else setFeedStatus('idle');
     } catch (e) {
         if (gen === feedGen) setFeedStatus('error', "Couldn't load more titles. Check your connection and try again.");
     } finally {
@@ -2782,7 +2844,7 @@ async function appendMoreSearchResults() {
     try {
         let added = 0, attempts = 0;
         // If a page is all duplicates / blocked titles, quietly try the next page (max 3)
-        while (!added && !searchPager.exhausted && attempts++ < 3) {
+        while (!added && !searchPager.exhausted && attempts++ < 5) {
             const items = await fetchPagerPage(searchPager);
             if (gen !== feedGen) return;
             const fresh = takeNewItems(items, searchItemFilter);
@@ -3533,6 +3595,7 @@ function buildRowElement(titleHTML, movies, isAI = false, isTop10 = false, allow
         if (!m.poster_path && !(m.poster && m.poster.startsWith('http'))) continue;
         if (!matchesActiveCategoryRules(m)) continue;
         if (currentView === 'discover' && !matchesSelectedMedia(m)) continue;
+        if (currentView === 'discover' && !matchesSelectedCategories(m)) continue;
         const uniqueKey = `${m.media_type || 'movie'}_${m.id}`;
         if (rowSeenIds.has(uniqueKey)) continue;
         if (!allowCrossCategory && displayedMovieIds.has(uniqueKey)) continue;
@@ -3581,6 +3644,7 @@ const CURATED_SPECIAL_TITLES = {
         "My Octopus Teacher", "13th", "Won't You Be My Neighbor?", "The Last Dance"
     ]
 };
+const CURATED_COUNTRIES = { BL: ['KR','TH','TW','JP','CN','PH','ID','VN'], GL: ['TH','KR','JP','TW','CN','PH','US','GB'] };
 
 async function fetchSpecialCategoryItems(categoryKey, page = 1) {
     const titles = CURATED_SPECIAL_TITLES[categoryKey];
@@ -3607,17 +3671,22 @@ async function fetchSpecialCategoryItems(categoryKey, page = 1) {
             return;
         }
         const expectedTitle = normalize(selectedTitles[index]);
-        const match = (result.value.results || []).find(item =>
-            ['movie', 'tv'].includes(item.media_type)
-            && normalize(item.title || item.name) === expectedTitle
-            && item.id
-        );
+        const match = (result.value.results || []).find(item => {
+            if (!['movie', 'tv'].includes(item.media_type) || !item.id || normalize(item.title || item.name) !== expectedTitle) return false;
+            if (categoryKey === 'BL' || categoryKey === 'GL') {
+                const cc = (item.origin_country || [])[0] || LANG_TO_COUNTRY[(item.original_language || '').toLowerCase()];
+                const g = item.genre_ids || [];
+                return CURATED_COUNTRIES[categoryKey].includes(cc) && (g.includes(10749) || g.includes(18) || g.includes(35));
+            }
+            return true;
+        });
         if (!match) return;
         const key = `${match.media_type}_${match.id}`;
         if (seen.has(key)) return;
         seen.add(key);
         items.push({
             ...match,
+            _curatedGenre: categoryKey,
             _customGenreBadge: categoryLabel,
             rationale: `Curated ${categoryLabel} selection.`
         });
@@ -3625,14 +3694,15 @@ async function fetchSpecialCategoryItems(categoryKey, page = 1) {
     return items;
 }
 
-function getActiveFilterQueryParams(mediaType = "movie") {
+function getActiveFilterQueryParams(mediaType = "movie", genres = selectedGenres) {
+    const sel = new Set(genres);
     const SPECIAL_KEYS = new Set(['BL', 'GL', 'ANIME', 'KIDS_FAMILY', 'SPORTS']);
-    const standardGenres = [...selectedGenres].filter(g => !SPECIAL_KEYS.has(g));
-    const hasBL = selectedGenres.has('BL');
-    const hasGL = selectedGenres.has('GL');
-    const hasAnime = selectedGenres.has('ANIME');
-    const hasKidsFamily = selectedGenres.has('KIDS_FAMILY');
-    const hasSports = selectedGenres.has('SPORTS');
+    const standardGenres = [...sel].filter(g => !SPECIAL_KEYS.has(g));
+    const hasBL = sel.has('BL');
+    const hasGL = sel.has('GL');
+    const hasAnime = sel.has('ANIME');
+    const hasKidsFamily = sel.has('KIDS_FAMILY');
+    const hasSports = sel.has('SPORTS');
 
     // Never include adult content when Kids & Family is selected
     let q = hasKidsFamily ? "&include_adult=false" : "&include_adult=true";
@@ -3656,13 +3726,13 @@ function getActiveFilterQueryParams(mediaType = "movie") {
             gSet.add("10751");
         }
         // Exclude mature/horror/crime/thriller genres from Kids & Family
-        if (!selectedGenres.has('27') && !selectedGenres.has('80') && !selectedGenres.has('53')) {
+        if (!sel.has('27') && !sel.has('80') && !sel.has('53')) {
             excl.push('27', '80', '53', '10768');
         }
     }
 
-    if (hasSports && !hasAnime && !selectedGenres.has('16')) excl.push('16');
-    if (selectedGenres.has('99') && !selectedGenres.has('80')) excl.push('80');
+    if (hasSports && !hasAnime && !sel.has('16')) excl.push('16');
+    if (sel.has('99') && !sel.has('80')) excl.push('80');
     if (excl.length) q += `&without_genres=${[...new Set(excl)].join(',')}`;
 
     if (gSet.size > 0) {
@@ -3691,6 +3761,7 @@ function getActiveFilterQueryParams(mediaType = "movie") {
 async function initEndlessNetflixHome() {
     if (currentView !== 'discover') return;
     const gen = resetFeed('rows');
+    nextRowIndex = selectedGenres.size ? (selectedMedia === 'all' ? 4 : 2) : 0;
     initHeroBannerSlideshow();   // slideshow follows the Browse selection
     mainContainer.innerHTML = `<p style="color: var(--text-muted); text-align:center; padding: 35px;"><i class="fa-solid fa-spinner fa-spin"></i> Synchronizing Unique Galaxy Cinema & Series Streams...</p>`;
 
@@ -4020,12 +4091,19 @@ async function initEndlessNetflixHome() {
         title: `<i class="fa-solid fa-star" style="color:#fbbf24;"></i> Curated ${GENRE_OPTIONS[genre]} Picks`,
         loader: () => fetchSpecialCategoryItems(CURATED_KEY[genre], 1).then(results => ({ results })),
         isAI: true,
-        allowCross: true
+        allowCross: true,
+        curated: true
     }));
 
-    const settled = await Promise.allSettled(specialRows.map(row => row.loader ? row.loader() : fetchJSON(row.url)));
-    if (gen !== feedGen) return;   // user changed filters while this was loading
-
+    const settled = await Promise.allSettled(specialRows.map(async row => {
+        const data = row.loader ? await row.loader() : await fetchJSON(row.url);
+        const items = (data.results || []).map(m => ({
+            ...m, media_type: m.media_type || row.mType,
+            rationale: row.customRationale || m.rationale
+        }));
+        return row.curated ? items : await verifyItems(items.filter(isSafeNonPorn));
+    }));
+    if (gen !== feedGen) return;
     if (settled.length && settled.every(s => s.status === 'rejected')) {
         return showMainError("Couldn't load movies. Check your connection and try again.", initEndlessNetflixHome);
     }
@@ -4037,12 +4115,7 @@ async function initEndlessNetflixHome() {
             return;
         }
         const cfg = specialRows[idx];
-        const items = (res.value.results || []).map(m => ({
-            ...m,
-            media_type: m.media_type || cfg.mType,
-            rationale: cfg.customRationale || m.rationale
-        }));
-        const rowEl = buildRowElement(cfg.title, items, cfg.isAI, cfg.isTop10, Boolean(cfg.allowCross));
+        const rowEl = buildRowElement(cfg.title, res.value, cfg.isAI, cfg.isTop10, Boolean(cfg.allowCross));
         if (rowEl) mainContainer.appendChild(rowEl);
     });
 
@@ -4192,6 +4265,8 @@ async function performSearch() {
         let results = initial;
         if (sources && sources.length) {
             searchPager = { sourcesForPage: page => sources.map(s => s(page)), page: 0, totalPages: 1, exhausted: false };
+            searchPager.genres = (isBLQuery || isGLQuery) ? [isBLQuery && 'BL', isGLQuery && 'GL'].filter(Boolean)
+                : isAnimeQuery ? ['ANIME'] : isSportsQuery ? ['SPORTS'] : isKidsQuery ? ['KIDS_FAMILY'] : isDocQuery ? ['99'] : undefined;
             searchPager.post = intentMode ? (items => postProcessIntent(items, intent)) : null;
             results = await fetchPagerPage(searchPager);
             if (gen !== feedGen) return;
@@ -5363,7 +5438,8 @@ const slimNovaMovie = m => ({
     id: m.id, title: m.title, name: m.name, media_type: m.media_type, poster_path: m.poster_path, poster: m.poster,
     overview: m.overview, release_date: m.release_date, first_air_date: m.first_air_date, vote_average: m.vote_average,
     vote_count: m.vote_count, genre_ids: m.genre_ids, original_language: m.original_language,
-    origin_country: m.origin_country, rationale: m.rationale, match: m.match, _isR18: m._isR18, _why: m._why
+    origin_country: m.origin_country, rationale: m.rationale, match: m.match, _isR18: m._isR18, _why: m._why,
+    _cats: [...getAllItemCategories(m)]
 });
 
 // forceDetails = true always loads the full TMDB record (keywords, tagline, genres) so plot matching has real data
@@ -5869,12 +5945,42 @@ function fetchWithTimeout(url, options = {}, ms = 15000) {
     return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
 }
 
+const SPECIAL_GENRE_WORDS = [
+    ['BL', /\b(bl|boys'? love|yaoi|danmei)\b/i], ['GL', /\b(gl|girls'? love|yuri|baihe)\b/i],
+    ['ANIME', /\b(anime|donghua)\b/i], ['SPORTS', /\bsports?\b/i],
+    ['KIDS_FAMILY', /\b(kids|family movies?)\b/i], ['99', /\b(documentar(?:y|ies)|docuseries)\b/i]
+];
+const explicitGenresInMessage = (msg, intent) =>
+    [...new Set([...intent.genreIds.map(String), ...SPECIAL_GENRE_WORDS.filter(([, re]) => re.test(msg)).map(([k]) => k)])];
+
+async function topUpFromGenres(genres, have, want = 12) {
+    const types = selectedMedia === 'all' ? ['movie', 'tv'] : [selectedMedia];
+    const seen = new Set(have.map(titleKey));
+    const out = [...have];
+    for (let page = 1; page <= 3 && out.length < want; page++) {
+        const res = await Promise.allSettled(types.map(t => fetchJSON(
+            `https://api.themoviedb.org/3/discover/${t}?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams(t, new Set(genres))}&page=${page}`)));
+        const pool = [];
+        res.forEach((r, i) => {
+            if (r.status === 'fulfilled') (r.value.results || []).forEach(m => pool.push({ ...m, media_type: types[i] }));
+        });
+        const fresh = pool.filter(m => m.poster_path && isSafeNonPorn(m) && !isBlockedByNotInterested(m, false) && !seen.has(titleKey(m)));
+        for (const m of await verifyItems(fresh, genres)) {
+            seen.add(titleKey(m));
+            out.push(m);
+            if (out.length >= want) break;
+        }
+    }
+    return out;
+}
+
 async function sendToNovaEngine(message) {
     appendBubbleToBothChats(message, 'user', false);
     appendBubbleToBothChats(`<i class="fa-solid fa-spinner fa-spin"></i> Nova is analyzing your question & scanning cinema vectors...`, 'ai', true);
 
     try {
         const nIntent = parseSearchIntent(message);
+        const explicit = explicitGenresInMessage(message, nIntent);
         const questionStart = /^(?:why|how|who|when|where|is|are|does|do|did|can|could|should|hi|hello|hey|thanks|thank)\b/i.test(message.trim());
         const plotStrong = !nIntent.structured && NOVA_PLOT_RE.test(message);
         // a short description that clearly matches a known plot also counts ("girl turns into red panda")
@@ -5923,12 +6029,17 @@ async function sendToNovaEngine(message) {
             if (nIntent.structured) {
                 candidates = await enrichAndVerify(candidates, nIntent);
                 if (candidates.length < 3) candidates = await topUpFromIntent(nIntent, candidates, 12);
+                candidates = await enrichAndVerify(candidates, nIntent);
             } else {
                 // Nova named a movie in text only -> still show the real card
                 if (!candidates.length && data.reply) candidates = (await resolveReplyTitles(data.reply)).filter(allow);
                 // "what should I watch?" with nothing from the backend -> highly rated picks
-                if (!candidates.length && wantsRecs) { candidates = await fallbackRecommendations(); usedFallback = true; }
+                if (!candidates.length && wantsRecs && !explicit.length) { candidates = await fallbackRecommendations(); usedFallback = true; }
                 else if (nIntent.themeWords.length) candidates = [...candidates].sort((a, b) => intentRelevance(b, nIntent) - intentRelevance(a, nIntent));
+            }
+            if (explicit.length && !nIntent.structured) {
+                candidates = await verifyItems(candidates, explicit);
+                if (candidates.length < 3) candidates = await topUpFromGenres(explicit, candidates, 12);
             }
             const pool = await hydrateNovaMovies(candidates, 12, true);
             const previous = new Set(lastNovaMovies.map(titleKey));
@@ -5938,7 +6049,7 @@ async function sendToNovaEngine(message) {
         }
         removeNovaSpinner();
 
-        movies = movies.filter(m => matchesSelectedMedia(m) && matchesSelectedCategories(m));   // final safety net
+        movies = movies.filter(m => matchesSelectedMedia(m) && matchesSelectedCategories(m) && matchesSelectedCategories(m, explicit));
         if (plot && !movies.length) plot = null;
         let replyText;
         if (movies.length && plot) {
@@ -6030,7 +6141,7 @@ chatInput.addEventListener('keydown', (e) => {
     update();
 })();
 
-initEndlessNetflixHome();
+initKeywordIds().finally(() => initEndlessNetflixHome());
 </script>
 </body>
 </html>
