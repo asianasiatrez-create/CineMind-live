@@ -414,20 +414,25 @@ html[data-theme="light"] .netflix-dropdown.open .netflix-dropdown-trigger {
 .row-title { font-size: 1.35rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
 .catalog-container { display: flex; flex-direction: column; gap: 34px; min-width: 0; min-height: 70vh; }
 .row-section { display: flex; flex-direction: column; gap: 12px; min-width: 0; content-visibility: auto; contain-intrinsic-size: auto 500px; }
-@media (max-width: 640px) { .row-section { contain-intrinsic-size: auto 400px; } }
-.movie-row {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 20px;
-    width: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 12px 8px 24px 8px;
-    -webkit-overflow-scrolling: touch;
-    touch-action: pan-x pan-y;
-    scroll-snap-type: x proximity;
-    scrollbar-width: thin;
-    scrollbar-color: var(--secondary-glow) transparent;
+@media (max-width: 640px) {
+    /* ... existing 640px rules ... */
+    
+    /* FIX: Force 2x2 grid on mobile so it doesn't push movies off-screen */
+    .filter-dropdown-container { 
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important; 
+        gap: 10px 8px; 
+    }
+    .netflix-dropdown-trigger { 
+        height: 42px; 
+        min-height: 42px; 
+        font-size: 0.82rem; 
+        padding: 0 10px;
+        border-radius: 12px;
+    }
+    .filter-select-wrapper label {
+        font-size: 0.72rem;
+        margin-bottom: -2px;
+    }
 }
 
 .movie-card {
@@ -1078,21 +1083,13 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
 
     <div class="filter-panel" id="filterPanel">
         <!-- 1. MEDIA FORMAT & QUICK CONTENT CATEGORY HUB (Documentaries, Kids & Family, Anime, Sports, BL, GL) -->
-        <div class="filter-row" id="mediaFilterRow">
+     <div class="filter-row" id="mediaFilterRow">
             <span class="filter-label"><i class="fa-solid fa-layer-group"></i> Browse:</span>
             <button type="button" class="filter-pill active" data-media="all"><i class="fa-solid fa-layer-group"></i> All Formats</button>
             <button type="button" class="filter-pill" data-media="movie"><i class="fa-solid fa-film"></i> Movies Only</button>
             <button type="button" class="filter-pill" data-media="tv"><i class="fa-solid fa-tv"></i> TV Series, Shows & Dramas</button>
-            <span class="filter-divider"></span>
-            <button type="button" class="filter-pill quick-cat-pill" data-quick-cat="ANIME"><i class="fa-solid fa-wand-sparkles"></i> Anime</button>
-            <button type="button" class="filter-pill quick-cat-pill" data-quick-cat="KIDS_FAMILY"><i class="fa-solid fa-child-reaching"></i> Kids & Family</button>
-            <button type="button" class="filter-pill quick-cat-pill" data-quick-cat="99"><i class="fa-solid fa-video"></i> Documentaries</button>
-            <button type="button" class="filter-pill quick-cat-pill" data-quick-cat="SPORTS"><i class="fa-solid fa-medal"></i> Sports</button>
-            <button type="button" class="filter-pill quick-cat-pill" data-quick-cat="BL"><i class="fa-solid fa-heart"></i> BL</button>
-            <button type="button" class="filter-pill quick-cat-pill" data-quick-cat="GL"><i class="fa-solid fa-heart"></i> GL</button>
             <button type="button" class="filter-pill" id="resetDislikedBtn" style="display:none;margin-left:auto;border-color:#f43f5e;color:#fda4af"><i class="fa-solid fa-eye-slash"></i> <span id="dislikedCountText"></span></button>
         </div>
-
         <!-- 2. NETFLIX-STYLE DROPDOWN SELECTORS: GENRES (MULTI) + STREAMING APP + ORIGIN COUNTRY + STREAMING REGION -->
         <div class="filter-dropdown-container">
             <div class="filter-select-wrapper">
@@ -1230,17 +1227,7 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
             <p style="font-size: 0.8rem; color: var(--text-muted);" id="authMsg">Sign up or log in to sync your library, or calibrate your tastes below:</p>
         </div>
     </div>
-
-    <!-- LOGGED-OUT VIEW -->
-    <div id="authView" style="display:flex; flex-direction:column; gap:16px;">
-        <div class="pref-group" style="display:flex; flex-direction:column; gap:10px;">
-            <input type="text" id="authUsername" placeholder="Username..." style="width: 100%; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 14px; padding: 12px 16px; color: var(--text-main); outline: none; font-size: 0.92rem;">
-            <div class="pw-wrap">
-                <input type="password" id="authPassword" placeholder="Password (6+ chars)..." autocomplete="current-password" style="width: 100%; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 14px; padding: 12px 16px; color: var(--text-main); outline: none; font-size: 0.92rem;">
-                <button type="button" class="pw-toggle" data-pw-target="authPassword" aria-label="Show password"><i class="fa-solid fa-eye"></i></button>
-            </div>
-        </div>
-
+   
         <div id="signupGenres" style="display:flex; flex-direction:column; gap:10px; background: rgba(124,58,237,0.08); padding: 14px; border-radius: 16px; border: 1px solid var(--glass-border);">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-size:0.84rem; font-weight:700; color:var(--secondary-glow);"><i class="fa-solid fa-sparkles"></i> Pick at least 3 Genres You Love:</span>
@@ -1291,9 +1278,6 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
         <div>
             <div style="font-size:0.8rem; font-weight:700; color:var(--secondary-glow); margin-bottom:6px;">Your Genres</div>
             <div id="acctGenres" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
-        </div>
-        <button type="button" class="btn-action" id="openAdminAuditBtn" style="display:none;width:100%;justify-content:center;background:linear-gradient(135deg,#10b981,#0284c7)"><i class="fa-solid fa-shield-halved"></i> View Admin Audit Logs</button>
-        <div id="adminAuditLogContainer" style="display:none;max-height:190px;overflow-y:auto;background:rgba(6,3,20,.92);border:1px solid var(--secondary-glow);border-radius:12px;padding:10px;font-size:.74rem"></div>
         <button type="button" id="logoutBtn" class="btn-action btn-not-interested" style="width:100%; justify-content:center;">
             <i class="fa-solid fa-right-from-bracket"></i> Log Out
         </button>
@@ -2612,12 +2596,6 @@ function syncGenreNetflixDropdownUI() {
         }
     });
 
-    // Sync Quick Category Pills in the top Browse bar
-    document.querySelectorAll('.quick-cat-pill').forEach(pill => {
-        const cat = pill.getAttribute('data-quick-cat');
-        pill.classList.toggle('active', selectedGenres.has(cat));
-    });
-}
 
 function initNetflixGenreDropdown() {
     const dd = document.getElementById('netflixGenreDropdown');
@@ -3016,9 +2994,13 @@ async function syncCloudLibrary() {
 syncCloudLibrary();
 
 window.addEventListener('DOMContentLoaded', () => {
-    if (!currentUser && userGenres.length < 3) profileModal.classList.add('active');
+    if (currentUser) {
+        // Force the UI to remember the user immediately
+        renderProfileCard();
+    } else if (userGenres.length < 3) {
+        profileModal.classList.add('active');
+    }
 });
-
 document.getElementById('homeLogoBtn').onclick = () => {
     triggerTiltAnimation(mainBrandLogo);
     searchInput.value = '';
@@ -4863,7 +4845,7 @@ function plotMatchScore(m, query) {
     const quality = Math.min(10, Number(m.vote_average) || 0) + Math.min(6, Math.log10((m.vote_count || 0) + 1) * 2);
     return { terms: terms.length, hits, ratio, score: ratio * 100 + quality };
 }
-const plotIsMatch = s => s.terms > 0 && s.hits >= Math.min(2, s.terms) && s.ratio >= 0.4;
+const plotIsMatch = s => s.terms > 0 && s.hits >= Math.min(2, s.terms) && s.ratio >= 0.55;
 
 const PLOT_KB = [
     ["Parasite",2019,"movie","poor unemployed family infiltrates and cons their way into working for a wealthy rich family inside their mansion house, class divide, basement secret"],
@@ -4952,11 +4934,10 @@ function plotKbSearch(query, limit = 3) {
     return kb.docs.map(({ e, terms }) => {
         const hit = q.filter(t => terms.has(t));
         return { e, hits: hit.length, ratio: hit.reduce((s, t) => s + weight(t), 0) / total };
-    }).filter(x => x.hits >= 2 && x.ratio >= 0.45)
+    }).filter(x => x.hits >= 2 && x.ratio >= 0.60)
       .sort((a, b) => b.ratio - a.ratio || b.hits - a.hits)
       .slice(0, limit);
 }
-
 // Words that describe a plot but are not TMDB keywords themselves -> the keyword TMDB actually uses (extend freely)
 const PLOT_KEYWORD_ALIASES = {
     turns: 'transformation', turn: 'transformation', transforms: 'transformation', transformed: 'transformation',
@@ -5164,8 +5145,8 @@ async function resolvePlotMatches(query, backendCandidates, replyText = '') {
     }
 
     // Keep a title only if it fits the description. Trusted picks need a matching clue unless the KB is confident.
-    const ranked = [...cands.values()]
-        .filter(x => plotIsMatch(x.s) || (x.bonus >= 30 && (x.kb || (!kbStrong && x.s.hits >= 1))))
+    cconst ranked = [...cands.values()]
+        .filter(x => plotIsMatch(x.s) || (x.bonus >= 30 && (x.kb || (!kbStrong && x.s.hits >= 2)))) // Require at least 2 hits for non-KB
         .sort((a, b) => (b.s.score + b.bonus) - (a.s.score + a.bonus));
     if (!ranked.length) return { movies: [], clear: false };
 
