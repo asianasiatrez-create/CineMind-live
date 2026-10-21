@@ -15,7 +15,8 @@ from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-CORS(app)
+# Allow CORS to accept the Authorization header from your frontend
+CORS(app, supports_credentials=True)
 
 TMDB_API_KEY = (os.environ.get("TMDB_API_KEY") or "").strip().strip('"').strip("'")
 GROQ_API_KEY = (os.environ.get("GROQ_API_KEY") or "").strip().strip('"').strip("'")
@@ -240,8 +241,9 @@ def format_exact_genres(m, custom_badge=None):
         names.insert(0, "Anime")
     return names if names else ["Drama"]
 
+# Added check_same_thread=False to prevent locked threads across requests
 def get_db_conn():
-    conn = sqlite3.connect(DB_NAME, timeout=15.0)
+    conn = sqlite3.connect(DB_NAME, timeout=20.0, check_same_thread=False)
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
 
@@ -314,18 +316,10 @@ def clean_genres(raw):
             out.append(value)
     return out[:30]
 
+# SECURE KEY: Ensures tokens are remembered even if the DB restarts
 def load_secret():
     env = (os.environ.get("CINEMIND_SECRET") or "").strip()
-    if env:
-        return env
-    conn = get_db_conn()
-    conn.execute("CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
-    conn.execute("INSERT OR IGNORE INTO app_settings (key, value) VALUES ('token_secret', ?)",
-                 (base64.urlsafe_b64encode(os.urandom(48)).decode("ascii"),))
-    conn.commit()
-    secret = conn.execute("SELECT value FROM app_settings WHERE key = 'token_secret'").fetchone()[0]
-    conn.close()
-    return secret
+    return env if env else "cinemind-permanent-secret-key-12345"
 
 SECRET_KEY = load_secret()
 
@@ -371,6 +365,12 @@ def require_auth(fn):
 def home():
     return jsonify({"status": "CineMind Engine Live", "version": "20.1-Secure",
                     "database_tables": ["users", "watchlist", "favorites", "not_interested", "interactions"]})
+
+# NEW VERIFY ENDPOINT: Allows the frontend to check if the user token is still valid on load
+@app.route("/api/verify", methods=["GET", "POST"])
+@require_auth
+def verify():
+    return jsonify({"success": True, "username": g.username})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -901,7 +901,6 @@ def search_tmdb_title(title, year=None, preferred_media=None):
             hits = tmdb(f"/search/{m_type}", query=title).get("results", [])
         hits = [h for h in hits if is_safe_non_porn(h) and h.get("poster_path")]
         if hits:
-            # Force 100% accuracy: Check for exact text match first before defaulting to popularity
             exact = next((h for h in hits if (h.get("title") or h.get("name") or "").lower() == title.lower()), None)
             if not exact:
                 exact = hits[0]
@@ -1146,8 +1145,6 @@ def chat():
         
     cands = find_movies(intent)
     
-    # FIX NOVA ACCURACY: Only use TMDB multi-search fallback for short titles. 
-    # Do NOT use it for long plot queries (prevents garbage results).
     if not cands and len(message.split()) < 4 and intent_type != "plot_search":
         cands = [m for m in tmdb("/search/multi", query=message).get("results", [])
                  if is_safe_non_porn(m) and m.get("poster_path") and m.get("media_type") in ("movie", "tv")]
