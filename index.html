@@ -1292,6 +1292,43 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
     .filter-select-wrapper label i { display: none; }
     .netflix-dropdown-trigger { height: 48px; min-height: 48px; padding: 0 8px 0 10px; font-size: .74rem; border-radius: 14px; }
 }
+
+/* ---- Ratings, reviews, Nova "why" ---- */
+.rating-box { display: flex; flex-direction: column; gap: 10px; background: rgba(124,58,237,.08); border: 1px solid var(--glass-border); border-radius: 16px; padding: 14px 16px; }
+.rating-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rating-title { font-size: .82rem; font-weight: 800; color: var(--secondary-glow); display: flex; align-items: center; gap: 6px; }
+.rating-title i { color: #fbbf24; }
+.rating-hint { font-size: .76rem; font-weight: 600; color: var(--text-muted); }
+.rating-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.star-group { display: inline-flex; gap: 2px; }
+.star-group.busy { opacity: .55; pointer-events: none; }
+.star-btn { width: 44px; height: 44px; border: 0; background: transparent; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 1.6rem; color: rgba(165,180,252,.35); transition: transform .15s ease, color .15s ease; }
+.star-btn i { color: inherit; pointer-events: none; }
+.star-btn.on { color: #fbbf24; filter: drop-shadow(0 0 6px rgba(251,191,36,.55)); }
+.star-btn:focus-visible { outline: 2px solid var(--secondary-glow); }
+@media (hover: hover) and (pointer: fine) { .star-btn:hover { transform: scale(1.15); } }
+.rating-clear { border: 1px solid rgba(244,63,94,.55); background: rgba(244,63,94,.12); color: #fda4af; font-size: .74rem; font-weight: 700; padding: 6px 12px; border-radius: 14px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.rating-clear i { color: inherit; }
+.rating-clear[hidden], .card-my-rating[hidden] { display: none; }
+.rating-community { font-size: .84rem; color: var(--text-muted); line-height: 1.5; }
+.rating-community strong { color: var(--text-main); }
+.mini-stars { display: inline-flex; gap: 1px; vertical-align: middle; }
+.mini-stars i { color: #fbbf24; font-size: .78rem; }
+.mini-stars i.off { color: rgba(165,180,252,.35); }
+.review-area { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--glass-border); padding-top: 10px; }
+.review-area textarea { width: 100%; min-height: 76px; resize: vertical; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px 12px; color: var(--text-main); font-size: .88rem; outline: none; }
+.review-area textarea:focus { border-color: var(--secondary-glow); }
+.review-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.review-count { margin-left: auto; font-size: .72rem; color: var(--text-muted); }
+.review-item { background: rgba(12,6,34,.45); border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
+html[data-theme="light"] .review-item { background: rgba(255,255,255,.7); }
+.review-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: .76rem; color: var(--text-muted); font-weight: 600; }
+.review-meta b { color: var(--text-main); }
+.review-body { font-size: .86rem; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.card-my-rating { position: absolute; bottom: 8px; right: 8px; z-index: 4; pointer-events: none; display: inline-flex; align-items: center; gap: 4px; background: rgba(8,4,26,.88); border: 1px solid rgba(251,191,36,.6); color: #fbbf24; font-size: .7rem; font-weight: 800; padding: 3px 8px; border-radius: 9px; }
+.card-my-rating i { color: inherit; }
+.nova-rec-why { font-size: .72rem; font-weight: 600; color: #10b981; line-height: 1.35; }
+.nova-rec-why i { color: inherit; margin-right: 4px; }
 </style>
 </head>
 <body>
@@ -1433,6 +1470,7 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
         <h2 class="modal-title" id="modalTitle">Loading...</h2>
         <div class="modal-meta" id="modalMeta"></div>
         <div class="modal-genres-row" id="modalGenresRow"></div>
+        <div class="rating-box" id="modalRatingBox"></div>
         <div class="streaming-providers" id="modalProviders">
             <i class="fa-solid fa-tv"></i> <span>Checking streaming availability...</span>
         </div>
@@ -1648,6 +1686,9 @@ let selectedGenres = new Set();
 let selectedCountry = "";
 let activeSearchQuery = "";
 let analyticsChartInstance = null;
+let myRatings = new Map();                       // "movie_123" -> 1..5 (the signed-in user's own ratings)
+let userPrefs = { genres: {}, tags: {} };        // learned weights from the server, per user
+const emptyPrefs = () => ({ genres: {}, tags: {} });
 
 // ===== BROWSE FILTER: one source of truth for Movies / TV / category =====
 function itemMediaType(m) {
@@ -3225,6 +3266,9 @@ async function syncCloudLibrary() {
     if (!currentUser) {
         watchlist = [];
         favorites = [];
+        myRatings = new Map();
+        userPrefs = emptyPrefs();
+        refreshAllCardRatingBadges();
         profileDisplayName.innerText = "Guest User";
         profileSubText.innerText = userGenres.length >= 3 ? `${userGenres.length} Genres Calibrated` : "Tap to Login";
         welcomeName.innerText = "Guest";
@@ -3244,6 +3288,7 @@ async function syncCloudLibrary() {
         const data = await res.json();
         watchlist = await repairSavedPosters(data.watchlist || []);
         favorites = await repairSavedPosters(data.favorites || []);
+        await loadRatingProfile();
         if (data.genres && data.genres.length >= 3 && userGenres.length === 0) {
             userGenres = data.genres.map(String);
             localStorage.setItem('cinemind_genres', JSON.stringify(userGenres));
@@ -3255,8 +3300,21 @@ async function syncCloudLibrary() {
 }
 syncCloudLibrary();
 
-window.addEventListener('DOMContentLoaded', () => {
-    if (!currentUser && userGenres.length < 3) profileModal.classList.add('active');
+window.addEventListener('DOMContentLoaded', async () => {
+    if (currentUser && currentAuthToken) {
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/verify`, {
+                headers: { 'Authorization': 'Bearer ' + currentAuthToken }
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error("Invalid token");
+            renderProfileCard();
+        } catch (e) {
+            logoutBtn.click();
+        }
+    } else if (userGenres.length < 3) {
+        profileModal.classList.add('active');
+    }
 });
 
 document.getElementById('homeLogoBtn').onclick = () => {
@@ -3394,6 +3452,7 @@ function createMovieCard(movie, isAI = false, searchContext = "", rankNum = null
             <span class="media-badge">${mediaLabel(mType)}</span>
         </div>
         <span class="origin-country-badge"><i class="fa-solid fa-location-dot" style="color:var(--secondary-glow);"></i> ${escapeHTML(originLabel)}</span>
+        <span class="card-my-rating" ${myRatings.has(`${mType}_${movie.id}`) ? '' : 'hidden'}><i class="fa-solid fa-star"></i> ${myRatings.get(`${mType}_${movie.id}`) || ''}</span>
     `;
     const rationale = movie.rationale || (searchContext
         ? `High neural similarity to "${searchContext}".`
@@ -3401,6 +3460,7 @@ function createMovieCard(movie, isAI = false, searchContext = "", rankNum = null
 
     const card = document.createElement('div');
     card.setAttribute('data-movie-id', movie.id);
+    card.setAttribute('data-title-key', `${mType}_${movie.id}`);
 
     if (rankNum !== null) {
         card.className = 'movie-card top10-card';
@@ -4691,6 +4751,7 @@ async function fetchAndOpenModal(title, fallbackPoster, customRationale, movieId
 
         // Render Complete Genres, Cast (Characters + Actors), and Crew
         renderModalGenresAndCredits(item, mType);
+        initRatingBox(item, mType);
 
         fetch(`${BACKEND_URL}/api/omdb?title=${encodeURIComponent(currentMovieData.title)}&year=${year}`)
             .then(r => r.json())
@@ -4778,6 +4839,8 @@ function libraryPayload(m) {
         poster: cleanPoster,
         vote_average: m.vote_average || 0,
         media_type: m.media_type || 'movie',
+        genre_ids: itemGenreKeys(m).slice(0, 12),
+        tags: itemTags(m).slice(0, 15),
         _isR18: Boolean(m._isR18),
         rationale: m.rationale || "Saved in your personal CineMind cloud library."
     };
@@ -4830,6 +4893,352 @@ document.getElementById('watchedBtn').onclick = () => {
     if (currentView === 'watched') navItems[5].click();
     else if (currentView === 'discover') initEndlessNetflixHome();
 };
+
+// ================= RATINGS, REVIEWS & PREFERENCE PROFILE =================
+const STAR_LABELS = ['', 'Strong dislike', 'Dislike', 'Neutral', 'Like', 'Strongly like'];
+const REVIEW_PAGE = 5, REVIEW_MAX = 2000;
+let ratingCtx = null;
+
+const titleKey = m => `${itemMediaType(m) || m.media_type || 'movie'}_${m.id}`;
+const normTag = s => String(s || '').toLowerCase().replace(/[^a-z0-9 '&-]/g, '').replace(/\s+/g, ' ').trim();
+const itemTags = m => [...new Set(((m.keywords && (m.keywords.keywords || m.keywords.results)) || [])
+    .map(k => normTag(k.name)).filter(t => t.length >= 2 && t.length <= 40))];
+// Ordered genre keys: TMDB genres first (their order drives the weight), then CineMind categories (ANIME, SPORTS, BL...)
+function itemGenreKeys(m) {
+    const base = (m.genres && m.genres.length ? m.genres.map(g => g.id) : (m.genre_ids || [])).map(String);
+    const special = [...getAllItemCategories(m)].filter(k => /^[A-Z_]+$/.test(k) && !base.includes(k));
+    return [...base, ...special];
+}
+const rankWeight = i => Math.max(0.3, 1 - 0.2 * i);
+function titleMetaForServer(item) {
+    const y = parseInt((item.release_date || item.first_air_date || '').slice(0, 4), 10);
+    const country = Array.isArray(item.origin_country) ? item.origin_country[0] : ((item.production_countries || [])[0] || {}).iso_3166_1;
+    return {
+        genres: itemGenreKeys(item).slice(0, 12), tags: itemTags(item).slice(0, 25),
+        country: country || undefined, language: item.original_language || undefined, year: y || undefined
+    };
+}
+const miniStars = n => `<span class="mini-stars" aria-label="${n} out of 5">${[1,2,3,4,5].map(i => `<i class="fa-solid fa-star${i <= Math.round(n) ? '' : ' off'}"></i>`).join('')}</span>`;
+
+async function loadRatingProfile() {
+    if (!currentUser) return;
+    myRatings = new Map();
+    userPrefs = emptyPrefs();
+    const [r, p] = await Promise.allSettled([
+        fetch(`${BACKEND_URL}/api/ratings/mine`, { headers: authHeaders() }).then(x => x.ok ? x.json() : Promise.reject(new Error(`HTTP ${x.status}`))),
+        fetch(`${BACKEND_URL}/api/me/preferences`, { headers: authHeaders() }).then(x => x.ok ? x.json() : Promise.reject(new Error(`HTTP ${x.status}`)))
+    ]);
+    if (r.status === 'fulfilled') myRatings = new Map(Object.entries(r.value.ratings || {}).map(([k, v]) => [k, Number(v)]));
+    else console.warn('Could not load your ratings.', r.reason);
+    if (p.status === 'fulfilled') userPrefs = { genres: p.value.preferences.genres || {}, tags: p.value.preferences.tags || {} };
+    else console.warn('Could not load your preferences.', p.reason);
+    refreshAllCardRatingBadges();
+}
+
+function refreshCardRatingBadges(key) {
+    const v = myRatings.get(key);
+    document.querySelectorAll(`[data-title-key="${key}"] .card-my-rating`).forEach(el => {
+        el.hidden = !v;
+        if (v) el.innerHTML = `<i class="fa-solid fa-star"></i> ${v}`;
+    });
+}
+
+function refreshAllCardRatingBadges() {
+    document.querySelectorAll('[data-title-key]').forEach(card => {
+        const badge = card.querySelector('.card-my-rating');
+        if (!badge) return;
+        const rating = myRatings.get(card.getAttribute('data-title-key'));
+        badge.hidden = !rating;
+        if (rating) badge.innerHTML = `<i class="fa-solid fa-star"></i> ${rating}`;
+    });
+}
+
+function promptLogin() {
+    showToast('Log in to rate and review titles.');
+    profileModal.classList.add('active');
+}
+
+function initRatingBox(item, type) {
+    const box = document.getElementById('modalRatingBox');
+    if (!box) return;
+    const c = ratingCtx = { key: `${type}_${item.id}`, type, id: item.id, item, community: null, mine: null, offset: 0, saving: false };
+    box.innerHTML = `
+        <div class="rating-head">
+            <span class="rating-title"><i class="fa-solid fa-star"></i> Your rating</span>
+            <span class="rating-hint" id="ratingHint"></span>
+        </div>
+        <div class="rating-row">
+            <div class="star-group" id="starGroup" role="radiogroup" aria-label="Rate this title from 1 to 5 stars">
+                ${[1,2,3,4,5].map(v => `<button type="button" class="star-btn" data-v="${v}" role="radio" aria-checked="false" aria-label="${v} star${v > 1 ? 's' : ''}: ${STAR_LABELS[v]}"><i class="fa-solid fa-star"></i></button>`).join('')}
+            </div>
+            <button type="button" class="rating-clear" id="ratingClear" hidden><i class="fa-solid fa-xmark"></i> Remove rating</button>
+        </div>
+        <div class="rating-community" id="ratingCommunity">Loading CineMind community rating...</div>
+        <div class="review-area" id="reviewArea"></div>`;
+    const group = box.querySelector('#starGroup');
+    group.addEventListener('click', e => { const b = e.target.closest('.star-btn'); if (b) submitRating(Number(b.dataset.v)); });
+    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+        group.addEventListener('mouseover', e => { const b = e.target.closest('.star-btn'); if (b) paintMyRating(Number(b.dataset.v)); });
+        group.addEventListener('mouseleave', () => paintMyRating());
+    }
+    box.querySelector('#ratingClear').onclick = removeRating;
+    paintMyRating();
+    paintReviewForm();
+    loadTitleRatings();
+}
+
+function paintMyRating(preview) {
+    const c = ratingCtx; if (!c) return;
+    const cur = myRatings.get(c.key) || 0, shown = preview || cur;
+    document.querySelectorAll('#starGroup .star-btn').forEach(b => {
+        const v = Number(b.dataset.v);
+        b.classList.toggle('on', v <= shown);
+        b.setAttribute('aria-checked', String(v === cur));
+    });
+    const hint = document.getElementById('ratingHint'), clear = document.getElementById('ratingClear');
+    if (hint) hint.textContent = preview ? STAR_LABELS[preview] : (cur ? `${cur}/5 • ${STAR_LABELS[cur]}` : (currentUser ? 'Tap a star to rate' : 'Log in to rate'));
+    if (clear) clear.hidden = !cur;
+}
+
+function paintCommunity() {
+    const c = ratingCtx, el = document.getElementById('ratingCommunity'); if (!c || !el) return;
+    const k = c.community;
+    el.innerHTML = (!k || !k.count)
+        ? 'No CineMind ratings yet. Be the first to rate this title. <span style="opacity:.8">(TMDB / IMDb ratings are shown separately.)</span>'
+        : `<strong>CineMind community:</strong> ${miniStars(k.average)} <strong>${k.average.toFixed(1)}/5</strong> • ${k.count} rating${k.count === 1 ? '' : 's'} <span style="opacity:.8">(TMDB / IMDb ratings are shown separately.)</span>`;
+}
+
+function setRatingBusy(b) { const g = document.getElementById('starGroup'); if (g) g.classList.toggle('busy', b); }
+
+function applyRatingResult(c, d) {
+    if (d.rating) myRatings.set(c.key, d.rating); else myRatings.delete(c.key);
+    if (d.preferences) userPrefs = { genres: d.preferences.genres || {}, tags: d.preferences.tags || {} };
+    c.community = d.community;
+    refreshCardRatingBadges(c.key);
+    if (ratingCtx === c) { paintMyRating(); paintCommunity(); loadReviews(true); }
+}
+
+async function submitRating(v) {
+    const c = ratingCtx; if (!c || c.saving) return;
+    if (!currentUser) return promptLogin();
+    if (myRatings.get(c.key) === v) return;
+    c.saving = true; setRatingBusy(true);
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/ratings/${c.type}/${c.id}`, {
+            method: 'PUT', headers: authHeaders(), body: JSON.stringify({ rating: v, meta: titleMetaForServer(c.item) })
+        });
+        if (res.status === 401) return expireSession();
+        const d = await res.json();
+        if (!res.ok || !d.success) throw new Error(d.message || `HTTP ${res.status}`);
+        applyRatingResult(c, d);
+        showToast(`Rated ${v}/5. Your recommendations will adapt.`);
+    } catch (e) { console.error('Rating failed.', e); showToast("Couldn't save your rating. Please try again."); }
+    finally { c.saving = false; if (ratingCtx === c) setRatingBusy(false); }
+}
+
+async function removeRating() {
+    const c = ratingCtx; if (!c || c.saving || !currentUser) return;
+    c.saving = true; setRatingBusy(true);
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/ratings/${c.type}/${c.id}`, { method: 'DELETE', headers: authHeaders() });
+        if (res.status === 401) return expireSession();
+        const d = await res.json();
+        if (!res.ok || !d.success) throw new Error(d.message || `HTTP ${res.status}`);
+        applyRatingResult(c, d);
+        showToast('Rating removed.');
+    } catch (e) { console.error('Remove rating failed.', e); showToast("Couldn't remove your rating."); }
+    finally { c.saving = false; if (ratingCtx === c) setRatingBusy(false); }
+}
+
+async function loadTitleRatings() {
+    const c = ratingCtx; if (!c) return;
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/titles/${c.type}/${c.id}/ratings`, { headers: authHeaders() });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const d = await res.json();
+        if (ratingCtx !== c) return;
+        c.community = d.community; c.mine = d.mine || null;
+        if (currentUser && c.mine) { if (c.mine.rating) myRatings.set(c.key, c.mine.rating); else myRatings.delete(c.key); }
+        paintMyRating(); paintCommunity();
+        const ta = document.getElementById('reviewText');
+        if (ta && c.mine && c.mine.review && !ta.value) { ta.value = c.mine.review; updateReviewCount(); }
+        const del = document.getElementById('reviewDelete'); if (del) del.hidden = !(c.mine && c.mine.review);
+        loadReviews(true);
+    } catch (e) {
+        console.warn('Community ratings unavailable.', e);
+        const el = document.getElementById('ratingCommunity');
+        if (el && ratingCtx === c) el.textContent = 'CineMind community ratings are unavailable right now.';
+    }
+}
+
+function updateReviewCount() {
+    const ta = document.getElementById('reviewText'), n = document.getElementById('reviewCount');
+    if (ta && n) n.textContent = `${ta.value.length}/${REVIEW_MAX}`;
+}
+
+function paintReviewForm() {
+    const area = document.getElementById('reviewArea'); if (!area) return;
+    const form = currentUser ? `
+        <textarea id="reviewText" maxlength="${REVIEW_MAX}" placeholder="Write a review (optional)..." aria-label="Your review"></textarea>
+        <div class="review-actions">
+            <button type="button" class="btn-action" id="reviewSave"><i class="fa-solid fa-paper-plane"></i> Save review</button>
+            <button type="button" class="btn-action btn-not-interested" id="reviewDelete" hidden><i class="fa-solid fa-trash"></i> Delete my review</button>
+            <span class="review-count" id="reviewCount">0/${REVIEW_MAX}</span>
+        </div>`
+        : `<div class="rating-community">Log in to rate and review this title. <button type="button" class="rating-clear" id="reviewLogin" style="color:var(--secondary-glow);border-color:var(--secondary-glow);background:transparent">Log in</button></div>`;
+    area.innerHTML = `${form}<div id="reviewList" style="display:flex;flex-direction:column;gap:8px"></div><button type="button" class="filter-pill" id="reviewMore" hidden><i class="fa-solid fa-chevron-down"></i> Load more reviews</button>`;
+    const q = id => area.querySelector(id);
+    if (q('#reviewLogin')) q('#reviewLogin').onclick = promptLogin;
+    if (q('#reviewText')) q('#reviewText').addEventListener('input', updateReviewCount);
+    if (q('#reviewSave')) q('#reviewSave').onclick = saveReview;
+    if (q('#reviewDelete')) q('#reviewDelete').onclick = deleteReview;
+    q('#reviewMore').onclick = () => loadReviews(false);
+}
+
+async function loadReviews(reset) {
+    const c = ratingCtx; if (!c) return;
+    const list = document.getElementById('reviewList'), more = document.getElementById('reviewMore'); if (!list) return;
+    if (reset) { c.offset = 0; list.innerHTML = ''; }
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/titles/${c.type}/${c.id}/reviews?offset=${c.offset}&limit=${REVIEW_PAGE}`, { headers: authHeaders() });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const d = await res.json();
+        if (ratingCtx !== c) return;
+        (d.reviews || []).forEach(r => {
+            const div = document.createElement('div');
+            div.className = 'review-item';
+            const date = r.created_at ? new Date(r.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '';
+            div.innerHTML = `<div class="review-meta"><b>${escapeHTML(r.username)}${r.mine ? ' (you)' : ''}</b>${r.rating ? miniStars(r.rating) : ''}<span>${escapeHTML(date)}</span></div><div class="review-body">${escapeHTML(r.body)}</div>`;
+            list.appendChild(div);
+        });
+        c.offset += (d.reviews || []).length;
+        if (more) more.hidden = !d.has_more;
+        if (reset && !(d.reviews || []).length) list.innerHTML = '<div class="rating-community">No written reviews yet.</div>';
+    } catch (e) { console.warn('Could not load reviews.', e); }
+}
+
+async function saveReview() {
+    const c = ratingCtx, ta = document.getElementById('reviewText'); if (!c || !ta) return;
+    const body = ta.value.trim();
+    if (!body) return showToast('Write something first, or leave the review empty.');
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/reviews/${c.type}/${c.id}`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify({ body }) });
+        if (res.status === 401) return expireSession();
+        const d = await res.json();
+        if (!res.ok || !d.success) throw new Error(d.message || `HTTP ${res.status}`);
+        ta.value = d.body; updateReviewCount();
+        const del = document.getElementById('reviewDelete'); if (del) del.hidden = false;
+        showToast('Review saved.');
+        loadReviews(true);
+    } catch (e) { console.error('Save review failed.', e); showToast(e.message || "Couldn't save your review."); }
+}
+
+async function deleteReview() {
+    const c = ratingCtx; if (!c) return;
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/reviews/${c.type}/${c.id}`, { method: 'DELETE', headers: authHeaders() });
+        if (res.status === 401) return expireSession();
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const ta = document.getElementById('reviewText'); if (ta) { ta.value = ''; updateReviewCount(); }
+        const del = document.getElementById('reviewDelete'); if (del) del.hidden = true;
+        showToast('Review deleted.');
+        loadReviews(true);
+    } catch (e) { console.error('Delete review failed.', e); showToast("Couldn't delete your review."); }
+}
+
+// ================= NOVA RANKING (combines request, genres, tags, ratings, favorites, locale, quality) =================
+const RANK_WEIGHTS = { request: 0.34, explicitGenre: 0.12, learnedGenre: 0.10, learnedTag: 0.08, favorites: 0.05, locale: 0.06, quality: 0.10 };
+const RANK_PENALTIES = { alreadyRated: 0.15, notInterested: 0.20 };
+const MIN_COMMUNITY_RATINGS = 5;
+
+function favoriteProfile() {
+    const genres = new Set(), tags = new Set();
+    favorites.forEach(f => { (f.genre_ids || []).forEach(g => genres.add(String(g))); (f.tags || []).forEach(t => tags.add(t)); });
+    return { genres, tags, size: genres.size + tags.size };
+}
+async function fetchCommunityBatch(keys) {
+    try {
+        const res = await fetchWithTimeout(`${BACKEND_URL}/api/titles/ratings/batch`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keys })
+        }, 6000);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return (await res.json()).communities || {};
+    } catch (e) { console.warn('Community ratings unavailable for ranking.', e); return {}; }
+}
+const itemCountryCodes = m => [...(Array.isArray(m.origin_country) ? m.origin_country : []), ...(m.production_countries || []).map(c => c.iso_3166_1)];
+
+async function rankNovaMovies(movies, query, intent) {
+    if (!movies.length) return movies;
+    const keys = movies.map(titleKey);
+    const comm = await fetchCommunityBatch(keys);
+    const fav = favoriteProfile();
+    const personalization = (intent.structured || intent.themeWords.length) ? 0.5 : 1;
+    const explicit = new Set([...selectedGenres, ...userGenres.map(String), ...intent.genreIds.map(String)]);
+    const W = RANK_WEIGHTS;
+    const used = W.request + W.explicitGenre + (W.learnedGenre + W.learnedTag + W.favorites) * personalization + W.locale + W.quality;
+
+    const ranked = movies.map((m, idx) => {
+        const key = keys[idx], cats = getAllItemCategories(m), gkeys = itemGenreKeys(m), tags = itemTags(m);
+        const text = `${m.title || m.name || ''} ${m.overview || ''} ${tags.join(' ')}`.toLowerCase();
+        const reasons = [];
+
+        const parts = [];
+        if (intent.structured) { parts.push(1); reasons.push(`matches your request (${describeIntent(intent)})`); }
+        if (intent.themeWords.length) {
+            const hit = intent.themeWords.filter(w => text.includes(w));
+            parts.push(hit.length / intent.themeWords.length);
+            if (hit.length) reasons.push(`fits "${hit.slice(0, 3).join(', ')}"`);
+        }
+        const request = parts.length ? parts.reduce((a, b) => a + b, 0) / parts.length : 0.5;
+
+        const exHit = [...explicit].filter(g => cats.has(g));
+        const explicitScore = explicit.size ? Math.min(1, exHit.length / Math.min(explicit.size, 3)) : 0.5;
+        if (exHit.length && !intent.structured) reasons.push(`matches your genres (${exHit.slice(0, 2).map(g => GENRE_OPTIONS[g]).filter(Boolean).join(', ')})`);
+
+        let num = 0, den = 0, best = null;
+        gkeys.forEach((k, i) => {
+            const w = rankWeight(i), p = Number(userPrefs.genres[k]) || 0;
+            num += p * w; den += w;
+            if (p >= 0.2 && (!best || p > best.p)) best = { k, p };
+        });
+        const learnedGenre = den ? (num / den + 1) / 2 : 0.5;
+        if (best && GENRE_OPTIONS[best.k]) reasons.push(`you tend to rate ${GENRE_OPTIONS[best.k]} titles highly`);
+
+        const known = tags.filter(t => userPrefs.tags[t] !== undefined);
+        const tagAvg = known.length ? known.reduce((s, t) => s + userPrefs.tags[t], 0) / known.length : 0;
+        const learnedTag = (tagAvg * Math.min(1, known.length / 3) + 1) / 2;
+        const liked = known.filter(t => userPrefs.tags[t] >= 0.2).slice(0, 2);
+        if (liked.length) reasons.push(`shares themes you like (${liked.join(', ')})`);
+
+        const favScore = fav.size
+            ? Math.min(1, ((gkeys.filter(k => fav.genres.has(k)).length / Math.max(1, gkeys.length)) + (tags.filter(t => fav.tags.has(t)).length / Math.max(1, Math.min(tags.length, 8)))) / 2 * 1.5)
+            : 0.5;
+        if (fav.size && favScore > 0.6) reasons.push('similar to your favorites');
+
+        const lp = [];
+        const wantCountry = intent.country ? intent.country.code : selectedCountry;
+        if (wantCountry) lp.push(itemCountryCodes(m).includes(wantCountry) ? 1 : 0);
+        if (intent.language) lp.push((m.original_language || '') === intent.language ? 1 : 0);
+        if (intent.yearFrom) { const y = parseInt(yearOf(m), 10); lp.push(y >= intent.yearFrom && y <= intent.yearTo ? 1 : 0); }
+        const locale = lp.length ? lp.reduce((a, b) => a + b, 0) / lp.length : 0.5;
+
+        const cm = comm[key];
+        const communityUsed = cm && cm.count >= MIN_COMMUNITY_RATINGS && cm.average != null;
+        const quality = communityUsed
+            ? cm.average / 5
+            : (Number(m.vote_average) || 0) / 10 * Math.min(1, Math.log10((m.vote_count || 0) + 1) / 3);
+        if (communityUsed && cm.average >= 4) reasons.push(`rated ${cm.average.toFixed(1)}/5 by CineMind users`);
+
+        let score = (request * W.request + explicitScore * W.explicitGenre + locale * W.locale + quality * W.quality
+            + (learnedGenre * W.learnedGenre + learnedTag * W.learnedTag + favScore * W.favorites) * personalization) / used;
+        if (myRatings.has(key)) score -= RANK_PENALTIES.alreadyRated;
+        score -= (getNotInterestedPenalty(m) / 24) * RANK_PENALTIES.notInterested;
+        const why = reasons.slice(0, 3).join('; ');
+        return { ...m, _score: score, _why: why ? why.charAt(0).toUpperCase() + why.slice(1) + '.' : '' };
+    });
+    const seen = new Set();
+    return ranked.sort((a, b) => b._score - a._score).filter(m => { const k = titleKey(m); if (seen.has(k)) return false; seen.add(k); return true; });
+}
 
 // ---------------- UNIFIED SUPER-NOVA CHAT ENGINE ----------------
 const chatWrapper = document.getElementById('chatWrapper');
@@ -4954,7 +5363,7 @@ const slimNovaMovie = m => ({
     id: m.id, title: m.title, name: m.name, media_type: m.media_type, poster_path: m.poster_path, poster: m.poster,
     overview: m.overview, release_date: m.release_date, first_air_date: m.first_air_date, vote_average: m.vote_average,
     vote_count: m.vote_count, genre_ids: m.genre_ids, original_language: m.original_language,
-    origin_country: m.origin_country, rationale: m.rationale, match: m.match, _isR18: m._isR18
+    origin_country: m.origin_country, rationale: m.rationale, match: m.match, _isR18: m._isR18, _why: m._why
 });
 
 // forceDetails = true always loads the full TMDB record (keywords, tagline, genres) so plot matching has real data
@@ -5293,7 +5702,7 @@ async function resolveReplyTitles(reply, limit = 3) {
 }
 
 // Used when someone just asks "what should I watch?" and the backend has nothing (or is asleep)
-async function fallbackRecommendations(want = 5) {
+async function fallbackRecommendations(want = 12) {
     const api = 'https://api.themoviedb.org/3';
     const types = selectedMedia === 'all' ? ['movie', 'tv'] : [selectedMedia];
     const page = Math.floor(Math.random() * 3) + 1;
@@ -5419,6 +5828,7 @@ function buildNovaRecList(movies, query = '', opts = {}) {
                 </div>
                 ${genres ? `<div class="nova-rec-genres">${escapeHTML(genres)}</div>` : ''}
                 <p class="nova-rec-overview">${escapeHTML(briefOverview(m.overview, solo ? 380 : 220))}</p>
+                ${m._why ? `<div class="nova-rec-why"><i class="fa-solid fa-lightbulb"></i> ${escapeHTML(m._why)}</div>` : ''}
                 <div class="nova-rec-actions">
                     <button type="button" class="nova-rec-btn" data-act="details"><i class="fa-solid fa-circle-info"></i> Details</button>
                     <button type="button" class="nova-rec-btn nova-rec-btn-trailer" data-act="trailer"><i class="fa-solid fa-play"></i> Trailer</button>
@@ -5512,7 +5922,7 @@ async function sendToNovaEngine(message) {
         } else {
             if (nIntent.structured) {
                 candidates = await enrichAndVerify(candidates, nIntent);
-                if (candidates.length < 3) candidates = await topUpFromIntent(nIntent, candidates, 6);
+                if (candidates.length < 3) candidates = await topUpFromIntent(nIntent, candidates, 12);
             } else {
                 // Nova named a movie in text only -> still show the real card
                 if (!candidates.length && data.reply) candidates = (await resolveReplyTitles(data.reply)).filter(allow);
@@ -5520,7 +5930,11 @@ async function sendToNovaEngine(message) {
                 if (!candidates.length && wantsRecs) { candidates = await fallbackRecommendations(); usedFallback = true; }
                 else if (nIntent.themeWords.length) candidates = [...candidates].sort((a, b) => intentRelevance(b, nIntent) - intentRelevance(a, nIntent));
             }
-            movies = await hydrateNovaMovies(candidates, 6);
+            const pool = await hydrateNovaMovies(candidates, 12, true);
+            const previous = new Set(lastNovaMovies.map(titleKey));
+            let fresh = pool.filter(m => !previous.has(titleKey(m)));
+            if (fresh.length < 3) fresh = pool;
+            movies = (await rankNovaMovies(fresh, message, nIntent)).slice(0, 6);
         }
         removeNovaSpinner();
 
