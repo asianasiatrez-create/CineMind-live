@@ -1,4 +1,3 @@
-
 import os
 import re
 import json
@@ -25,8 +24,7 @@ DB_NAME = os.environ.get("CINEMIND_DB", "cinemind.db")
 TMDB = "https://api.themoviedb.org/3"
 IMG = "https://image.tmdb.org/t/p"
 
-SECRET_KEY = os.environ.get("CINEMIND_SECRET") or "cinemind-secure-jwt-salt-2026"
-TOKEN_MAX_AGE = 60 * 60 * 8
+TOKEN_MAX_AGE = 60 * 60 * 24 * 30
 
 GENRES = {
     "action": 28, "adventure": 12, "animation": 16, "comedy": 35, "crime": 80,
@@ -264,11 +262,9 @@ def init_db():
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
             genres TEXT DEFAULT '[]',
-            role TEXT DEFAULT 'user',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP)''')
         for sql in [
             "ALTER TABLE users ADD COLUMN genres TEXT DEFAULT '[]'",
-            "ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'",
             "ALTER TABLE users ADD COLUMN created_at TEXT"
         ]:
             try:
@@ -316,11 +312,41 @@ def init_db():
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
         conn.commit()
         conn.close()
-    except Exception:
-        pass
+    except Exception as e:
+        print("init_db failed:", e)
 
 
 init_db()
+
+GENRE_KEY_RE = re.compile(r"^(\d{1,6}|[A-Z_]{2,20})$")
+
+
+def clean_genres(raw):
+    if not isinstance(raw, list):
+        return []
+    out = []
+    for item in raw:
+        value = str(item).strip()
+        if GENRE_KEY_RE.match(value) and value not in out:
+            out.append(value)
+    return out[:30]
+
+
+def load_secret():
+    env = (os.environ.get("CINEMIND_SECRET") or "").strip()
+    if env:
+        return env
+    conn = get_db_conn()
+    conn.execute("CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
+    conn.execute("INSERT OR IGNORE INTO app_settings (key, value) VALUES ('token_secret', ?)",
+                 (base64.urlsafe_b64encode(os.urandom(48)).decode("ascii"),))
+    conn.commit()
+    secret = conn.execute("SELECT value FROM app_settings WHERE key = 'token_secret'").fetchone()[0]
+    conn.close()
+    return secret
+
+
+SECRET_KEY = load_secret()
 
 
 def log_audit_event(username, event_type, details=""):
@@ -338,38 +364,6 @@ def log_audit_event(username, event_type, details=""):
         pass
 
 
-def get_user_role(username):
-    if not username:
-        return "guest"
-    try:
-        conn = get_db_conn()
-        row = conn.execute("SELECT role FROM users WHERE username = ?", (username.strip().lower(),)).fetchone()
-        conn.close()
-        return row[0] if row and row[0] else "guest"
-    except Exception:
-        return "guest"
-
-
-def seed_admin():
-    u = os.environ.get("ADMIN_USERNAME", "").strip().lower()
-    p = os.environ.get("ADMIN_PASSWORD", "")
-    if not u or len(p) < 8:
-        return
-    try:
-        conn = get_db_conn()
-        conn.execute("INSERT OR IGNORE INTO users (username, password, role) VALUES (?, ?, 'admin')",
-                     (u, generate_password_hash(p)))
-        conn.execute("UPDATE users SET role='admin', password=? WHERE username=?",
-                     (generate_password_hash(p), u))
-        conn.commit()
-        conn.close()
-    except Exception:
-        pass
-
-
-seed_admin()
-
-
 def issue_token(username):
     payload = json.dumps({"u": username, "ts": int(time.time())}).encode("utf-8")
     b64 = base64.urlsafe_b64encode(payload).decode("ascii")
@@ -377,41 +371,38 @@ def issue_token(username):
     return f"{b64}.{sig}"
 
 
-def current_identity():
-    header = request.headers.get("Authorization", "")
-    if not header.startswith("Bearer "):
-        return None
-    token = header[7:].strip()
-    if "." not in token:
-        return None
-    b64, sig = token.rsplit(".", 1)
-    expected = hmac.new(SECRET_KEY.encode("utf-8"), b64.encode("ascii"), hashlib.sha256).hexdigest()
-    if not hmac.compare_digest(sig, expected):
-        return None
+def current_username():
+    """Username from a valid, unexpired Bearer token whose account still exists, otherwise None."""
     try:
+        header = request.headers.get("Authorization", "")
+        if not header.startswith("Bearer "):
+            return None
+        token = header[7:].strip()
+        b64, sig = token.rsplit(".", 1)
+        expected = hmac.new(SECRET_KEY.encode("utf-8"), b64.encode("ascii"), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(sig, expected):
+            return None
         data = json.loads(base64.urlsafe_b64decode(b64.encode("ascii")).decode("utf-8"))
         if time.time() - data.get("ts", 0) > TOKEN_MAX_AGE:
             return None
-        return {"username": data["u"], "role": get_user_role(data["u"])}
+        username = str(data["u"]).strip().lower()
+        conn = get_db_conn()
+        row = conn.execute("SELECT 1 FROM users WHERE username = ?", (username,)).fetchone()
+        conn.close()
+        return username if row else None
     except Exception:
         return None
 
 
-def require_role(required):
-    def deco(fn):
-        @wraps(fn)
-        def wrapper(*args, **kwargs):
-            ident = current_identity()
-            if not ident:
-                log_audit_event("anonymous", "UNAUTHENTICATED_ACCESS", f"Blocked {request.path}")
-                return jsonify({"success": False, "message": "Authentication required."}), 401
-            if ident["role"] != required:
-                log_audit_event(ident["username"], "UNAUTHORIZED_ADMIN_ACCESS", f"Blocked {request.path}")
-                return jsonify({"success": False, "message": "Access Denied: Administrator role required."}), 403
-            g.identity = ident
-            return fn(*args, **kwargs)
-        return wrapper
-    return deco
+def require_auth(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        username = current_username()
+        if not username:
+            return jsonify({"success": False, "message": "Please log in again."}), 401
+        g.username = username
+        return fn(*args, **kwargs)
+    return wrapper
 
 
 @app.route("/", methods=["GET"])
@@ -422,70 +413,95 @@ def home():
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
-    data = request.get_json() or {}
-    username = data.get("username", "").strip().lower()
-    password = data.get("password", "")
-    genres = data.get("genres") or []
-    if not username or not re.match(r"^[a-z0-9_.\-]{3,30}$", username):
-        return jsonify({"success": False, "message": "Username must be 3-30 alphanumeric characters."}), 400
+    data = request.get_json(silent=True) or {}
+    username = str(data.get("username", "")).strip().lower()
+    password = str(data.get("password", ""))
+    genres = clean_genres(data.get("genres"))
+    if not re.match(r"^[a-z0-9_.\-]{3,30}$", username):
+        return jsonify({"success": False, "message": "Username must be 3-30 characters: letters, numbers, dots, dashes or underscores."}), 400
     if len(password) < 6:
-        return jsonify({"success": False, "message": "Password must be 6+ characters."}), 400
-    assigned_role = "user"
+        return jsonify({"success": False, "message": "Password must be at least 6 characters."}), 400
+    if len(genres) < 3:
+        return jsonify({"success": False, "message": "Please pick at least 3 genres."}), 400
+    conn = get_db_conn()
     try:
-        conn = get_db_conn()
-        conn.execute("INSERT INTO users (username, password, genres, role) VALUES (?, ?, ?, ?)",
-                     (username, generate_password_hash(password), json.dumps(genres), assigned_role))
+        conn.execute("INSERT INTO users (username, password, genres) VALUES (?, ?, ?)",
+                     (username, generate_password_hash(password), json.dumps(genres)))
         conn.commit()
-        conn.close()
-        log_audit_event(username, "USER_SIGNUP", f"Account created with role={assigned_role}")
-        return jsonify({"success": True, "username": username, "role": assigned_role,
-                        "token": issue_token(username), "genres": genres,
-                        "message": "Account created successfully!"})
     except sqlite3.IntegrityError:
+        conn.close()
         log_audit_event(username, "SIGNUP_DUPLICATE", "Attempted duplicate username registration")
-        return jsonify({"success": False, "message": "Username already exists."}), 400
+        return jsonify({"success": False, "message": "That username is already taken."}), 409
+    conn.close()
+    log_audit_event(username, "USER_SIGNUP", "Account created")
+    return jsonify({"success": True, "username": username, "genres": genres,
+                    "token": issue_token(username), "message": "Account created successfully!"})
 
 
 @app.route("/api/login", methods=["POST"])
 def login():
-    seed_admin()
-    data = request.get_json() or {}
-    username = data.get("username", "").strip().lower()
-    password = data.get("password", "")
+    data = request.get_json(silent=True) or {}
+    username = str(data.get("username", "")).strip().lower()
+    password = str(data.get("password", ""))
     if not username or not password:
         return jsonify({"success": False, "message": "Username and password are required."}), 400
     conn = get_db_conn()
-    row = conn.execute("SELECT password, genres, role FROM users WHERE username = ?", (username,)).fetchone()
-    ok, saved_genres, role = False, [], "user"
+    row = conn.execute("SELECT password, genres FROM users WHERE username = ?", (username,)).fetchone()
+    ok, saved_genres = False, []
     if row:
-        stored = row[0]
+        stored = row[0] or ""
         try:
-            saved_genres = json.loads(row[1] or "[]")
+            saved_genres = clean_genres(json.loads(row[1] or "[]"))
         except Exception:
             saved_genres = []
-        role = row[2] or "user"
         if stored.startswith(("pbkdf2:", "scrypt:")):
             ok = check_password_hash(stored, password)
-        elif stored == hashlib.sha256(password.encode()).hexdigest():
-            ok = True
+        elif hmac.compare_digest(stored, hashlib.sha256(password.encode()).hexdigest()):
+            ok = True  # Upgrade old SHA-256 accounts to a salted hash.
             conn.execute("UPDATE users SET password = ? WHERE username = ?",
                          (generate_password_hash(password), username))
             conn.commit()
     conn.close()
     if ok:
-        log_audit_event(username, "LOGIN_SUCCESS", f"Authenticated with role={role}")
-        return jsonify({"success": True, "username": username, "role": role,
-                        "token": issue_token(username), "genres": saved_genres,
+        log_audit_event(username, "LOGIN_SUCCESS", "Authenticated")
+        return jsonify({"success": True, "username": username, "genres": saved_genres,
+                        "token": issue_token(username),
                         "message": "Login successful!"})
     log_audit_event(username, "LOGIN_FAILED", "Invalid username or password attempt")
     return jsonify({"success": False, "message": "Invalid username or password."}), 401
 
 
+@app.route("/api/me", methods=["GET"])
+@require_auth
+def me():
+    conn = get_db_conn()
+    row = conn.execute("SELECT genres FROM users WHERE username = ?", (g.username,)).fetchone()
+    conn.close()
+    try:
+        genres = clean_genres(json.loads((row[0] if row else "[]") or "[]"))
+    except Exception:
+        genres = []
+    return jsonify({"success": True, "username": g.username, "genres": genres})
+
+
+@app.route("/api/user/genres", methods=["POST"])
+@require_auth
+def save_genres():
+    data = request.get_json(silent=True) or {}
+    genres = clean_genres(data.get("genres"))
+    if len(genres) < 3:
+        return jsonify({"success": False, "message": "Please keep at least 3 genres selected."}), 400
+    conn = get_db_conn()
+    conn.execute("UPDATE users SET genres = ? WHERE username = ?", (json.dumps(genres), g.username))
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True, "genres": genres})
+
+
 @app.route("/api/user/library", methods=["GET"])
+@require_auth
 def get_library():
-    username = request.args.get("username", "").strip().lower()
-    if not username:
-        return jsonify({"watchlist": [], "favorites": [], "not_interested": [], "genres": [], "role": "guest"})
+    username = g.username
     conn = get_db_conn()
     c = conn.cursor()
     q = "SELECT movie_id, title, poster, vote_average, media_type FROM {} WHERE username = ?"
@@ -495,26 +511,26 @@ def get_library():
     fav = [{"id": r[0], "title": r[1], "poster": r[2], "vote_average": r[3], "media_type": r[4] or "movie"} for r in c.fetchall()]
     c.execute("SELECT movie_id, title, keywords FROM not_interested WHERE username = ?", (username,))
     ni = [{"id": r[0], "title": r[1], "keywords": json.loads(r[2] or "[]")} for r in c.fetchall()]
-    c.execute("SELECT genres, role FROM users WHERE username = ?", (username,))
+    c.execute("SELECT genres FROM users WHERE username = ?", (username,))
     g_row = c.fetchone()
     conn.close()
-    saved, role = [], "guest"
+    saved = []
     if g_row:
         try:
             saved = json.loads(g_row[0] or "[]")
         except Exception:
             pass
-        role = g_row[1] or "user"
-    return jsonify({"watchlist": wl, "favorites": fav, "not_interested": ni, "genres": saved, "role": role})
+    return jsonify({"watchlist": wl, "favorites": fav, "not_interested": ni, "genres": saved})
 
 
 @app.route("/api/user/library/toggle", methods=["POST"])
+@require_auth
 def toggle_library():
-    data = request.get_json() or {}
-    username = data.get("username", "").strip().lower()
+    data = request.get_json(silent=True) or {}
+    username = g.username
     lib_type = data.get("type")
     movie = data.get("movie", {})
-    if not username or lib_type not in ("watchlist", "favorites") or not movie:
+    if lib_type not in ("watchlist", "favorites") or not movie:
         return jsonify({"success": False, "message": "Invalid payload."}), 400
     movie_id = movie.get("id")
     title = movie.get("title") or movie.get("name")
@@ -525,7 +541,7 @@ def toggle_library():
     if c.fetchone():
         c.execute(f"DELETE FROM {table} WHERE username = ? AND movie_id = ?", (username, movie_id))
         action = "removed"
-        log_audit_event(username, "LIBRARY_REMOVE", f"Removed '{title}' ({movie_id}) from {table}")
+        audit_details = f"Removed '{title}' ({movie_id}) from {table}"
     else:
         try:
             c.execute(f"INSERT OR REPLACE INTO {table} (username, movie_id, title, poster, vote_average, media_type) VALUES (?, ?, ?, ?, ?, ?)",
@@ -536,16 +552,18 @@ def toggle_library():
             conn.close()
             return jsonify({"success": False, "message": "User account not found in database."}), 400
         action = "added"
-        log_audit_event(username, "LIBRARY_ADD", f"Added '{title}' ({movie_id}) to {table}")
+        audit_details = f"Added '{title}' ({movie_id}) to {table}"
     conn.commit()
     conn.close()
+    log_audit_event(username, f"LIBRARY_{action.upper()}", audit_details)
     return jsonify({"success": True, "action": action})
 
 
 @app.route("/api/user/not_interested", methods=["POST"])
+@require_auth
 def mark_not_interested():
-    data = request.get_json() or {}
-    username = (data.get("username") or "guest").strip().lower()
+    data = request.get_json(silent=True) or {}
+    username = g.username
     movie = data.get("movie") or {}
     keywords = data.get("keywords") or []
     movie_id = movie.get("id")
@@ -566,41 +584,10 @@ def mark_not_interested():
     return jsonify({"success": True, "action": "hidden"})
 
 
-@app.route("/api/admin/audit-logs", methods=["GET"])
-@require_role("admin")
-def admin_audit_logs():
-    try:
-        limit = max(1, min(int(request.args.get("limit", 100)), 500))
-    except ValueError:
-        limit = 100
-    event = request.args.get("event_type", "").strip().upper()
-    conn = get_db_conn()
-    c = conn.cursor()
-    base = "SELECT id, username, event_type, details, ip_address, timestamp FROM audit_logs"
-    if event:
-        c.execute(base + " WHERE event_type = ? ORDER BY id DESC LIMIT ?", (event, limit))
-    else:
-        c.execute(base + " ORDER BY id DESC LIMIT ?", (limit,))
-    logs = [{"id": r[0], "username": r[1], "event_type": r[2], "details": r[3],
-             "ip_address": r[4], "timestamp": r[5]} for r in c.fetchall()]
-    total_users = c.execute("SELECT COUNT(*) FROM users").fetchone()[0]
-    conn.close()
-    log_audit_event(g.identity["username"], "ADMIN_AUDIT_VIEW", "Viewed security audit logs")
-    return jsonify({"success": True, "role": "admin", "total_registered_users": total_users, "audit_logs": logs})
-
-
-@app.route("/api/admin/users", methods=["GET"])
-@require_role("admin")
-def admin_users():
-    conn = get_db_conn()
-    rows = conn.execute("SELECT username, role, created_at FROM users ORDER BY id").fetchall()
-    conn.close()
-    return jsonify({"success": True, "users": [{"username": r[0], "role": r[1], "created_at": r[2]} for r in rows]})
-
-
 @app.route("/api/user/insights", methods=["GET"])
+@require_auth
 def get_insights():
-    username = request.args.get("username", "").strip().lower()
+    username = g.username
     conn = get_db_conn()
     c = conn.cursor()
     c.execute("SELECT action, vote_average FROM interactions WHERE username = ?", (username,))
@@ -611,7 +598,7 @@ def get_insights():
     conn.close()
     rated = [r[1] for r in inter if r[1]]
     return jsonify({
-        "username": username or "Guest", "role": get_user_role(username),
+        "username": username,
         "total_recommendations_viewed": len(inter), "total_liked": counts["favorites"],
         "total_watchlist": counts["watchlist"], "total_not_interested": counts["not_interested"],
         "average_rating_of_interest": round(sum(rated) / len(rated), 2) if rated else 0.0,
