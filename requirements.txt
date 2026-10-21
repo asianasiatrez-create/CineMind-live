@@ -1,6 +1,7 @@
-flask
-flask-cors
+Flask
+Flask-Cors
 requests
-gunicorn
-itsdangerous
-werkzeug
+scikit-learn
+numpy
+pandas
+Werkzeug
