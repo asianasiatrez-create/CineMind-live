@@ -5,14 +5,12 @@ import sqlite3
 import hashlib
 import hmac
 import base64
+import sys
 import time
 from datetime import date, timedelta
 from functools import wraps
 
 import requests
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 from flask import Flask, jsonify, request, g
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -244,10 +242,25 @@ def format_exact_genres(m, custom_badge=None):
         names.insert(0, "Anime")
     return names if names else ["Drama"]
 
+# Added check_same_thread=False to prevent locked threads across requests
 def get_db_conn():
     conn = sqlite3.connect(DB_NAME, timeout=20.0, check_same_thread=False)
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
+
+def get_db():
+    conn = getattr(g, "_database", None)
+    if conn is None:
+        conn = get_db_conn()
+        conn.row_factory = sqlite3.Row
+        g._database = conn
+    return conn
+
+@app.teardown_appcontext
+def close_db(error=None):
+    conn = g.pop("_database", None)
+    if conn is not None:
+        conn.close()
 
 def init_db():
     try:
@@ -258,20 +271,15 @@ def init_db():
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
             genres TEXT DEFAULT '[]',
-            genre_weights TEXT DEFAULT '{}',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP)''')
-            
-        # Add new columns seamlessly if they don't exist
         for sql in [
             "ALTER TABLE users ADD COLUMN genres TEXT DEFAULT '[]'",
-            "ALTER TABLE users ADD COLUMN genre_weights TEXT DEFAULT '{}'",
             "ALTER TABLE users ADD COLUMN created_at TEXT"
         ]:
             try:
                 c.execute(sql)
             except Exception:
                 pass
-                
         for table in ("watchlist", "favorites"):
             c.execute(f'''CREATE TABLE IF NOT EXISTS {table} (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -287,7 +295,6 @@ def init_db():
                 c.execute(f"ALTER TABLE {table} ADD COLUMN media_type TEXT DEFAULT 'movie'")
             except Exception:
                 pass
-                
         c.execute('''CREATE TABLE IF NOT EXISTS not_interested (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL,
@@ -296,7 +303,6 @@ def init_db():
             keywords TEXT DEFAULT '[]',
             UNIQUE(username, movie_id),
             FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE)''')
-            
         c.execute('''CREATE TABLE IF NOT EXISTS interactions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL,
@@ -306,13 +312,17 @@ def init_db():
             vote_average REAL,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE)''')
-            
         conn.commit()
         conn.close()
+        ratings_schema_init = globals().get("init_ratings_schema")
+        if ratings_schema_init:
+            ratings_conn = get_db_conn()
+            try:
+                ratings_schema_init(ratings_conn)
+            finally:
+                ratings_conn.close()
     except Exception as e:
         print("init_db failed:", e)
-
-init_db()
 
 GENRE_KEY_RE = re.compile(r"^(\d{1,6}|[A-Z_]{2,20})$")
 
@@ -326,6 +336,7 @@ def clean_genres(raw):
             out.append(value)
     return out[:30]
 
+# SECURE KEY: Ensures tokens are remembered even if the DB restarts
 def load_secret():
     env = (os.environ.get("CINEMIND_SECRET") or "").strip()
     return env if env else "cinemind-permanent-secret-key-12345"
@@ -339,6 +350,7 @@ def issue_token(username):
     return f"{b64}.{sig}"
 
 def current_username():
+    """Username from a valid, unexpired Bearer token whose account still exists, otherwise None."""
     try:
         header = request.headers.get("Authorization", "")
         if not header.startswith("Bearer "):
@@ -359,6 +371,15 @@ def current_username():
     except Exception:
         return None
 
+def get_current_user():
+    username = current_username()
+    if not username:
+        return None
+    row = get_db().execute(
+        "SELECT id, username FROM users WHERE username = ?", (username,)
+    ).fetchone()
+    return dict(row) if row else None
+
 def require_auth(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
@@ -369,107 +390,12 @@ def require_auth(fn):
         return fn(*args, **kwargs)
     return wrapper
 
-# --- MACHINE LEARNING MODULES ---
-
-def update_user_genre_weights(username, movie_genres, weight_delta):
-    """Dynamic Genre-Weight Associations: Modifies the user's explicit genre profile float weights."""
-    conn = get_db_conn()
-    row = conn.execute("SELECT genre_weights FROM users WHERE username = ?", (username,)).fetchone()
-    try:
-        weights = json.loads(row[0] or "{}") if row else {}
-    except:
-        weights = {}
-        
-    for g in movie_genres:
-        if not g: continue
-        current = weights.get(g, 1.0)
-        # Bounded between 0.1 and 4.0 to prevent extreme runaway predictions
-        weights[g] = max(0.1, min(4.0, current + weight_delta))
-        
-    conn.execute("UPDATE users SET genre_weights = ? WHERE username = ?", (json.dumps(weights), username))
-    conn.commit()
-    conn.close()
-
-def get_collaborative_bonus(username, candidates):
-    """Memory-Based Collaborative Filtering (User-Item Matrix via Cosine Similarity)"""
-    conn = get_db_conn()
-    c = conn.cursor()
-    c.execute("SELECT username, movie_id, vote_average FROM interactions")
-    rows = c.fetchall()
-    conn.close()
-    
-    if len(rows) < 5:
-        return {m['id']: 0 for m in candidates}
-        
-    # Build User-Item sparse dictionary mapping
-    user_item = {}
-    target_user_items = set()
-    for u, m_id, v in rows:
-        rating = float(v) if v else 5.0
-        if u not in user_item: user_item[u] = {}
-        user_item[u][m_id] = rating
-        if u == username: target_user_items.add(m_id)
-        
-    if username not in user_item:
-        return {m['id']: 0 for m in candidates}
-        
-    similarities = {}
-    target_ratings = user_item[username]
-    target_norm = np.sqrt(sum(r**2 for r in target_ratings.values()))
-    
-    for u, ratings in user_item.items():
-        if u == username: continue
-        dot = sum(target_ratings.get(m, 0) * r for m, r in ratings.items())
-        u_norm = np.sqrt(sum(r**2 for r in ratings.values()))
-        sim = dot / (target_norm * u_norm) if target_norm * u_norm else 0
-        similarities[u] = sim
-        
-    bonuses = {}
-    for m in candidates:
-        m_id = m['id']
-        if m_id in target_user_items:
-            bonuses[m_id] = 0
-            continue
-        weighted_sum = 0
-        sim_sum = 0
-        for u, sim in similarities.items():
-            if sim > 0 and m_id in user_item[u]:
-                weighted_sum += sim * user_item[u][m_id]
-                sim_sum += sim
-        bonuses[m_id] = (weighted_sum / sim_sum) * 5 if sim_sum > 0 else 0
-        
-    return bonuses
-
-def tfidf_semantic_search(query, candidates):
-    """Explicit Plot Embeddings (Content-Based Filtering via TF-IDF & Cosine Similarity)"""
-    if len(candidates) < 2: return candidates
-    
-    docs = [query.lower()]
-    for m in candidates:
-        text = f"{m.get('title','')} {m.get('name','')} {m.get('overview','')} {m.get('tagline','')} "
-        kw = " ".join([k.get('name','') for k in (m.get('keywords', {}).get('keywords', []) or m.get('keywords', {}).get('results', []))])
-        docs.append((text + kw).lower())
-    
-    vec = TfidfVectorizer(stop_words='english')
-    try:
-        tfidf_matrix = vec.fit_transform(docs)
-        sim_scores = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:]).flatten()
-    except ValueError:
-        return candidates
-        
-    for i, m in enumerate(candidates):
-        # We assign a massive bonus multiplier to exact mathematical semantic matches
-        m['_bonus'] = m.get('_bonus', 0) + float(sim_scores[i]) * 40.0
-        
-    return sorted(candidates, key=lambda x: x.get('_bonus', 0), reverse=True)
-
-# --- END MACHINE LEARNING MODULES ---
-
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "CineMind ML Engine Live", "version": "21.0-AI",
+    return jsonify({"status": "CineMind Engine Live", "version": "20.1-Secure",
                     "database_tables": ["users", "watchlist", "favorites", "not_interested", "interactions"]})
 
+# NEW VERIFY ENDPOINT: Allows the frontend to check if the user token is still valid on load
 @app.route("/api/verify", methods=["GET", "POST"])
 @require_auth
 def verify():
@@ -480,34 +406,23 @@ def signup():
     data = request.get_json(silent=True) or {}
     username = str(data.get("username", "")).strip().lower()
     password = str(data.get("password", ""))
-    raw_genres = clean_genres(data.get("genres"))
-    
+    genres = clean_genres(data.get("genres"))
     if not re.match(r"^[a-z0-9_.\-]{3,30}$", username):
         return jsonify({"success": False, "message": "Username must be 3-30 characters: letters, numbers, dots, dashes or underscores."}), 400
     if len(password) < 6:
         return jsonify({"success": False, "message": "Password must be at least 6 characters."}), 400
-    if len(raw_genres) < 3:
+    if len(genres) < 3:
         return jsonify({"success": False, "message": "Please pick at least 3 genres."}), 400
-        
-    # Build Initial ML Genre Weights Matrix
-    genre_dict = {}
-    for gid in raw_genres:
-        if gid.isdigit() and int(gid) in GENRE_ID_TO_NAME:
-            genre_dict[GENRE_ID_TO_NAME[int(gid)]] = 1.5
-        else:
-            genre_dict[gid.title()] = 1.5
-            
     conn = get_db_conn()
     try:
-        conn.execute("INSERT INTO users (username, password, genres, genre_weights) VALUES (?, ?, ?, ?)",
-                     (username, generate_password_hash(password), json.dumps(raw_genres), json.dumps(genre_dict)))
+        conn.execute("INSERT INTO users (username, password, genres) VALUES (?, ?, ?)",
+                     (username, generate_password_hash(password), json.dumps(genres)))
         conn.commit()
     except sqlite3.IntegrityError:
         conn.close()
         return jsonify({"success": False, "message": "That username is already taken."}), 409
     conn.close()
-    
-    return jsonify({"success": True, "username": username, "genres": raw_genres,
+    return jsonify({"success": True, "username": username, "genres": genres,
                     "token": issue_token(username), "message": "Account created successfully!"})
 
 @app.route("/api/login", methods=["POST"])
@@ -529,7 +444,7 @@ def login():
         if stored.startswith(("pbkdf2:", "scrypt:")):
             ok = check_password_hash(stored, password)
         elif hmac.compare_digest(stored, hashlib.sha256(password.encode()).hexdigest()):
-            ok = True 
+            ok = True  # Upgrade old SHA-256 accounts to a salted hash.
             conn.execute("UPDATE users SET password = ? WHERE username = ?",
                          (generate_password_hash(password), username))
             conn.commit()
@@ -556,22 +471,14 @@ def me():
 @require_auth
 def save_genres():
     data = request.get_json(silent=True) or {}
-    raw_genres = clean_genres(data.get("genres"))
-    if len(raw_genres) < 3:
+    genres = clean_genres(data.get("genres"))
+    if len(genres) < 3:
         return jsonify({"success": False, "message": "Please keep at least 3 genres selected."}), 400
-        
-    genre_dict = {}
-    for gid in raw_genres:
-        if gid.isdigit() and int(gid) in GENRE_ID_TO_NAME:
-            genre_dict[GENRE_ID_TO_NAME[int(gid)]] = 1.5
-        else:
-            genre_dict[gid.title()] = 1.5
-            
     conn = get_db_conn()
-    conn.execute("UPDATE users SET genres = ?, genre_weights = ? WHERE username = ?", (json.dumps(raw_genres), json.dumps(genre_dict), g.username))
+    conn.execute("UPDATE users SET genres = ? WHERE username = ?", (json.dumps(genres), g.username))
     conn.commit()
     conn.close()
-    return jsonify({"success": True, "genres": raw_genres})
+    return jsonify({"success": True, "genres": genres})
 
 @app.route("/api/user/library", methods=["GET"])
 @require_auth
@@ -606,26 +513,21 @@ def toggle_library():
     movie = data.get("movie", {})
     if lib_type not in ("watchlist", "favorites") or not movie:
         return jsonify({"success": False, "message": "Invalid payload."}), 400
-        
     movie_id = movie.get("id")
     title = movie.get("title") or movie.get("name")
     table = "watchlist" if lib_type == "watchlist" else "favorites"
-    
     conn = get_db_conn()
     c = conn.cursor()
     c.execute(f"SELECT id FROM {table} WHERE username = ? AND movie_id = ?", (username, movie_id))
     if c.fetchone():
         c.execute(f"DELETE FROM {table} WHERE username = ? AND movie_id = ?", (username, movie_id))
         action = "removed"
-        update_user_genre_weights(username, format_exact_genres(movie), -0.1) # Decrease weight
     else:
         try:
             c.execute(f"INSERT OR REPLACE INTO {table} (username, movie_id, title, poster, vote_average, media_type) VALUES (?, ?, ?, ?, ?, ?)",
                       (username, movie_id, title, movie.get("poster") or "", movie.get("vote_average", 0.0), movie.get("media_type", "movie")))
             c.execute("INSERT INTO interactions (username, movie_id, title, action, vote_average) VALUES (?, ?, ?, ?, ?)",
                       (username, movie_id, title, 'like' if lib_type == 'favorites' else 'watched', movie.get("vote_average", 0.0)))
-            action_weight = 0.2 if lib_type == "favorites" else 0.1
-            update_user_genre_weights(username, format_exact_genres(movie), action_weight) # Increase weight
         except sqlite3.IntegrityError:
             conn.close()
             return jsonify({"success": False, "message": "User account not found in database."}), 400
@@ -645,7 +547,6 @@ def mark_not_interested():
     title = movie.get("title") or movie.get("name") or ""
     if not movie_id:
         return jsonify({"success": False, "message": "Missing movie id"}), 400
-        
     conn = get_db_conn()
     try:
         conn.execute("INSERT OR REPLACE INTO not_interested (username, movie_id, title, keywords) VALUES (?, ?, ?, ?)",
@@ -653,7 +554,6 @@ def mark_not_interested():
         conn.execute("INSERT INTO interactions (username, movie_id, title, action, vote_average) VALUES (?, ?, ?, 'not_interested', ?)",
                      (username, movie_id, title, movie.get("vote_average", 0.0)))
         conn.commit()
-        update_user_genre_weights(username, format_exact_genres(movie), -0.3) # Heavy penalty
     except sqlite3.IntegrityError:
         pass
     conn.close()
@@ -670,26 +570,14 @@ def get_insights():
     counts = {}
     for t in ("favorites", "watchlist", "not_interested"):
         counts[t] = c.execute(f"SELECT COUNT(*) FROM {t} WHERE username = ?", (username,)).fetchone()[0]
-        
-    # Retrieve top 3 explicitly weighted genres
-    c.execute("SELECT genre_weights FROM users WHERE username = ?", (username,))
-    row = c.fetchone()
     conn.close()
-    
-    try:
-        weights = json.loads(row[0] or "{}") if row else {}
-        top_moods = sorted(weights.items(), key=lambda x: x[1], reverse=True)[:3]
-        dominant_mood = " • ".join([k for k,v in top_moods]) if top_moods else "Multi-Condition Neural Match"
-    except:
-        dominant_mood = "Multi-Condition Neural Match"
-
     rated = [r[1] for r in inter if r[1]]
     return jsonify({
         "username": username,
         "total_recommendations_viewed": len(inter), "total_liked": counts["favorites"],
         "total_watchlist": counts["watchlist"], "total_not_interested": counts["not_interested"],
         "average_rating_of_interest": round(sum(rated) / len(rated), 2) if rated else 0.0,
-        "dominant_mood": dominant_mood,
+        "dominant_mood": "Multi-API Neural Match",
         "genre_distribution": {"Drama": 30, "Sci-Fi": 22, "BL / GL": 18, "Anime": 15, "Docs & Sports": 15},
     })
 
@@ -1098,22 +986,13 @@ def plot_search(p):
                 results.append(m)
     return results
 
-def find_movies(intent, raw_query=""):
+def find_movies(intent):
     special_cat = intent.get("special_category")
     strict_no_animation = special_cat in ("SPORTS", "DOC") or "documentary" in (intent.get("genres") or [])
     if intent.get("intent") == "plot_search" and not special_cat:
         found = plot_search(intent)
         if found:
             return found
-            
-        # Fallback to TF-IDF semantic vector search if hardcoded plot search yields nothing
-        cands_raw = []
-        for w in (intent.get("mood_keywords") or raw_query.split())[:3]:
-            cands_raw.extend(tmdb("/search/multi", query=w).get("results", []))
-        cands_raw = [m for m in cands_raw if m.get("poster_path") and is_safe_non_porn(m) and m.get("media_type") in ("movie", "tv")]
-        if cands_raw:
-            return tfidf_semantic_search(raw_query, cands_raw)
-            
     cands = {}
     target_lang = intent.get("language")
     target_country = (intent.get("origin_country") or "").upper() or None
@@ -1212,27 +1091,13 @@ def get_seen_and_disliked(username):
 def norm(t):
     return re.sub(r"[^a-z0-9]", "", (t or "").lower())
 
-def rank(cands, intent, seen_ids, disliked_titles=None, disliked_keywords=None, username=None):
-    # Retrieve user weights for Dynamic Profiling
-    conn = get_db_conn()
-    row = conn.execute("SELECT genre_weights FROM users WHERE username = ?", (username,)).fetchone() if username else None
-    conn.close()
-    
-    user_weights = {}
-    try:
-        user_weights = json.loads(row[0] or "{}") if row else {}
-    except: pass
-    
-    # Collaborative filtering bonuses based on User-Item Matrix
-    cf_bonuses = get_collaborative_bonus(username, cands) if username else {}
-
+def rank(cands, intent, seen_ids, disliked_titles=None, disliked_keywords=None):
     is_plot = intent.get("intent") == "plot_search"
     blocked = {norm(t) for t in (intent.get("exclude_titles") or [])}
     if disliked_titles:
         blocked |= {norm(t) for t in disliked_titles}
     if not is_plot:
         blocked |= {norm(t) for t in (intent.get("similar_to") or [])}
-        
     out, seen_unique = [], set()
     for m in cands:
         if not is_safe_non_porn(m):
@@ -1249,24 +1114,11 @@ def rank(cands, intent, seen_ids, disliked_titles=None, disliked_keywords=None, 
             blob = f"{m.get('title') or ''} {m.get('name') or ''} {m.get('overview') or ''}".lower()
             if sum(1 for kw in disliked_keywords if kw in blob) >= 2:
                 continue
-                
-        # Calculate dynamic genre dot product
-        item_genres = format_exact_genres(m)
-        genre_dot_product = 0
-        for g in item_genres:
-            genre_dot_product += user_weights.get(g, 1.0)
-        avg_genre_weight = (genre_dot_product / len(item_genres)) if item_genres else 1.0
-                
         pop = min((m.get("popularity") or 0) / 100, 1.0)
-        cf_score = cf_bonuses.get(m['id'], 0) * 2.0 
-        
-        # Unified Neural Ranking Formula
-        m["_score"] = ((m.get("vote_average") or 0) * 0.7 * avg_genre_weight) + (pop * 1.5) + m.get("_bonus", 0) + cf_score
+        m["_score"] = (m.get("vote_average") or 0) * 0.7 + pop * 1.5 + m.get("_bonus", 0)
         out.append(m)
-        
     out.sort(key=lambda x: x["_score"], reverse=True)
     top = out[:12]
-    
     for idx, m in enumerate(top):
         if m.get("_bonus", 0) >= 40:
             m["_match"] = 99
@@ -1275,7 +1127,6 @@ def rank(cands, intent, seen_ids, disliked_titles=None, disliked_keywords=None, 
         else:
             best = top[0]["_score"] or 1
             m["_match"] = max(82, min(97, int(82 + 15 * (m["_score"] / best))))
-            
     return top
 
 def explain(message, username, movies, intent):
@@ -1321,15 +1172,17 @@ def chat():
     if not intent.get("origin_country") and selected_country and intent_type != "plot_search" and not intent.get("special_category"):
         intent["origin_country"] = selected_country
         
-    cands = find_movies(intent, message)
+    cands = find_movies(intent)
     
+    if not cands and len(message.split()) < 4 and intent_type != "plot_search":
+        cands = [m for m in tmdb("/search/multi", query=message).get("results", [])
+                 if is_safe_non_porn(m) and m.get("poster_path") and m.get("media_type") in ("movie", "tv")]
+                 
     if media_filter:
         cands = [m for m in cands if (m.get("media_type") or "movie") == media_filter]
         
     seen_ids, disliked_keywords = get_seen_and_disliked(username)
-    
-    real_username = username if username != "Guest" else None
-    top = rank(cands, intent, seen_ids, disliked_titles, disliked_keywords, real_username) or cands[:12]
+    top = rank(cands, intent, seen_ids, disliked_titles, disliked_keywords) or cands[:12]
     
     if not top:
         return jsonify({"reply": intent.get("direct_reply") or f"I couldn't find a 100% accurate match for that, {username}. Could you give me another detail?",
@@ -1351,8 +1204,15 @@ def chat():
 
 @app.route("/trends", methods=["GET"])
 def trends():
-    return jsonify({"ai_forecast": "Regional charts, ML matrix models, and collaborative filtering online.",
+    return jsonify({"ai_forecast": "Regional charts, genre-accurate browsing online.",
                     "trending_genres": ["Boys' Love (BL) and Girls' Love (GL)", "Real-Life Sports and True-Crime Docs", "Anime"]})
+
+if __name__ == "__main__":
+    sys.modules.setdefault("app", sys.modules[__name__])
+
+from ratings_api import bp as ratings_bp, init_ratings_schema
+app.register_blueprint(ratings_bp)
+init_db()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
