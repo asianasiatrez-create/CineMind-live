@@ -1228,6 +1228,70 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
     .cosmic-stars { animation: none; }
     .hero-slide { transition: opacity .3s ease; }
 }
+
+/* ================= MOBILE: 2-column filter grid ================= */
+@media (max-width: 640px) {
+    .filter-dropdown-container {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px 10px;
+        align-items: start;
+        width: 100%;
+    }
+    /* DOM order fills as: Genres | Streaming App, then Origin Country | Streaming Region. */
+    .filter-select-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+        width: 100%;
+        min-width: 0;
+    }
+    .filter-select-wrapper label {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        font-size: .62rem;
+        letter-spacing: .2px;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .filter-select-wrapper label i { margin-right: 4px; font-size: .7rem; }
+
+    .netflix-dropdown { width: 100%; min-width: 0; }
+    .netflix-dropdown-trigger {
+        height: 52px;
+        min-height: 52px;
+        padding: 0 10px 0 12px;
+        gap: 6px;
+        font-size: .8rem;
+        border-radius: 16px;
+        justify-content: space-between;
+    }
+    .netflix-dropdown-trigger span {
+        flex: 1 1 auto;
+        min-width: 0;
+        text-align: left;
+        line-height: 1.2;
+        white-space: normal;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        overflow-wrap: anywhere;
+    }
+    .netflix-caret { flex: 0 0 10px; width: 10px; font-size: .75rem; text-align: center; }
+}
+
+/* Very small phones (iPhone SE, small Androids) */
+@media (max-width: 380px) {
+    .filter-dropdown-container { gap: 12px 8px; }
+    .filter-select-wrapper label { font-size: .58rem; letter-spacing: 0; }
+    .filter-select-wrapper label i { display: none; }
+    .netflix-dropdown-trigger { height: 48px; min-height: 48px; padding: 0 8px 0 10px; font-size: .74rem; border-radius: 14px; }
+}
 </style>
 </head>
 <body>
