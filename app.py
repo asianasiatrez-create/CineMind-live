@@ -130,7 +130,7 @@ def init_db():
         conn = get_db_conn()
         c = conn.cursor()
         
-        # Added RBAC Roles and ML weights 
+        # RBAC Roles and ML weights 
         c.execute('''CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
@@ -159,7 +159,7 @@ def init_db():
             except Exception:
                 pass
                 
-        # Added Audit Logs
+        # Audit Logs
         c.execute('''CREATE TABLE IF NOT EXISTS audit_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL,
@@ -203,16 +203,20 @@ def init_db():
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE)''')
             
+        # Unified User Ratings Table
+        c.execute('''CREATE TABLE IF NOT EXISTS user_ratings (
+            username TEXT NOT NULL,
+            movie_id INTEGER NOT NULL,
+            media_type TEXT DEFAULT 'movie',
+            rating INTEGER NOT NULL CHECK(rating >= 1 AND rating <= 5),
+            review_body TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (username, movie_id, media_type),
+            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE)''')
+            
         conn.commit()
         conn.close()
-        
-        ratings_schema_init = globals().get("init_ratings_schema")
-        if ratings_schema_init:
-            ratings_conn = get_db_conn()
-            try:
-                ratings_schema_init(ratings_conn)
-            finally:
-                ratings_conn.close()
     except Exception as e:
         print("init_db failed:", e)
 
@@ -230,7 +234,6 @@ def log_audit_event(username, event_type, details=""):
     except Exception:
         pass
 
-# SECURE KEY: Ensures tokens are remembered even if the DB restarts
 def load_secret():
     env = (os.environ.get("CINEMIND_SECRET") or "").strip()
     return env if env else "cinemind-permanent-secret-key-12345"
@@ -413,9 +416,21 @@ def reply_mentions_restricted(text):
     low = (text or "").lower()
     return any(len(t) >= 5 and re.search(rf"\b{re.escape(t)}\b", low) for t in KNOWN_R18_TITLES)
 
+
 # --- MACHINE LEARNING MODULES ---
+GENRE_KEY_RE = re.compile(r"^(\d{1,6}|[A-Z_]{2,20})$")
+
+def clean_genres(raw):
+    if not isinstance(raw, list):
+        return []
+    out = []
+    for item in raw:
+        value = str(item).strip()
+        if GENRE_KEY_RE.match(value) and value not in out:
+            out.append(value)
+    return out[:30]
+
 def update_user_genre_weights(username, movie_genres, weight_delta):
-    """Dynamic Genre-Weight Associations"""
     conn = get_db_conn()
     row = conn.execute("SELECT genre_weights FROM users WHERE username = ?", (username,)).fetchone()
     try:
@@ -433,7 +448,6 @@ def update_user_genre_weights(username, movie_genres, weight_delta):
     conn.close()
 
 def get_collaborative_bonus(username, candidates):
-    """Memory-Based Collaborative Filtering (Cosine Similarity)"""
     conn = get_db_conn()
     c = conn.cursor()
     c.execute("SELECT username, movie_id, vote_average FROM interactions")
@@ -482,9 +496,7 @@ def get_collaborative_bonus(username, candidates):
     return bonuses
 
 def tfidf_semantic_search(query, candidates):
-    """Explicit Plot Embeddings via TF-IDF"""
     if len(candidates) < 2: return candidates
-    
     docs = [query.lower()]
     for m in candidates:
         text = f"{m.get('title','')} {m.get('name','')} {m.get('overview','')} {m.get('tagline','')} "
@@ -508,7 +520,7 @@ def tfidf_semantic_search(query, candidates):
 @app.route("/", methods=["GET"])
 def home():
     return jsonify({"status": "CineMind Engine Live", "version": "21.0-Secure",
-                    "database_tables": ["users", "watchlist", "favorites", "not_interested", "interactions", "audit_logs"]})
+                    "database_tables": ["users", "watchlist", "favorites", "not_interested", "interactions", "audit_logs", "user_ratings"]})
 
 @app.route("/api/verify", methods=["GET", "POST"])
 @require_auth
@@ -804,6 +816,178 @@ def get_insights():
         "genre_distribution": {"Drama": 30, "Sci-Fi": 22, "BL / GL": 18, "Anime": 15, "Docs & Sports": 15},
     })
 
+# --- RATINGS & REVIEWS ENDPOINTS ---
+def get_title_ratings_internal(media_type, movie_id, username):
+    conn = get_db_conn()
+    c = conn.cursor()
+    
+    c.execute("SELECT AVG(rating), COUNT(rating) FROM user_ratings WHERE movie_id = ? AND media_type = ?", (movie_id, media_type))
+    comm_row = c.fetchone()
+    community = {"average": round(comm_row[0], 2), "count": comm_row[1]} if comm_row and comm_row[1] > 0 else None
+    
+    mine = None
+    if username:
+        c.execute("SELECT rating, review_body FROM user_ratings WHERE username = ? AND movie_id = ? AND media_type = ?", (username, movie_id, media_type))
+        my_row = c.fetchone()
+        if my_row:
+            mine = {"rating": my_row[0], "review": my_row[1]}
+            
+    prefs = {"genres": {}, "tags": {}}
+    if username:
+        r = conn.execute("SELECT genre_weights FROM users WHERE username = ?", (username,)).fetchone()
+        try:
+            prefs["genres"] = json.loads(r[0] or "{}") if r else {}
+        except:
+            pass
+            
+    conn.close()
+    return jsonify({"success": True, "community": community, "mine": mine, "preferences": prefs})
+
+@app.route('/api/ratings/mine', methods=['GET'])
+@require_auth
+def my_ratings():
+    conn = get_db_conn()
+    c = conn.cursor()
+    c.execute("SELECT movie_id, media_type, rating FROM user_ratings WHERE username = ?", (g.username,))
+    rows = c.fetchall()
+    conn.close()
+    ratings = {f"{r[1]}_{r[0]}": r[2] for r in rows}
+    return jsonify({"success": True, "ratings": ratings})
+
+@app.route('/api/me/preferences', methods=['GET'])
+@require_auth
+def my_preferences():
+    conn = get_db_conn()
+    row = conn.execute("SELECT genre_weights FROM users WHERE username = ?", (g.username,)).fetchone()
+    conn.close()
+    weights = {}
+    try:
+        weights = json.loads(row[0] or "{}") if row else {}
+    except:
+        pass
+    return jsonify({"success": True, "preferences": {"genres": weights, "tags": {}}})
+
+@app.route('/api/ratings/<media_type>/<int:movie_id>', methods=['PUT'])
+@require_auth
+def save_rating(media_type, movie_id):
+    data = request.get_json(silent=True) or {}
+    rating = data.get('rating')
+    meta = data.get('meta') or {}
+    if not isinstance(rating, int) or rating < 1 or rating > 5:
+        return jsonify({"success": False, "message": "Rating must be an integer between 1 and 5."}), 400
+    conn = get_db_conn()
+    c = conn.cursor()
+    c.execute("""
+        INSERT INTO user_ratings (username, movie_id, media_type, rating) 
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(username, movie_id, media_type) 
+        DO UPDATE SET rating = excluded.rating, updated_at = CURRENT_TIMESTAMP
+    """, (g.username, movie_id, media_type, rating))
+    conn.commit()
+    conn.close()
+    
+    if meta.get("genres"):
+        weight_shift = (rating - 3) * 0.1 
+        update_user_genre_weights(g.username, meta["genres"], weight_shift)
+
+    return get_title_ratings_internal(media_type, movie_id, g.username)
+
+@app.route('/api/ratings/<media_type>/<int:movie_id>', methods=['DELETE'])
+@require_auth
+def delete_rating(media_type, movie_id):
+    conn = get_db_conn()
+    conn.execute("DELETE FROM user_ratings WHERE username = ? AND movie_id = ? AND media_type = ?", 
+                 (g.username, movie_id, media_type))
+    conn.commit()
+    conn.close()
+    return get_title_ratings_internal(media_type, movie_id, g.username)
+
+@app.route('/api/titles/<media_type>/<int:movie_id>/ratings', methods=['GET'])
+def get_title_ratings(media_type, movie_id):
+    username = current_username()
+    return get_title_ratings_internal(media_type, movie_id, username)
+
+@app.route('/api/titles/ratings/batch', methods=['POST'])
+def community_batch_ratings():
+    data = request.get_json(silent=True) or {}
+    keys = data.get("keys", [])
+    if not keys:
+        return jsonify({"communities": {}})
+    conn = get_db_conn()
+    c = conn.cursor()
+    results = {}
+    for key in keys:
+        try:
+            m_type, m_id = key.split('_')
+            c.execute("SELECT AVG(rating), COUNT(rating) FROM user_ratings WHERE movie_id = ? AND media_type = ?", (int(m_id), m_type))
+            row = c.fetchone()
+            if row and row[1] > 0:
+                results[key] = {"average": round(row[0], 2), "count": row[1]}
+        except:
+            continue
+    conn.close()
+    return jsonify({"communities": results})
+
+@app.route('/api/reviews/<media_type>/<int:movie_id>', methods=['PUT'])
+@require_auth
+def save_review(media_type, movie_id):
+    data = request.get_json(silent=True) or {}
+    body = str(data.get('body') or "").strip()[:2000]
+    
+    if not body:
+        return delete_review(media_type, movie_id)
+        
+    conn = get_db_conn()
+    c = conn.cursor()
+    c.execute("SELECT 1 FROM user_ratings WHERE username = ? AND movie_id = ? AND media_type = ?", (g.username, movie_id, media_type))
+    if not c.fetchone():
+        c.execute("INSERT INTO user_ratings (username, movie_id, media_type, rating) VALUES (?, ?, ?, 3)", (g.username, movie_id, media_type))
+        
+    c.execute("UPDATE user_ratings SET review_body = ?, updated_at = CURRENT_TIMESTAMP WHERE username = ? AND movie_id = ? AND media_type = ?",
+              (body, g.username, movie_id, media_type))
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True, "body": body})
+
+@app.route('/api/reviews/<media_type>/<int:movie_id>', methods=['DELETE'])
+@require_auth
+def delete_review(media_type, movie_id):
+    conn = get_db_conn()
+    conn.execute("UPDATE user_ratings SET review_body = NULL WHERE username = ? AND movie_id = ? AND media_type = ?",
+                 (g.username, movie_id, media_type))
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True})
+
+@app.route('/api/titles/<media_type>/<int:movie_id>/reviews', methods=['GET'])
+def list_reviews(media_type, movie_id):
+    limit = min(int(request.args.get('limit', 5)), 20)
+    offset = int(request.args.get('offset', 0))
+    username = current_username()
+    conn = get_db_conn()
+    c = conn.cursor()
+    c.execute("""
+        SELECT username, rating, review_body, updated_at 
+        FROM user_ratings 
+        WHERE movie_id = ? AND media_type = ? AND review_body IS NOT NULL AND review_body != ''
+        ORDER BY updated_at DESC
+        LIMIT ? OFFSET ?
+    """, (movie_id, media_type, limit + 1, offset))
+    rows = c.fetchall()
+    conn.close()
+    has_more = len(rows) > limit
+    reviews = []
+    for r in rows[:limit]:
+        reviews.append({
+            "username": r[0],
+            "rating": r[1],
+            "body": r[2],
+            "created_at": r[3],
+            "mine": r[0] == username
+        })
+    return jsonify({"success": True, "reviews": reviews, "has_more": has_more})
+
+# --- DATA FETCHING & DISCOVER ---
 def tmdb(path, **params):
     params["api_key"] = TMDB_API_KEY
     params.setdefault("include_adult", "false")
@@ -812,6 +996,22 @@ def tmdb(path, **params):
         return r.json() if r.status_code == 200 else {}
     except Exception:
         return {}
+
+def format_exact_genres(m, custom_badge=None):
+    names = []
+    if custom_badge:
+        names.append(custom_badge)
+    for x in (m.get("genres") or []):
+        if isinstance(x, dict) and x.get("name") and x["name"] not in names:
+            names.append(x["name"])
+    for gid in (m.get("genre_ids") or []):
+        label = GENRE_ID_TO_NAME.get(int(gid))
+        if label and label not in names:
+            names.append(label)
+    lang = (m.get("original_language") or "").lower()
+    if "Animation" in names and lang in ("ja", "ko", "zh") and "Anime" not in names:
+        names.insert(0, "Anime")
+    return names if names else ["Drama"]
 
 def card(m, media, badge=None):
     return {
@@ -914,6 +1114,7 @@ def discover():
         items = [x for pair in zip(mv, tv) for x in pair] + mv[len(tv):] + tv[len(mv):]
     return jsonify({"success": True, "page": page, "items": items, "has_more": bool(pages) and page < max(pages) and bool(items)})
 
+# --- NOVA AI CHAT ---
 PARSE_PROMPT = f"""You are Nova, a flawless, highly accurate AI cinema and TV expert.
 CRITICAL RULES FOR 100% ACCURACY:
 1. ZERO HALLUCINATIONS: If the user describes a plot, identify the EXACT real-world title in "plot_guesses". Do NOT invent or guess blindly. If unsure, leave "plot_guesses" empty.
@@ -1001,32 +1202,6 @@ def deep_plot_detective(message):
         return guesses, f"The top match is '{top['title']}'{yr}. Here are the closest titles:"
     return [], None
 
-COUNTRY_MAP = {
-    "korean": ("KR", "ko", "South Korean"), "korea": ("KR", "ko", "South Korean"),
-    "k-drama": ("KR", "ko", "South Korean"), "kdrama": ("KR", "ko", "South Korean"),
-    "japanese": ("JP", "ja", "Japanese"), "japan": ("JP", "ja", "Japanese"),
-    "filipino": ("PH", "tl", "Filipino"), "pinoy": ("PH", "tl", "Filipino"),
-    "philippine": ("PH", "tl", "Philippine"), "philippines": ("PH", "tl", "Philippine"),
-    "tagalog": ("PH", "tl", "Filipino"), "thai": ("TH", "th", "Thai"), "thailand": ("TH", "th", "Thai"),
-    "taiwanese": ("TW", "zh", "Taiwanese"), "taiwan": ("TW", "zh", "Taiwanese"),
-    "chinese": ("CN", "zh", "Chinese"), "china": ("CN", "zh", "Chinese"),
-    "indian": ("IN", "hi", "Indian"), "india": ("IN", "hi", "Indian"), "bollywood": ("IN", "hi", "Indian"),
-    "french": ("FR", "fr", "French"), "france": ("FR", "fr", "French"),
-    "spanish": ("ES", "es", "Spanish"), "spain": ("ES", "es", "Spanish"),
-    "british": ("GB", "en", "British"), "uk": ("GB", "en", "British"),
-}
-
-MOOD_GENRES = [
-    (["romcom", "rom-com", "romantic comedy"], ["romance", "comedy"]),
-    (["romance", "romantic", "love", "sweet", "heartbreaking"], ["romance"]),
-    (["funny", "comedy", "hilarious", "laugh"], ["comedy"]),
-    (["sad", "cry", "tearjerker", "emotional"], ["drama"]),
-    (["sci-fi", "scifi", "science fiction", "space", "future", "alien", "time travel"], ["sci-fi"]),
-    (["mind-bending", "twist", "psychological", "suspense", "dark", "thriller", "stuck", "trapped", "survival"], ["thriller"]),
-    (["scary", "horror", "ghost", "creepy", "haunted"], ["horror"]),
-    (["action", "explosive", "fight", "blockbuster"], ["action"]),
-]
-
 def smart_local_nlp_parse(message, history, username="Guest", fav_genres=None):
     lower = message.lower()
     genres, origin_country, language, country_label = [], None, None, ""
@@ -1045,7 +1220,7 @@ def smart_local_nlp_parse(message, history, username="Guest", fav_genres=None):
         return {"intent": "recommend", "special_category": special_cat,
                 "plot_guesses": list(CURATED_SPECIAL_CATALOG[special_cat]), "genres": genres,
                 "origin_country": origin_country, "language": language, "mood_keywords": [],
-                "similar_to": [], "direct_reply": replies[special_cat]}
+                "similar_to": [], "direct_reply": replies.get(special_cat, "Matched special category.")}
     for words, gs in MOOD_GENRES:
         if any(w in lower for w in words):
             for gname in gs:
@@ -1434,11 +1609,6 @@ def trends():
     return jsonify({"ai_forecast": "Regional charts, ML matrix models, and collaborative filtering online.",
                     "trending_genres": ["Boys' Love (BL) and Girls' Love (GL)", "Real-Life Sports and True-Crime Docs", "Anime"]})
 
-if __name__ == "__main__":
-    sys.modules.setdefault("app", sys.modules[__name__])
-
-from ratings_api import bp as ratings_bp, init_ratings_schema
-app.register_blueprint(ratings_bp)
 init_db()
 
 if __name__ == "__main__":
