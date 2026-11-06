@@ -3,7 +3,8 @@ from datetime import datetime, timezone
 
 from flask import Blueprint, jsonify, request
 
-from app import get_current_user, get_db
+# FIXED: Added the necessary imports from app.py to connect the ML profile builder
+from app import get_current_user, get_db, get_db_conn, current_username, require_auth, format_exact_genres, update_user_genre_weights
 
 
 bp = Blueprint("ratings", __name__)
@@ -218,6 +219,13 @@ def put_rating(media, tmdb_id):
             (user["id"], key, rating, now(), now()),
         )
         preferences = recompute_preferences(db, user["id"])
+        
+        # FIXED: Tell the ML Profile system to learn from this 1-5 rating 
+        if body.get("meta") and body["meta"].get("genres"):
+            # A 5-star gives +0.2 genre weight, a 1-star gives -0.2 genre weight
+            weight_shift = (rating - 3) * 0.1 
+            update_user_genre_weights(user["username"], body["meta"]["genres"], weight_shift)
+
     return jsonify(
         success=True, rating=rating, community=community(db, key), preferences=preferences
     )
@@ -258,7 +266,22 @@ def my_preferences():
     user = get_current_user()
     if not user:
         return err("Authentication required.", 401)
-    return jsonify(success=True, preferences=read_preferences(get_db(), user["id"]))
+        
+    # Combine local SQLite preferences with ML genre_weights from users table
+    prefs = read_preferences(get_db(), user["id"])
+    
+    conn = get_db_conn()
+    row = conn.execute("SELECT genre_weights FROM users WHERE username = ?", (user["username"],)).fetchone()
+    conn.close()
+    try:
+        if row and row[0]:
+            ml_weights = json.loads(row[0])
+            for g, weight in ml_weights.items():
+                # Merge the two tracking systems for the frontend
+                prefs["genres"][g] = weight
+    except: pass
+
+    return jsonify(success=True, preferences=prefs)
 
 
 @bp.get("/api/titles/<media>/<int:tmdb_id>/ratings")
