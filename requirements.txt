@@ -1,8 +1,8 @@
 Flask
 Flask-Cors
 requests
+Werkzeug
+gunicorn
 scikit-learn
 numpy
 pandas
-Werkzeug
-gunicorn
