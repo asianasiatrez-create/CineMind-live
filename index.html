@@ -788,6 +788,10 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
 .nova-rec-badges { display: inline-flex; gap: 5px; align-items: center; }
 .nova-rec-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); }
 .nova-rec-genres { font-size: 0.7rem; font-weight: 600; color: var(--secondary-glow); }
+.nova-rec-cast { font-size: .72rem; color: var(--text-muted); line-height: 1.35; }
+.nova-rec-cast i { color: var(--secondary-glow); margin-right: 4px; }
+.nova-imdb { font-size: .75rem; font-weight: 700; color: #f5c518; }
+.nova-imdb i { color: inherit; }
 .nova-rec-overview { font-size: 0.78rem; line-height: 1.4; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .nova-best-tag { display: inline-flex; align-items: center; gap: 5px; width: fit-content; font-size: .68rem; font-weight: 800; color: #10b981; background: rgba(16,185,129,.14); border: 1px solid rgba(16,185,129,.45); padding: 2px 8px; border-radius: 10px; }
 .nova-rec-list.solo .nova-rec-poster { width: 110px; height: 165px; }
@@ -1282,8 +1286,10 @@ html[data-theme="light"] .cast-member-card { background: rgba(255, 255, 255, 0.7
         overflow: hidden;
         overflow-wrap: anywhere;
     }
-    .netflix-caret { flex: 0 0 10px; width: 10px; font-size: .75rem; text-align: center; }
+    .netflix-caret { flex: 0 0 10px; width: 10px; font-size: .75rem; text-align: center;     }
 }
+
+
 
 /* Very small phones (iPhone SE, small Androids) */
 @media (max-width: 380px) {
@@ -1329,6 +1335,44 @@ html[data-theme="light"] .review-item { background: rgba(255,255,255,.7); }
 .card-my-rating i { color: inherit; }
 .nova-rec-why { font-size: .72rem; font-weight: 600; color: #10b981; line-height: 1.35; }
 .nova-rec-why i { color: inherit; margin-right: 4px; }
+
+/* ---- Profile picture & profile info ---- */
+.avatar-img{width:34px;height:34px;border-radius:50%;object-fit:cover;border:1.5px solid var(--secondary-glow);flex-shrink:0;display:block}
+.avatar-img[hidden]{display:none}
+.profile-avatar-wrap{position:relative;width:92px;height:92px;flex-shrink:0}
+.profile-avatar-lg{width:92px;height:92px;border-radius:50%;object-fit:cover;border:2.5px solid var(--secondary-glow);box-shadow:0 0 22px rgba(0,242,254,.45);background:#160f38;display:block}
+.profile-avatar-lg[hidden]{display:none}
+.profile-avatar-placeholder{display:flex;align-items:center;justify-content:center;font-size:2.4rem;color:var(--secondary-glow)}
+.avatar-edit-btn{position:absolute;right:-2px;bottom:-2px;width:36px;height:36px;border-radius:50%;border:1px solid var(--secondary-glow);background:linear-gradient(135deg,var(--primary-glow),var(--secondary-glow));cursor:pointer;display:flex;align-items:center;justify-content:center}
+.avatar-edit-btn i{color:#fff;font-size:.85rem;pointer-events:none}
+.profile-field{display:flex;flex-direction:column;gap:5px}
+.profile-field label{font-size:.74rem;font-weight:800;color:var(--secondary-glow);text-transform:uppercase;letter-spacing:.4px}
+.profile-field input{width:100%;background:var(--input-bg);border:1px solid var(--glass-border);border-radius:14px;padding:11px 14px;color:var(--text-main);outline:none;font-size:.92rem}
+.profile-field input:focus{border-color:var(--secondary-glow)}
+.profile-field input:disabled{opacity:.65;cursor:not-allowed}
+.profile-field small{font-size:.72rem;color:var(--text-muted);line-height:1.35}
+.age-badge{display:inline-flex;align-items:center;gap:6px;width:fit-content;font-size:.72rem;font-weight:800;padding:3px 10px;border-radius:12px;border:1px solid rgba(16,185,129,.5);background:rgba(16,185,129,.14);color:#10b981}
+.age-badge.restricted{border-color:rgba(244,63,94,.55);background:rgba(244,63,94,.14);color:#fda4af}
+.age-badge i{color:inherit}
+@media (max-width:640px){.profile-field input{font-size:16px;min-height:46px}.profile-avatar-wrap,.profile-avatar-lg{width:78px;height:78px}}
+
+/* ---- Nova icon (nova.png): one consistent, non-distorting size everywhere ---- */
+.nova-icon {
+    display: block;
+    flex: 0 0 auto;
+    aspect-ratio: 1 / 1;
+    object-fit: contain;
+    object-position: center;
+    max-width: none;
+    background: transparent;
+    border-radius: 0;
+}
+.nova-icon--sm { width: 32px; height: 32px; }
+.nova-banner-clean .nova-icon--md { width: 66px; height: 66px; }
+.nova-chathead .nova-icon { width: 100%; height: 100%; }
+@media (max-width: 640px) {
+    .nova-banner-clean .nova-icon--md { width: 48px; height: 48px; }
+}
 </style>
 </head>
 <body>
@@ -1345,7 +1389,8 @@ html[data-theme="light"] .review-item { background: rgba(255,255,255,.7); }
 
         <div class="top-controls-row">
             <div class="account-top-btn" id="openProfile" title="Click to log in or switch account">
-                <i class="fa-solid fa-user-astronaut" style="color: var(--secondary-glow); font-size: 1.15rem;"></i>
+                <i class="fa-solid fa-user-astronaut" id="topAvatarIcon" style="color: var(--secondary-glow); font-size: 1.15rem;"></i>
+                <img id="topAvatarImg" class="avatar-img" alt="Profile" hidden>
                 <div class="account-info">
                     <span class="account-name" id="profileDisplayName">Guest User</span>
                     <span class="account-sub" id="profileSubText">Tap to Login</span>
@@ -1540,6 +1585,11 @@ html[data-theme="light"] .review-item { background: rgba(255,255,255,.7); }
                 <input type="password" id="authPassword" placeholder="Password (6+ chars)..." autocomplete="current-password" style="width: 100%; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 14px; padding: 12px 16px; color: var(--text-main); outline: none; font-size: 0.92rem;">
                 <button type="button" class="pw-toggle" data-pw-target="authPassword" aria-label="Show password"><i class="fa-solid fa-eye"></i></button>
             </div>
+            <div id="signupExtraFields" style="display:none; flex-direction:column; gap:10px;">
+                <div class="profile-field"><label for="authFullName">Full name</label><input type="text" id="authFullName" maxlength="60" autocomplete="name" placeholder="Your name"></div>
+                <div class="profile-field"><label for="authEmail">Email</label><input type="email" id="authEmail" autocomplete="email" placeholder="you@example.com"></div>
+                <div class="profile-field"><label for="authBirthDate">Date of birth</label><input type="date" id="authBirthDate"><small>Used for age restrictions. R-18 titles are hidden for users under 18. It can't be changed later.</small></div>
+            </div>
         </div>
 
         <div id="signupGenres" style="display:flex; flex-direction:column; gap:10px; background: rgba(124,58,237,0.08); padding: 14px; border-radius: 16px; border: 1px solid var(--glass-border);">
@@ -1567,17 +1617,32 @@ html[data-theme="light"] .review-item { background: rgba(255,255,255,.7); }
 
     <!-- LOGGED-IN VIEW -->
     <div id="accountView" style="display:none; flex-direction:column; gap:16px;">
-        <div style="display:flex; align-items:center; gap:14px; background: rgba(124,58,237,0.08); border:1px solid var(--glass-border); border-radius:18px; padding:16px;">
-            <i class="fa-solid fa-user-astronaut" style="font-size:2.2rem; color:var(--secondary-glow);"></i>
-            <div style="min-width:0;">
-                <div id="acctName" style="font-size:1.15rem; font-weight:800; word-break:break-all;"></div>
-                <div style="font-size:0.76rem; color:#10b981; font-weight:700;"><i class="fa-solid fa-cloud-check"></i> Cloud Synced</div>
+        <div style="display:flex; align-items:center; gap:16px; background: rgba(124,58,237,0.08); border:1px solid var(--glass-border); border-radius:18px; padding:16px;">
+            <div class="profile-avatar-wrap">
+                <img id="acctAvatar" class="profile-avatar-lg" alt="Profile picture" hidden>
+                <div id="acctAvatarPlaceholder" class="profile-avatar-lg profile-avatar-placeholder"><i class="fa-solid fa-user-astronaut"></i></div>
+                <button type="button" class="avatar-edit-btn" id="avatarEditBtn" title="Upload or change profile picture" aria-label="Upload or change profile picture"><i class="fa-solid fa-camera"></i></button>
+                <input type="file" id="avatarFileInput" accept="image/png,image/jpeg,image/webp" hidden>
+            </div>
+            <div style="min-width:0; display:flex; flex-direction:column; gap:4px;">
+                <div id="acctDisplayName" style="font-size:1.15rem; font-weight:800; word-break:break-word;"></div>
+                <div id="acctName" style="font-size:.8rem; color:var(--text-muted); word-break:break-all;"></div>
+                <div id="acctEmail" style="font-size:.8rem; color:var(--text-muted); word-break:break-all;"></div>
+                <div id="acctAgeBadge" class="age-badge"></div>
+                <div style="font-size:.76rem; color:#10b981; font-weight:700;"><i class="fa-solid fa-cloud-check"></i> Cloud Synced</div>
+                <button type="button" id="avatarRemoveBtn" class="rating-clear" hidden><i class="fa-solid fa-trash"></i> Remove photo</button>
             </div>
         </div>
         <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; text-align:center;">
             <div class="analytics-stat-card"><h4 style="justify-content:center;"><i class="fa-solid fa-bookmark"></i></h4><p id="acctWatchlist">0</p><span style="font-size:0.7rem; color:var(--text-muted);">Watchlist</span></div>
             <div class="analytics-stat-card"><h4 style="justify-content:center;"><i class="fa-solid fa-heart"></i></h4><p id="acctFavs">0</p><span style="font-size:0.7rem; color:var(--text-muted);">Favorites</span></div>
             <div class="analytics-stat-card"><h4 style="justify-content:center;"><i class="fa-solid fa-circle-check"></i></h4><p id="acctWatched">0</p><span style="font-size:0.7rem; color:var(--text-muted);">Watched</span></div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px; background: rgba(124,58,237,0.08); border:1px solid var(--glass-border); border-radius:18px; padding:14px;">
+            <div class="profile-field"><label for="pfFullName">Full name</label><input type="text" id="pfFullName" maxlength="60"></div>
+            <div class="profile-field"><label for="pfEmail">Email</label><input type="email" id="pfEmail"></div>
+            <div class="profile-field"><label for="pfBirthDate">Date of birth</label><input type="date" id="pfBirthDate"><small id="pfBirthHint"></small></div>
+            <button type="button" class="btn-action" id="profileSaveBtn" style="justify-content:center;"><i class="fa-solid fa-floppy-disk"></i> Save profile</button>
         </div>
         <div>
             <div style="font-size:0.8rem; font-weight:700; color:var(--secondary-glow); margin-bottom:6px;">Your Genres</div>
@@ -1596,7 +1661,7 @@ html[data-theme="light"] .review-item { background: rgba(255,255,255,.7); }
     <div class="chat-modal" id="chatModal">
         <div class="chat-header">
             <div style="display:flex; align-items:center; gap:8px;">
-                <img src="nova.png" alt="Nova" class="nova-avatar-animated" style="width:28px; height:28px; object-fit:contain;" onclick="triggerTiltAnimation(this)" onerror="this.src='CineMind-Logo.jpg'">
+                <img src="nova.png" alt="Nova" class="nova-avatar-animated nova-icon nova-icon--sm" onclick="triggerTiltAnimation(this)" onerror="this.onerror=null;this.src='CineMind-Logo.png'">
                 <span>Nova AI</span>
                 <span style="font-size:0.68rem; background:rgba(16,185,129,0.2); color:#10b981; padding:2px 8px; border-radius:10px; border:1px solid rgba(16,185,129,0.4);">Online</span>
             </div>
@@ -1618,7 +1683,7 @@ html[data-theme="light"] .review-item { background: rgba(255,255,255,.7); }
         </div>
     </div>
     <div class="nova-chathead" id="chatToggle" title="Tap to open Nova AI!">
-        <img src="nova.png" alt="Nova" onclick="triggerTiltAnimation(this)" onerror="this.src='CineMind-Logo.jpg'">
+        <img src="nova.png" alt="Nova" class="nova-icon" onclick="triggerTiltAnimation(this)" onerror="this.onerror=null;this.src='CineMind-Logo.png'">
     </div>
 </div>
 
@@ -1689,6 +1754,36 @@ let analyticsChartInstance = null;
 let myRatings = new Map();                       // "movie_123" -> 1..5 (the signed-in user's own ratings)
 let userPrefs = { genres: {}, tags: {} };        // learned weights from the server, per user
 const emptyPrefs = () => ({ genres: {}, tags: {} });
+
+// ================= PROFILE STATE =================
+let currentProfile = null;
+let profileTryAt = 0, profileTry = null;
+const ageBlockCache = new Map();
+const AGE_CACHE_KEY = 'cinemind_age_cache';
+
+function viewerAge() {
+    let birthDate = currentProfile && currentProfile.birth_date;
+    if (!birthDate && currentUser) {
+        try {
+            const cached = JSON.parse(localStorage.getItem(AGE_CACHE_KEY) || 'null');
+            if (cached && cached.u === currentUser) birthDate = cached.birth_date;
+        } catch (error) {}
+    }
+    const date = birthDate ? new Date(`${birthDate}T00:00:00`) : null;
+    if (!date || isNaN(date)) return null;
+    const now = new Date();
+    let age = now.getFullYear() - date.getFullYear();
+    if (now.getMonth() < date.getMonth() ||
+        (now.getMonth() === date.getMonth() && now.getDate() < date.getDate())) age--;
+    return age >= 0 && age <= 120 ? age : null;
+}
+
+function viewerCeiling() {
+    const age = viewerAge();
+    return age === null ? 17 : (age >= 18 ? Infinity : (age >= 13 ? 17 : 12));
+}
+const isMinorViewer = () => viewerCeiling() < 18;
+const displayName = () => (currentProfile && currentProfile.full_name) || currentUser || 'Guest';
 
 // ===== BROWSE FILTER: one source of truth for Movies / TV / category =====
 function itemMediaType(m) {
@@ -1825,7 +1920,7 @@ async function initKeywordIds() {
     if (c && Date.now() - c.t < 7 * 864e5) { Object.keys(KW_IDS).forEach(k => (c.ids[k] || []).forEach(id => KW_IDS[k].add(id))); return; }
   } catch (e) {}
   await Promise.all(Object.entries(KW_NAMES).flatMap(([key, names]) => [...names].map(name =>
-    fetchJSON(`https://api.themoviedb.org/3/search/keyword?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(name)}`)
+    fetchJSON(`https://api.themoviedb.org/3/search/keyword?api_key=TMDBAPIKEY&query={encodeURIComponent(name)}`)
       .then(d => (d.results || []).forEach(k => { if (names.has(normKw(k.name))) KW_IDS[key].add(k.id); }))
       .catch(() => {}))));
   const ids = Object.fromEntries(Object.entries(KW_IDS).map(([k, v]) => [k, [...v]]));
@@ -1906,7 +2001,7 @@ function parseSearchIntent(query = "") {
     }
     const dec = rest.match(/\b(19|20)(\d)0s\b/);
     const yr = rest.match(/\b(19\d{2}|20\d{2})\b/);
-    if (dec) { intent.yearFrom = Number(`${dec[1]}${dec[2]}0`); intent.yearTo = intent.yearFrom + 9; rest = rest.replace(dec[0], ' '); }
+    if (dec) { intent.yearFrom = Number(`dec[1]{dec[2]}0`); intent.yearTo = intent.yearFrom + 9; rest = rest.replace(dec[0], ' '); }
     else if (yr) { intent.yearFrom = intent.yearTo = Number(yr[1]); rest = rest.replace(yr[0], ' '); }
     const cm = query.match(/\b(?:starring|stars?|featuring|with)\s+([A-Z][\w'.-]+(?:\s+[A-Z][\w'.-]+){0,2})/);
     if (cm) { intent.castName = cm[1]; rest = rest.replace(cm[0].toLowerCase(), ' '); }
@@ -1923,7 +2018,7 @@ function describeIntent(i) {
     if (i.country) parts.push((COUNTRY_NAMES[i.country.code] || i.country.code).replace(/\s*\p{Regional_Indicator}+/gu, ''));
     if (i.genreIds.length) parts.push(i.genreIds.map(g => GENRE_OPTIONS[g]).filter(Boolean).join(' + '));
     if (i.language) parts.push(`language: ${i.language}`);
-    if (i.yearFrom) parts.push(i.yearFrom === i.yearTo ? `${i.yearFrom}` : `${i.yearFrom}s`);
+    if (i.yearFrom) parts.push(i.yearFrom === i.yearTo ? `i.yearFrom`:`{i.yearFrom}s`);
     if (i.castName) parts.push(`starring ${i.castName}`);
     return parts.join(' • ');
 }
@@ -1932,7 +2027,7 @@ async function resolveIntentEntities(intent) {
     const T = 'https://api.themoviedb.org/3';
     if (intent.castName && !intent.cast) {
         try {
-            const d = await fetchJSON(`${T}/search/person?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(intent.castName)}`);
+            const d = await fetchJSON(`T/search/person?apikey={TMDB_API_KEY}&query=${encodeURIComponent(intent.castName)}`);
             const p = (d.results || [])[0];
             if (p) intent.cast = { id: p.id, name: p.name };
         } catch (e) {}
@@ -1942,7 +2037,7 @@ async function resolveIntentEntities(intent) {
         if (TV_NATIVE_GENRES.has(gid) || TV_GENRE_EQ[gid] || intent.tvKeywordIds[gid]) continue;
         const name = (GENRE_OPTIONS[gid] || '').toLowerCase();
         try {
-            const d = await fetchJSON(`${T}/search/keyword?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(name)}`);
+            const d = await fetchJSON(`T/search/keyword?apikey={TMDB_API_KEY}&query=${encodeURIComponent(name)}`);
             const hit = (d.results || []).find(k => (k.name || '').toLowerCase() === name);
             if (hit) intent.tvKeywordIds[gid] = hit.id;
         } catch (e) {}
@@ -1957,7 +2052,7 @@ function buildIntentSources(intent) {
         if (intent.language) p.push(`with_original_language=${intent.language}`);
         if (intent.yearFrom) {
             const f = type === 'tv' ? 'first_air_date' : 'primary_release_date';
-            p.push(`${f}.gte=${intent.yearFrom}-01-01`, `${f}.lte=${intent.yearTo}-12-31`);
+            p.push(`f.gte={intent.yearFrom}-01-01`, `f.lte={intent.yearTo}-12-31`);
         }
         if (type === 'movie') {
             if (intent.genreIds.length) p.push(`with_genres=${intent.genreIds.join(',')}`);
@@ -1975,7 +2070,7 @@ function buildIntentSources(intent) {
             if (kw.length) p.push(`with_keywords=${kw.join(',')}`);
         }
         return page => ({
-            url: `https://api.themoviedb.org/3/discover/${type}?api_key=${TMDB_API_KEY}&${p.join('&')}&page=${page}`,
+            url: `https://api.themoviedb.org/3/discover/type?apikey={TMDB_API_KEY}&p.join('&')&page={page}`,
             mType: type, origin: intent.country ? intent.country.code : undefined,
             rationale: `Verified match: ${describeIntent(intent)}.`
         });
@@ -2611,7 +2706,7 @@ function fetchJSON(url) {
 }
 
 // One URL per title, shared (and cached) by the R-18 check, the modal and Nova
-const detailsUrl = (type, id) => `https://api.themoviedb.org/3/${type}/${id}?api_key=${TMDB_API_KEY}&append_to_response=${type === 'tv' ? 'content_ratings,keywords,credits,aggregate_credits' : 'release_dates,keywords,credits'}`;
+const detailsUrl = (type, id) => `https://api.themoviedb.org/3/type/{id}?api_key=TMDBAPIKEY&appendtoresponse={type === 'tv' ? 'content_ratings,keywords,credits,aggregate_credits' : 'release_dates,keywords,credits'}`;
 
 async function mapLimit(list, n, fn) {
     const out = new Array(list.length);
@@ -2629,6 +2724,7 @@ const genreNeedsDetails = (g, t) => ['BL', 'GL', 'ANIME', 'SPORTS'].includes(g)
     || (t === 'tv' && /^\d+$/.test(g) && !TV_NATIVE_GENRES.has(+g) && !TV_GENRE_EQ[+g]);
 
 async function verifyItems(items, genres = [...selectedGenres]) {
+    items = await ageFilter(items);
     if (!genres.length) return items;
     let attempted = 0, failed = 0;
     const out = await mapLimit(items, 6, async m => {
@@ -2701,6 +2797,7 @@ function showMainError(msg, retryFn) {
 function takeNewItems(list, filter) {
     const out = [];
     for (const m of list) {
+        if (isAgeBlocked(m)) continue;
         const key = `${m.media_type || 'movie'}_${m.id}`;
         if (displayedMovieIds.has(key)) continue;
         if (!matchesSelectedMedia(m) || !matchesSelectedCategories(m)) continue;
@@ -2742,7 +2839,8 @@ async function fetchPagerPage(pager) {
     pager.exhausted = nextPage >= maxPages;
     const ok = items.filter(m => m.poster_path && isSafeNonPorn(m));
     const verified = await verifyItems(ok, pager.genres || [...selectedGenres]);
-    return pager.post ? await pager.post(verified) : verified;
+    const ageChecked = await ageFilter(verified);
+    return pager.post ? await pager.post(ageChecked) : ageChecked;
 }
 
 // Builds the row requests for Galaxy Home (pure: no side effects)
@@ -2761,7 +2859,7 @@ function buildNetflixRowConfigs(startIndex, count) {
             const page = Math.floor(i / types) + 1;
             mType = forceTV ? 'tv' : (forceMovie ? 'movie' : (i % 2 ? 'tv' : 'movie'));
             baseParams = `sort_by=popularity.desc&page=${page}`;
-            title = `More ${genreNames}${appLabel}${countryLabel} • Vol. ${page}`;
+            title = `More genreNames{appLabel}${countryLabel} • Vol. ${page}`;
             exhausted = page > feedTotals[mType];
         } else {
             const catalog = browseCatalog();
@@ -2769,12 +2867,12 @@ function buildNetflixRowConfigs(startIndex, count) {
             const page = Math.floor(i / catalog.length) + 1;
             mType = forceTV ? 'tv' : (forceMovie ? 'movie' : template.media);
             baseParams = template.params.replace(/page=\d+/, `page=${page}`);
-            title = `${template.title}${appLabel}${countryLabel}${page > 1 ? ` (Vol. ${page})` : ''}`;
+            title = `template.title{appLabel}countryLabel{page > 1 ? ` (Vol. ${page})` : ''}`;
             genres = template.verify || null;
         }
         const endpoint = mType === 'tv' ? '/discover/tv' : '/discover/movie';
         configs.push({ title, mType, genres, exhausted,
-            url: `https://api.themoviedb.org/3${endpoint}?api_key=${TMDB_API_KEY}&${baseParams}${getActiveFilterQueryParams(mType)}`
+            url: `https://api.themoviedb.org/3endpoint?apikey={TMDB_API_KEY}&baseParams{getActiveFilterQueryParams(mType)}`
         });
     }
     return configs;
@@ -2789,6 +2887,7 @@ function finishRows() {
 }
 
 async function appendNextNetflixRowBatch(count = 3) {
+    if (profileReady && currentUser && viewerAge() === null) await profileReady;
     if (isFetchingMore || feedState === 'end' || currentView !== 'discover' || infiniteMode !== 'rows') return;
     const gen = feedGen;
     const startIndex = nextRowIndex;
@@ -2804,7 +2903,7 @@ async function appendNextNetflixRowBatch(count = 3) {
             const data = await fetchJSON(c.url);
             if (selectedGenres.size) feedTotals[c.mType] = Math.min(feedTotals[c.mType], Math.min(data.total_pages || 1, 500));
             const items = (data.results || []).map(m => ({ ...m, media_type: c.mType })).filter(isSafeNonPorn);
-            return verifyItems(items, c.genres || [...selectedGenres]);
+            return ageFilter(await verifyItems(items, c.genres || [...selectedGenres]));
         }));
         if (gen !== feedGen) return;
 
@@ -3116,10 +3215,10 @@ async function initHeroBannerSlideshow() {
         const jobs = [];
         if (!hasFilters) {
             const tk = selectedMedia === 'all' ? 'all' : selectedMedia;
-            jobs.push(getResults(`${api}/trending/${tk}/week?api_key=${TMDB_API_KEY}&page=1`, tk === 'all' ? null : tk));
+            jobs.push(getResults(`api/trending/{tk}/week?api_key=${TMDB_API_KEY}&page=1`, tk === 'all' ? null : tk));
         }
         kinds.forEach(kind => jobs.push(getResults(
-            `${api}/discover/${kind}?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${hasFilters ? getActiveFilterQueryParams(kind) : '&include_adult=false'}&page=${page}`, kind)));
+            `api/discover/{kind}?api_key=TMDBAPIKEY&sortby=popularity.desc{hasFilters ? getActiveFilterQueryParams(kind) : '&include_adult=false'}&page=${page}`, kind)));
         const lists = await Promise.all(jobs);
         if (run !== heroRun) return;                      // a newer selection replaced this request
 
@@ -3132,12 +3231,14 @@ async function initHeroBannerSlideshow() {
             seen.add(key);
             return itemMediaType(m) && isSafeNonPorn(m) && matchesSelectedMedia(m) && matchesActiveCategoryRules(m);
         });
+        const ageCheckedList = await ageFilter(list);
+        if (run !== heroRun) return;
 
         const backdrops = [];
         const posters = [];
         const seenBackdrops = new Set();
         const seenPosters = new Set();
-        list.forEach(movie => {
+        ageCheckedList.forEach(movie => {
             if (movie.backdrop_path && !seenBackdrops.has(movie.backdrop_path)) {
                 seenBackdrops.add(movie.backdrop_path);
                 backdrops.push(`https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`);
@@ -3223,7 +3324,7 @@ function saveNovaMemory() {
 
 function renderChatHistoryInto(container) {
     if (!container) return;
-    container.innerHTML = `<div class="chat-bubble ai-bubble">Hi ${escapeHTML(currentUser || 'Guest')}! I'm Nova. Ask me any movie question (like <em>"Why is there boxing in Toy Story?"</em>), describe a plot, or search a country like <em>"Philippines"</em>!</div>`;
+    container.innerHTML = `<div class="chat-bubble ai-bubble">Hi ${escapeHTML(displayName())}! I'm Nova. Ask me any movie question (like <em>"Why is there boxing in Toy Story?"</em>), describe a plot, or search a country like <em>"Philippines"</em>!</div>`;
     conversationHistory.forEach(turn => {
         if (!turn || !turn.content) return;
         const div = document.createElement('div');
@@ -3233,7 +3334,8 @@ function renderChatHistoryInto(container) {
     });
     if (lastNovaMovies.length) {
         try {
-            const stillValid = lastNovaMovies.filter(m => matchesSelectedMedia(m) && matchesSelectedCategories(m));
+            const stillValid = lastNovaMovies.filter(m =>
+                matchesSelectedMedia(m) && matchesSelectedCategories(m) && !isAgeBlocked(m));
             if (stillValid.length) container.appendChild(buildNovaRecList(stillValid, lastNovaQuery));
         } catch (error) {
             console.warn('Could not restore Nova recommendation cards.', error);
@@ -3243,6 +3345,8 @@ function renderChatHistoryInto(container) {
 }
 
 window.clearNovaMemory = () => {
+    novaSession = null;
+    saveNovaSession();
     conversationHistory = [];
     lastNovaMovies = [];
     lastNovaQuery = '';
@@ -3285,7 +3389,7 @@ async function repairSavedPosters(list) {
         if (item.id) {
             const mType = item.media_type === 'tv' ? 'tv' : 'movie';
             try {
-                const r = await fetch(`https://api.themoviedb.org/3/${mType}/${item.id}?api_key=${TMDB_API_KEY}`);
+                const r = await fetch(`https://api.themoviedb.org/3/mType/{item.id}?api_key=${TMDB_API_KEY}`);
                 const d = await r.json();
                 if (d && d.poster_path) item.poster = `https://image.tmdb.org/t/p/w500${d.poster_path}`;
             } catch (e) {}
@@ -3293,6 +3397,243 @@ async function repairSavedPosters(list) {
         return item;
     }));
 }
+
+// ================= PROFILE: LOAD / RENDER / UPDATE =================
+function setProfile(p) {
+    currentProfile = p || null;
+    try {
+        if (p && p.birth_date && currentUser) {
+            localStorage.setItem(AGE_CACHE_KEY, JSON.stringify({ u: currentUser, birth_date: p.birth_date }));
+        } else if (!p) localStorage.removeItem(AGE_CACHE_KEY);
+    } catch (error) {}
+    renderProfileEverywhere();
+}
+
+function renderProfileEverywhere() {
+    const avatar = currentProfile && currentProfile.avatar;
+    profileDisplayName.innerText = currentUser ? displayName() : 'Guest User';
+    welcomeName.innerText = currentUser ? displayName() : 'Guest';
+    const img = document.getElementById('topAvatarImg');
+    const icon = document.getElementById('topAvatarIcon');
+    img.hidden = !avatar;
+    icon.style.display = avatar ? 'none' : '';
+    if (avatar) img.src = avatar;
+    else img.removeAttribute('src');
+    renderProfileCard();
+}
+
+async function loadProfile() {
+    profileTryAt = Date.now();
+    if (!currentAuthToken) {
+        setProfile(null);
+        return null;
+    }
+    try {
+        const response = await fetchWithTimeout(
+            `${BACKEND_URL}/api/profile`, { headers: authHeaders() }, 8000);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        setProfile(data.profile);
+        return data.profile;
+    } catch (error) {
+        console.warn('Could not load profile; R-18 stays hidden.', error);
+        return null;
+    }
+}
+
+function resizeImageToDataURL(file, size = 256) {
+    return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(file), image = new Image();
+        image.onload = () => {
+            const side = Math.min(image.width, image.height), canvas = document.createElement('canvas');
+            canvas.width = canvas.height = size;
+            canvas.getContext('2d').drawImage(
+                image, (image.width - side) / 2, (image.height - side) / 2,
+                side, side, 0, 0, size, size);
+            URL.revokeObjectURL(url);
+            resolve(canvas.toDataURL('image/jpeg', 0.85));
+        };
+        image.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject(new Error('Unsupported image'));
+        };
+        image.src = url;
+    });
+}
+
+async function saveAvatar(method, avatar) {
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/profile/avatar`, {
+            method,
+            headers: authHeaders(),
+            body: method === 'PUT' ? JSON.stringify({ avatar }) : undefined
+        });
+        if (response.status === 401) return expireSession();
+        const data = await response.json();
+        if (!response.ok || !data.success) throw new Error(data.message || `HTTP ${response.status}`);
+        setProfile(data.profile);
+        showToast(method === 'PUT' ? 'Profile picture updated.' : 'Profile picture removed.');
+    } catch (error) {
+        showToast(error.message || "Couldn't update your picture.");
+    }
+}
+
+document.getElementById('avatarEditBtn').onclick = () => document.getElementById('avatarFileInput').click();
+document.getElementById('avatarFileInput').onchange = async event => {
+    const file = event.target.files && event.target.files[0];
+    event.target.value = '';
+    if (!file) return;
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type) || file.size > 5 * 1024 * 1024) {
+        return showToast('Choose a PNG, JPEG or WebP image under 5 MB.');
+    }
+    try {
+        await saveAvatar('PUT', await resizeImageToDataURL(file));
+    } catch (error) {
+        showToast(error.message);
+    }
+};
+document.getElementById('avatarRemoveBtn').onclick = () => saveAvatar('DELETE');
+
+document.getElementById('profileSaveBtn').onclick = async () => {
+    if (!currentUser) return;
+    const body = {
+        full_name: document.getElementById('pfFullName').value,
+        email: document.getElementById('pfEmail').value
+    };
+    const birthDate = document.getElementById('pfBirthDate');
+    if (!birthDate.disabled && birthDate.value) body.birth_date = birthDate.value;
+    const wasCeiling = viewerCeiling();
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/profile`, {
+            method: 'PUT', headers: authHeaders(), body: JSON.stringify(body)
+        });
+        if (response.status === 401) return expireSession();
+        const data = await response.json();
+        if (!response.ok || !data.success) throw new Error(data.message || `HTTP ${response.status}`);
+        setProfile(data.profile);
+        showToast('Profile saved.');
+        if (wasCeiling !== viewerCeiling()) {
+            ageBlockCache.clear();
+            clearNovaMemory();
+            if (currentView === 'discover') initEndlessNetflixHome();
+        }
+    } catch (error) {
+        showToast(error.message || "Couldn't save your profile.");
+    }
+};
+
+// ================= AGE GATE =================
+const MINOR_SAFE_REPLY = "That title isn't available for your account. Here are age-appropriate picks instead.";
+const ageKey = movie => `${itemMediaType(movie) || movie.media_type || 'movie'}_${movie.id}`;
+const replyMentionsRestrictedTitle = text => {
+    const lower = String(text || '').toLowerCase();
+    return [...KNOWN_R18_TITLES].some(title => title.length >= 5 &&
+        new RegExp(`\\b${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(lower));
+};
+
+const ADULT_KW_RE = /\b(erotic|erotica|sex|nudity|female nudity|male nudity|sexual|softcore|bdsm|adultery|infidelity|seductress|lust|prostitute|stripper|gore|slasher|extreme violence|vivamax|pink film)\b/i;
+const CERT_AGES = new Map(Object.entries({
+    'TV-Y': 0, 'TV-Y7': 7, 'TV-G': 0, 'TV-PG': 10, 'TV-14': 14, 'TV-MA': 18,
+    'G': 0, 'U': 0, 'PG': 10, 'PG-13': 13, '12A': 12, 'R': 18, 'NC-17': 18, 'X': 18,
+    'R-13': 13, 'R-16': 16, 'R-18': 18, 'R18': 18, 'RESTRICTED': 18
+}));
+function certAge(raw) {
+    const certification = String(raw || '').replace(/\s+/g, '').toUpperCase();
+    if (!certification) return null;
+    if (CERT_AGES.has(certification)) return CERT_AGES.get(certification);
+    const match = certification.match(/^(\d{1,2})\+?$/);
+    return match ? parseInt(match[1], 10) : null;
+}
+
+function ageFactsFromDetails(details, type) {
+    const pairs = type === 'tv'
+        ? ((details.content_ratings && details.content_ratings.results) || [])
+            .map(rating => [rating.iso_3166_1, rating.rating])
+        : ((details.release_dates && details.release_dates.results) || [])
+            .map(country => [country.iso_3166_1, (country.release_dates || []).map(release => release.certification).find(Boolean)]);
+    let requiredAge = null;
+    for (const countryCode of ['US', 'GB', 'PH', selectedRegion, 'AU', 'CA']) {
+        const hit = pairs.find(([code, value]) => code === countryCode && certAge(value) !== null);
+        if (hit) { requiredAge = certAge(hit[1]); break; }
+    }
+    const keywords = ((details.keywords && (details.keywords.keywords || details.keywords.results)) || [])
+        .map(keyword => keyword.name || '').join(' ');
+    const names = [details.title, details.name, details.original_title, details.original_name]
+        .map(name => String(name || '').toLowerCase().trim());
+    const companies = (details.production_companies || []).map(company => (company.name || '').toLowerCase()).join(' ');
+    if (details.adult === true || !isSafeNonPorn(details)) requiredAge = 18;
+    else if (requiredAge === null &&
+        (names.some(name => KNOWN_R18_TITLES.has(name)) || ADULT_KW_RE.test(keywords) || companies.includes('vivamax'))) {
+        requiredAge = 18;
+    }
+    const genreIds = genreIdsOf(details);
+    const kid = [10751, 10762, 16].some(id => genreIds.includes(id)) &&
+        ![27, 80, 53, 10752, 10768].some(id => genreIds.includes(id));
+    return { req: requiredAge, kid };
+}
+
+function ageAllows(facts, ceiling) {
+    if (ceiling === Infinity) return true;
+    if (facts.req !== null) return facts.req <= ceiling;
+    return ceiling > 12 ? true : facts.kid;
+}
+
+function isAgeBlocked(movie) {
+    if (!movie) return false;
+    const ceiling = viewerCeiling();
+    if (ceiling === Infinity) return false;
+    if (movie.adult === true) return true;
+    const facts = ageBlockCache.get(ageKey(movie));
+    return facts ? !ageAllows(facts, ceiling) : false;
+}
+
+function ensureProfileForAge() {
+    if (!currentUser || currentProfile || Date.now() - profileTryAt < 60000) return profileTry || Promise.resolve();
+    profileTry = loadProfile().finally(() => { profileTry = null; });
+    return profileTry;
+}
+
+let ageActive = 0;
+const ageWaiters = [];
+async function agePool(fn) {
+    if (ageActive >= 12) await new Promise(resolve => ageWaiters.push(resolve));
+    ageActive++;
+    try { return await fn(); }
+    finally {
+        ageActive--;
+        const next = ageWaiters.shift();
+        if (next) next();
+    }
+}
+
+async function ageFilter(items) {
+    const list = (items || []).filter(movie => movie && movie.id);
+    if (!list.length || viewerCeiling() === Infinity) return list;
+    await ensureProfileForAge();
+    if (viewerCeiling() === Infinity) return list;
+    const pre = list.filter(movie => movie.adult !== true && isSafeNonPorn(movie));
+    const need = pre.filter(movie => !ageBlockCache.has(ageKey(movie)));
+    let failed = 0;
+    await Promise.all(need.map(movie => agePool(async () => {
+        const key = ageKey(movie), type = key.split('_')[0];
+        try {
+            ageBlockCache.set(key, ageFactsFromDetails(await fetchJSON(detailsUrl(type, movie.id)), type));
+        } catch (error) {
+            failed++;
+        }
+    })));
+    if (need.length && failed === need.length) throw new Error('Could not check age ratings');
+    const ceiling = viewerCeiling();
+    return pre.filter(movie => {
+        const facts = ageBlockCache.get(ageKey(movie));
+        return !!facts && ageAllows(facts, ceiling);
+    });
+}
+
+window.debugAge = async (type, id) => {
+    const facts = ageFactsFromDetails(await fetchJSON(detailsUrl(type, id)), type);
+    console.log(facts, 'ceiling', viewerCeiling(), 'allowed', ageAllows(facts, viewerCeiling()));
+};
 
 function renderProfileCard() {
     resetPasswordVisibility();
@@ -3306,7 +3647,35 @@ function renderProfileCard() {
     document.getElementById('openProfile').title = loggedIn ? 'View your account' : 'Click to log in or sign up';
 
     if (loggedIn) {
-        document.getElementById('acctName').textContent = currentUser;
+        const p = currentProfile || {};
+        document.getElementById('acctName').textContent = '@' + currentUser;
+        document.getElementById('acctDisplayName').textContent = p.full_name || currentUser;
+        document.getElementById('acctEmail').innerHTML = `<i class="fa-solid fa-envelope"></i> ${escapeHTML(p.email || 'No email on file')}`;
+        const av = document.getElementById('acctAvatar');
+        av.hidden = !p.avatar;
+        if (p.avatar) av.src = p.avatar;
+        else av.removeAttribute('src');
+        document.getElementById('acctAvatarPlaceholder').hidden = !!p.avatar;
+        document.getElementById('avatarRemoveBtn').hidden = !p.avatar;
+        const badge = document.getElementById('acctAgeBadge');
+        badge.className = 'age-badge' + (p.is_adult ? '' : ' restricted');
+        badge.innerHTML = p.age != null
+            ? `<i class="fa-solid ${p.is_adult ? 'fa-shield-check' : 'fa-ban'}"></i> Age ${p.age} • ${p.is_adult ? '18+ access' : 'R-18 hidden'}`
+            : `<i class="fa-solid fa-ban"></i> Add your birth date (R-18 hidden)`;
+        document.getElementById('pfFullName').value = p.full_name || '';
+        document.getElementById('pfEmail').value = p.email || '';
+        const bd = document.getElementById('pfBirthDate');
+        bd.value = p.birth_date || '';
+        bd.disabled = !!p.has_birth_date;
+        document.getElementById('pfBirthHint').textContent = p.has_birth_date
+            ? "Locked. Date of birth can't be changed once set."
+            : "Can be set once. Used for age restrictions.";
+        const topAvatar = document.getElementById('topAvatarImg');
+        const topAvatarIcon = document.getElementById('topAvatarIcon');
+        topAvatar.hidden = !p.avatar;
+        topAvatarIcon.style.display = p.avatar ? 'none' : '';
+        if (p.avatar) topAvatar.src = p.avatar;
+        else topAvatar.removeAttribute('src');
         document.getElementById('acctWatchlist').textContent = watchlist.length;
         document.getElementById('acctFavs').textContent = favorites.length;
         document.getElementById('acctWatched').textContent = watchedMovies.length;
@@ -3315,6 +3684,26 @@ function renderProfileCard() {
             ? g.map(n => `<span class="modal-genre-tag">${escapeHTML(n)}</span>`).join('')
             : `<span style="font-size:0.8rem; color:var(--text-muted);">No genres set yet.</span>`;
     } else {
+        document.getElementById('acctAvatar').hidden = true;
+        document.getElementById('acctAvatar').removeAttribute('src');
+        document.getElementById('acctAvatarPlaceholder').hidden = false;
+        document.getElementById('avatarRemoveBtn').hidden = true;
+        document.getElementById('acctDisplayName').textContent = '';
+        document.getElementById('acctName').textContent = '';
+        document.getElementById('acctEmail').textContent = '';
+        document.getElementById('acctAgeBadge').textContent = '';
+        ['authFullName', 'authEmail', 'authBirthDate'].forEach(id => {
+            document.getElementById(id).value = '';
+        });
+        document.getElementById('pfFullName').value = '';
+        document.getElementById('pfEmail').value = '';
+        document.getElementById('pfBirthDate').value = '';
+        document.getElementById('pfBirthDate').disabled = false;
+        document.getElementById('topAvatarImg').hidden = true;
+        document.getElementById('topAvatarImg').removeAttribute('src');
+        document.getElementById('topAvatarIcon').style.display = '';
+        document.getElementById('signupExtraFields').style.display = 'none';
+        document.getElementById('signupBtn').innerHTML = '<i class="fa-solid fa-user-plus"></i> Sign Up';
         document.getElementById('authUsername').value = '';
         document.getElementById('authPassword').value = '';
     }
@@ -3338,12 +3727,17 @@ async function syncCloudLibrary() {
         renderProfileCard();            
         return;
     }
-    profileDisplayName.innerText = currentUser;
+    profileDisplayName.innerText = displayName();
     profileSubText.innerText = userGenres.length ? `Synced • ${userGenres.length} Genres` : "Cloud Synced";
-    welcomeName.innerText = currentUser;
+    welcomeName.innerText = displayName();
     renderChatHistoryInto(chatHistory);
     renderProfileCard();            
     try {
+        const profileRes = await fetch(`${BACKEND_URL}/api/profile`, { headers: authHeaders() });
+        if (profileRes.status === 401) { if (user === currentUser) await expireSession(); return; }
+        if (!profileRes.ok) throw new Error(`Profile request failed: HTTP ${profileRes.status}`);
+        const profileData = await profileRes.json();
+        setProfile(profileData.profile);
         const res = await fetch(`${BACKEND_URL}/api/user/library`, { headers: authHeaders() });
         if (res.status === 401) { if (user === currentUser) await expireSession(); return; }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -3360,6 +3754,7 @@ async function syncCloudLibrary() {
     }
     renderProfileCard();                
 }
+let profileReady = loadProfile();
 syncCloudLibrary();
 
 window.addEventListener('DOMContentLoaded', async () => {
@@ -3402,6 +3797,8 @@ document.getElementById('openProfile').onclick = () => {
 document.getElementById('closeProfileModal').onclick = () => { profileModal.classList.remove('active'); };
 
 document.getElementById('continueGuestBtn').onclick = () => {
+    document.getElementById('signupExtraFields').style.display = 'none';
+    document.getElementById('signupBtn').innerHTML = '<i class="fa-solid fa-user-plus"></i> Sign Up';
     if (signupGenres.size > 0 && signupGenres.size < 3) {
         return alert("Please select at least 3 genres you like, or deselect them to continue uncalibrated.");
     }
@@ -3415,6 +3812,8 @@ document.getElementById('continueGuestBtn').onclick = () => {
 };
 
 document.getElementById('loginBtn').onclick = async () => {
+    document.getElementById('signupExtraFields').style.display = 'none';
+    document.getElementById('signupBtn').innerHTML = '<i class="fa-solid fa-user-plus"></i> Sign Up';
     const u = document.getElementById('authUsername').value.trim();
     const p = document.getElementById('authPassword').value.trim();
     if(!u || !p) return alert("Please enter your username and password to log in.");
@@ -3428,6 +3827,8 @@ document.getElementById('loginBtn').onclick = async () => {
             if (!data.token) throw new Error("Login response did not include an authentication token.");
             currentAuthToken = data.token;
             currentUser = data.username;
+            setProfile(data.profile);
+            clearNovaMemory();
             localStorage.setItem('cinemind_auth_token', currentAuthToken);
             localStorage.setItem('cinemind_auth_user', currentUser);
             if (signupGenres.size >= 3) userGenres = [...signupGenres];
@@ -3442,14 +3843,28 @@ document.getElementById('loginBtn').onclick = async () => {
 };
 
 document.getElementById('signupBtn').onclick = async () => {
+    const extra = document.getElementById('signupExtraFields');
+    if (extra.style.display === 'none') {
+        extra.style.display = 'flex';
+        return showToast('Fill in your details, then press Sign Up again.');
+    }
     const u = document.getElementById('authUsername').value.trim().toLowerCase();
     const p = document.getElementById('authPassword').value.trim();
+    const fullName = document.getElementById('authFullName').value.trim();
+    const email = document.getElementById('authEmail').value.trim();
+    const birthDate = document.getElementById('authBirthDate').value;
     if(!u || p.length < 6) return alert("Please enter a username and a password (6+ characters).");
+    if (!fullName) return alert("Please enter your full name.");
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(email)) return alert("Please enter a valid email address.");
+    if (!birthDate) return alert("Please enter your date of birth.");
     if (signupGenres.size < 3) return alert("Please pick at least 3 favorite genres before signing up!");
     try {
         const res = await fetch(`${BACKEND_URL}/api/signup`, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({username: u, password: p, genres: [...signupGenres]})
+            body: JSON.stringify({
+                username: u, password: p, genres: [...signupGenres],
+                full_name: fullName, email, birth_date: birthDate
+            })
         });
         const data = await res.json();
         if(data.success) {
@@ -3461,6 +3876,8 @@ document.getElementById('signupBtn').onclick = async () => {
             currentUser = u;
             localStorage.setItem('cinemind_auth_token', currentAuthToken);
             localStorage.setItem('cinemind_auth_user', currentUser);
+            setProfile(data.profile);
+            clearNovaMemory();
             await syncCloudLibrary();
             profileModal.classList.remove('active');
             initEndlessNetflixHome();
@@ -3472,6 +3889,7 @@ document.getElementById('signupBtn').onclick = async () => {
 async function expireSession() {
     currentUser = null;
     currentAuthToken = "";
+    setProfile(null);
     localStorage.removeItem('cinemind_auth_user');
     localStorage.removeItem('cinemind_auth_token');
     localStorage.removeItem('cinemind_auth_role');
@@ -3532,7 +3950,7 @@ function createMovieCard(movie, isAI = false, searchContext = "", rankNum = null
             <div class="top10-inner">
                 <div class="card-poster-wrap">
                     ${badgesHTML}
-                    <img src="${poster}" alt="${escapeHTML(title)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=NO_POSTER">
+                    <img src="poster"alt="{escapeHTML(title)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=NO_POSTER">
                 </div>
                 <div class="movie-info">
                     <div class="movie-title">${escapeHTML(title)}</div>
@@ -3562,7 +3980,7 @@ function createMovieCard(movie, isAI = false, searchContext = "", rankNum = null
     card.innerHTML = `
         <div class="card-poster-wrap">
             ${badgesHTML}
-            <img src="${poster}" alt="${escapeHTML(title)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=NO_POSTER">
+            <img src="poster"alt="{escapeHTML(title)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=NO_POSTER">
         </div>
         <div class="movie-info">
             <div class="movie-title">${escapeHTML(title)}</div>
@@ -3592,6 +4010,7 @@ function buildRowElement(titleHTML, movies, isAI = false, isTop10 = false, allow
     const rowSeenIds = new Set();
     for (const m of (movies || [])) {
         if (!isSafeNonPorn(m)) continue;
+        if (isAgeBlocked(m)) continue;
         if (!m.poster_path && !(m.poster && m.poster.startsWith('http'))) continue;
         if (!matchesActiveCategoryRules(m)) continue;
         if (currentView === 'discover' && !matchesSelectedMedia(m)) continue;
@@ -3654,7 +4073,7 @@ async function fetchSpecialCategoryItems(categoryKey, page = 1) {
     if (!selectedTitles.length) return [];
 
     const searches = await Promise.allSettled(selectedTitles.map(title =>
-        fetchJSON(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&include_adult=false&query=${encodeURIComponent(title)}`)
+        fetchJSON(`https://api.themoviedb.org/3/search/multi?api_key=TMDBAPIKEY&includeadult=false&query={encodeURIComponent(title)}`)
     ));
     const failedSearches = searches.filter(result => result.status === 'rejected');
     if (failedSearches.length === searches.length) {
@@ -3667,7 +4086,7 @@ async function fetchSpecialCategoryItems(categoryKey, page = 1) {
     const items = [];
     searches.forEach((result, index) => {
         if (result.status !== 'fulfilled') {
-            console.warn(`Could not search curated ${categoryKey} title "${selectedTitles[index]}".`, result.reason);
+            console.warn(`Could not search curated categoryKeytitle"{selectedTitles[index]}".`, result.reason);
             return;
         }
         const expectedTitle = normalize(selectedTitles[index]);
@@ -3694,7 +4113,7 @@ async function fetchSpecialCategoryItems(categoryKey, page = 1) {
     return items;
 }
 
-function getActiveFilterQueryParams(mediaType = "movie", genres = selectedGenres) {
+function getActiveFilterQueryParams(mediaType = "movie", genres = selectedGenres, useBrowse = true) {
     const sel = new Set(genres);
     const SPECIAL_KEYS = new Set(['BL', 'GL', 'ANIME', 'KIDS_FAMILY', 'SPORTS']);
     const standardGenres = [...sel].filter(g => !SPECIAL_KEYS.has(g));
@@ -3705,7 +4124,7 @@ function getActiveFilterQueryParams(mediaType = "movie", genres = selectedGenres
     const hasSports = sel.has('SPORTS');
 
     // Never include adult content when Kids & Family is selected
-    let q = hasKidsFamily ? "&include_adult=false" : "&include_adult=true";
+    let q = (hasKidsFamily || isMinorViewer()) ? "&include_adult=false" : "&include_adult=true";
     const excl = [];
 
     const gSet = new Set();
@@ -3750,15 +4169,16 @@ function getActiveFilterQueryParams(mediaType = "movie", genres = selectedGenres
         q += `&with_keywords=${kwParts.join('|')}`;
     }
 
-    if (selectedCountry) q += `&with_origin_country=${selectedCountry}`;
-    if (selectedProvider) {
-        q += `&with_watch_providers=${selectedProvider}&watch_region=${selectedRegion}`;
+    if (useBrowse && selectedCountry) q += `&with_origin_country=${selectedCountry}`;
+    if (useBrowse && selectedProvider) {
+        q += `&with_watch_providers=selectedProvider&watchregion={selectedRegion}`;
     }
     return q;
 }
 
 // ---------------- MASTER GALAXY HOME INITIALIZER ----------------
 async function initEndlessNetflixHome() {
+    if (profileReady && currentUser && viewerAge() === null) await profileReady;
     if (currentView !== 'discover') return;
     const gen = resetFeed('rows');
     nextRowIndex = selectedGenres.size ? (selectedMedia === 'all' ? 4 : 2) : 0;
@@ -3785,7 +4205,7 @@ async function initEndlessNetflixHome() {
     const extraProviderCountryOnly = (() => {
         let q = "";
         if (selectedCountry) q += `&with_origin_country=${selectedCountry}`;
-        if (selectedProvider) q += `&with_watch_providers=${selectedProvider}&watch_region=${selectedRegion}`;
+        if (selectedProvider) q += `&with_watch_providers=selectedProvider&watchregion={selectedRegion}`;
         return q;
     })();
 
@@ -3795,24 +4215,24 @@ async function initEndlessNetflixHome() {
     if (hasAnime) {
         if (!isMovieOnly) {
             specialRows.push({
-                title: `<i class="fa-solid fa-wand-sparkles" style="color: #00f2fe;"></i> 🎌 Japanese Anime Series (Shonen, Seinen, Fantasy & Sci-Fi)${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=true&with_genres=16&with_origin_country=${selectedCountry || 'JP'}&sort_by=popularity.desc${selectedProvider ? `&with_watch_providers=${selectedProvider}&watch_region=${selectedRegion}` : ''}&page=1`,
+                title: `<i class="fa-solid fa-wand-sparkles" style="color: #00f2fe;"></i> 🎌 Japanese Anime Series (Shonen, Seinen, Fantasy & Sci-Fi)appBadge{countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/tv?api_key=TMDBAPIKEY&includeadult=true&withgenres=16&withorigincountry={selectedCountry || 'JP'}&sort_by=popularity.desc${selectedProvider ? `&with_watch_providers=${selectedProvider}&watch_region=${selectedRegion}` : ''}&page=1`,
                 mType: 'tv',
                 isAI: true,
                 allowCross: true,
                 customRationale: "Official Japanese Anime Series classification."
             });
             specialRows.push({
-                title: `<i class="fa-solid fa-earth-asia" style="color: #d946ef;"></i> 🎌 Global Anime & International Donghua / Webtoon Series${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=true&with_genres=16&with_keywords=${ANIME_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-earth-asia" style="color: #d946ef;"></i> 🎌 Global Anime & International Donghua / Webtoon SeriesappBadge{countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/tv?api_key=TMDBAPIKEY&includeadult=true&withgenres=16&withkeywords={ANIME_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'tv',
                 isAI: true,
                 allowCross: true,
                 customRationale: "Japanese & International Animation matching the Anime classification."
             });
             specialRows.push({
-                title: `<i class="fa-solid fa-basketball" style="color: #fbbf24;"></i> 🎌🏆 Sports Anime Series & Tournament Action${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=16&with_keywords=${SPORTS_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-basketball" style="color: #fbbf24;"></i> 🎌🏆 Sports Anime Series & Tournament ActionappBadge{countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/tv?api_key=TMDBAPIKEY&includeadult=false&withgenres=16&withkeywords={SPORTS_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'tv',
                 isAI: true,
                 allowCross: true,
@@ -3821,8 +4241,8 @@ async function initEndlessNetflixHome() {
         }
         if (!isSeriesTab) {
             specialRows.push({
-                title: `<i class="fa-solid fa-film" style="color: #00f2fe;"></i> 🎌 Iconic Anime Movies & Feature Films${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=true&with_genres=16&with_origin_country=${selectedCountry || 'JP'}&sort_by=popularity.desc${selectedProvider ? `&with_watch_providers=${selectedProvider}&watch_region=${selectedRegion}` : ''}&page=1`,
+                title: `<i class="fa-solid fa-film" style="color: #00f2fe;"></i> 🎌 Iconic Anime Movies & Feature FilmsappBadge{countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/movie?api_key=TMDBAPIKEY&includeadult=true&withgenres=16&withorigincountry={selectedCountry || 'JP'}&sort_by=popularity.desc${selectedProvider ? `&with_watch_providers=${selectedProvider}&watch_region=${selectedRegion}` : ''}&page=1`,
                 mType: 'movie',
                 isAI: true,
                 allowCross: true,
@@ -3835,8 +4255,8 @@ async function initEndlessNetflixHome() {
     if (hasAnimation && !hasAnime && !hasKidsFamily) {
         if (!isSeriesTab) {
             specialRows.push({
-                title: `<i class="fa-solid fa-palette" style="color: #00f2fe;"></i> 🎨 Animated Feature Films (Across All Genres)${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=true&with_genres=16${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-palette" style="color: #00f2fe;"></i> 🎨 Animated Feature Films (Across All Genres)appBadge{countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/movie?api_key=TMDBAPIKEY&includeadult=true&withgenres=16{extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'movie',
                 isAI: true,
                 allowCross: true,
@@ -3845,8 +4265,8 @@ async function initEndlessNetflixHome() {
         }
         if (!isMovieOnly) {
             specialRows.push({
-                title: `<i class="fa-solid fa-fire-flame-curved" style="color: #f43f5e;"></i> 🎨 Teen & Adult Animated Series (Sci-Fi, Action & Comedy)${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=true&with_genres=16&without_genres=10762,10751${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-fire-flame-curved" style="color: #f43f5e;"></i> 🎨 Teen & Adult Animated Series (Sci-Fi, Action & Comedy)appBadge{countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/tv?api_key=TMDBAPIKEY&includeadult=true&withgenres=16&withoutgenres=10762,10751{extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'tv',
                 isAI: true,
                 allowCross: true,
@@ -3859,8 +4279,8 @@ async function initEndlessNetflixHome() {
     if (hasKidsFamily) {
         if (!isSeriesTab) {
             specialRows.push({
-                title: `<i class="fa-solid fa-child-reaching" style="color: #fbbf24;"></i> 🧸 Kids & Family Movies (All-Ages Live-Action & Animated Favorites)${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=10751&without_genres=27,80,53&certification_country=US&certification.lte=PG${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-child-reaching" style="color: #fbbf24;"></i> 🧸 Kids & Family Movies (All-Ages Live-Action & Animated Favorites)appBadge{countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/movie?api_key=TMDBAPIKEY&includeadult=false&withgenres=10751&withoutgenres=27,80,53&certificationcountry=US&certification.lte=PG{extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'movie',
                 isAI: true,
                 allowCross: true,
@@ -3869,8 +4289,8 @@ async function initEndlessNetflixHome() {
         }
         if (!isMovieOnly) {
             specialRows.push({
-                title: `<i class="fa-solid fa-tv" style="color: #38bdf8;"></i> 🧸 Kids & Family TV Shows & Animated Cartoons${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=10762|10751&without_genres=80,9648,10768${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-tv" style="color: #38bdf8;"></i> 🧸 Kids & Family TV Shows & Animated CartoonsappBadge{countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/tv?api_key=TMDBAPIKEY&includeadult=false&withgenres=10762|10751&withoutgenres=80,9648,10768{extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'tv',
                 isAI: true,
                 allowCross: true,
@@ -3883,8 +4303,8 @@ async function initEndlessNetflixHome() {
     if (hasDocs) {
         if (!isSeriesTab) {
             specialRows.push({
-                title: `<i class="fa-solid fa-video" style="color: #10b981;"></i> 🎥 Acclaimed Documentary Films${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=99${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-video" style="color: #10b981;"></i> 🎥 Acclaimed Documentary FilmsappBadge{countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/movie?api_key=TMDBAPIKEY&includeadult=false&withgenres=99{extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'movie',
                 isAI: true,
                 allowCross: true,
@@ -3893,8 +4313,8 @@ async function initEndlessNetflixHome() {
         }
         if (!isMovieOnly) {
             specialRows.push({
-                title: `<i class="fa-solid fa-earth-americas" style="color: #10b981;"></i> 🎥 Binge-Worthy Docuseries & True Stories${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_genres=99${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-earth-americas" style="color: #10b981;"></i> 🎥 Binge-Worthy Docuseries & True StoriesappBadge{countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/tv?api_key=TMDBAPIKEY&includeadult=false&withgenres=99{extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'tv',
                 isAI: true,
                 allowCross: true,
@@ -3907,8 +4327,8 @@ async function initEndlessNetflixHome() {
     if (hasSports) {
         if (!isSeriesTab) {
             specialRows.push({
-                title: `<i class="fa-solid fa-medal" style="color: #fbbf24;"></i> 🏆 Sports Movies, Dramas & Championship Stories${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${SPORTS_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-medal" style="color: #fbbf24;"></i> 🏆 Sports Movies, Dramas & Championship StoriesappBadge{countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/movie?api_key=TMDBAPIKEY&includeadult=false&withkeywords={SPORTS_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'movie',
                 isAI: true,
                 allowCross: true,
@@ -3917,8 +4337,8 @@ async function initEndlessNetflixHome() {
         }
         if (!isMovieOnly) {
             specialRows.push({
-                title: `<i class="fa-solid fa-basketball" style="color: #f97316;"></i> 🏆 Sports Series, Sports Anime & Docuseries${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${SPORTS_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-basketball" style="color: #f97316;"></i> 🏆 Sports Series, Sports Anime & DocuseriesappBadge{countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/tv?api_key=TMDBAPIKEY&includeadult=false&withkeywords={SPORTS_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'tv',
                 isAI: true,
                 allowCross: true,
@@ -3931,8 +4351,8 @@ async function initEndlessNetflixHome() {
     if (hasBL) {
         if (!isMovieOnly) {
             specialRows.push({
-                title: `<i class="fa-solid fa-heart" style="color: #38bdf8;"></i> 💙 Boys' Love (BL) Series & Shows — Boys Love Boys${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=true&with_keywords=${BL_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-heart" style="color: #38bdf8;"></i> 💙 Boys' Love (BL) Series & Shows — Boys Love BoysappBadge{countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/tv?api_key=TMDBAPIKEY&includeadult=true&withkeywords={BL_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'tv',
                 isAI: true,
                 allowCross: true,
@@ -3941,8 +4361,8 @@ async function initEndlessNetflixHome() {
         }
         if (!isSeriesTab) {
             specialRows.push({
-                title: `<i class="fa-solid fa-film" style="color: #38bdf8;"></i> 💙 Boys' Love (BL) Movies & Romance — Boys Love Boys${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=true&with_keywords=${BL_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-film" style="color: #38bdf8;"></i> 💙 Boys' Love (BL) Movies & Romance — Boys Love BoysappBadge{countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/movie?api_key=TMDBAPIKEY&includeadult=true&withkeywords={BL_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'movie',
                 isAI: true,
                 allowCross: true,
@@ -3954,8 +4374,8 @@ async function initEndlessNetflixHome() {
     if (hasGL) {
         if (!isSeriesTab) {
             specialRows.push({
-                title: `<i class="fa-solid fa-heart" style="color: #f43f5e;"></i> 💖 Girls' Love (GL) Movies & Romance — Girls Love Girls${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=true&with_keywords=${GL_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-heart" style="color: #f43f5e;"></i> 💖 Girls' Love (GL) Movies & Romance — Girls Love GirlsappBadge{countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/movie?api_key=TMDBAPIKEY&includeadult=true&withkeywords={GL_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'movie',
                 isAI: true,
                 allowCross: true,
@@ -3964,8 +4384,8 @@ async function initEndlessNetflixHome() {
         }
         if (!isMovieOnly) {
             specialRows.push({
-                title: `<i class="fa-solid fa-tv" style="color: #f43f5e;"></i> 💖 Girls' Love (GL) Series & Shows — Girls Love Girls${appBadge}${countryBadge}`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=true&with_keywords=${GL_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
+                title: `<i class="fa-solid fa-tv" style="color: #f43f5e;"></i> 💖 Girls' Love (GL) Series & Shows — Girls Love GirlsappBadge{countryBadge}`,
+                url: `https://api.themoviedb.org/3/discover/tv?api_key=TMDBAPIKEY&includeadult=true&withkeywords={GL_TMDB_KEYWORDS}${extraProviderCountryOnly}&sort_by=popularity.desc&page=1`,
                 mType: 'tv',
                 isAI: true,
                 allowCross: true,
@@ -3979,8 +4399,8 @@ async function initEndlessNetflixHome() {
         const pName = selectedProvider ? PROVIDER_NAMES[selectedProvider] : "Multi-Genre Stream";
         if (!isSeriesTab) {
             specialRows.push({
-                title: `<i class="fa-solid fa-sliders" style="color: var(--secondary-glow);"></i> 🎯 Custom Filtered Movies (${pName}${activeGenreLabel}${countryBadge})`,
-                url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams('movie')}&page=1`,
+                title: `<i class="fa-solid fa-sliders" style="color: var(--secondary-glow);"></i> 🎯 Custom Filtered Movies (pName{activeGenreLabel}${countryBadge})`,
+                url: `https://api.themoviedb.org/3/discover/movie?api_key=TMDBAPIKEY&sortby=popularity.desc{getActiveFilterQueryParams('movie')}&page=1`,
                 mType: 'movie',
                 isAI: true,
                 allowCross: true,
@@ -3989,8 +4409,8 @@ async function initEndlessNetflixHome() {
         }
         if (!isMovieOnly) {
             specialRows.push({
-                title: `<i class="fa-solid fa-tv" style="color: var(--primary-glow);"></i> 📺 Custom Filtered Series & Dramas (${pName}${activeGenreLabel}${countryBadge})`,
-                url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams('tv')}&page=1`,
+                title: `<i class="fa-solid fa-tv" style="color: var(--primary-glow);"></i> 📺 Custom Filtered Series & Dramas (pName{activeGenreLabel}${countryBadge})`,
+                url: `https://api.themoviedb.org/3/discover/tv?api_key=TMDBAPIKEY&sortby=popularity.desc{getActiveFilterQueryParams('tv')}&page=1`,
                 mType: 'tv',
                 isAI: true,
                 allowCross: true,
@@ -4005,7 +4425,7 @@ async function initEndlessNetflixHome() {
         const lwType = lastWatched.media_type === 'tv' ? 'tv' : 'movie';
         specialRows.push({
             title: `<i class="fa-solid fa-robot" style="color: var(--primary-glow);"></i> 🤖 AI Recommended Because You Watched "${escapeHTML(lastWatched.title)}"`,
-            url: `https://api.themoviedb.org/3/${lwType}/${lastWatched.id}/recommendations?api_key=${TMDB_API_KEY}&page=1`,
+            url: `https://api.themoviedb.org/3/lwType/{lastWatched.id}/recommendations?api_key=${TMDB_API_KEY}&page=1`,
             mType: lwType,
             isAI: true,
             customRationale: `AI Recommended because you watched "${lastWatched.title}".`
@@ -4014,10 +4434,10 @@ async function initEndlessNetflixHome() {
 
     if (!isSeriesTab) {
         const top10MovieUrl = (selectedProvider || selectedCountry || selectedGenres.size > 0)
-            ? `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams('movie')}&page=2`
-            : `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=false&watch_region=${selectedRegion}&with_watch_monetization_types=flatrate&sort_by=popularity.desc&vote_count.gte=30&page=1`;
+            ? `https://api.themoviedb.org/3/discover/movie?api_key=TMDBAPIKEY&sortby=popularity.desc{getActiveFilterQueryParams('movie')}&page=2`
+            : `https://api.themoviedb.org/3/discover/movie?api_key=TMDBAPIKEY&includeadult=false&watchregion={selectedRegion}&with_watch_monetization_types=flatrate&sort_by=popularity.desc&vote_count.gte=30&page=1`;
         specialRows.push({
-            title: `<i class="fa-solid fa-trophy" style="color: #fbbf24;"></i> Top 10 Movies in ${selectedRegion} Today${appBadge}${activeGenreLabel}${countryBadge}`,
+            title: `<i class="fa-solid fa-trophy" style="color: #fbbf24;"></i> Top 10 Movies in selectedRegionToday{appBadge}activeGenreLabel{countryBadge}`,
             url: top10MovieUrl,
             mType: 'movie',
             isTop10: true,
@@ -4026,10 +4446,10 @@ async function initEndlessNetflixHome() {
     }
     if (!isMovieOnly) {
         const top10TVUrl = (selectedProvider || selectedCountry || selectedGenres.size > 0)
-            ? `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams('tv')}&page=2`
-            : `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&include_adult=false&watch_region=${selectedRegion}&with_watch_monetization_types=flatrate&sort_by=popularity.desc&vote_count.gte=25&page=1`;
+            ? `https://api.themoviedb.org/3/discover/tv?api_key=TMDBAPIKEY&sortby=popularity.desc{getActiveFilterQueryParams('tv')}&page=2`
+            : `https://api.themoviedb.org/3/discover/tv?api_key=TMDBAPIKEY&includeadult=false&watchregion={selectedRegion}&with_watch_monetization_types=flatrate&sort_by=popularity.desc&vote_count.gte=25&page=1`;
         specialRows.push({
-            title: `<i class="fa-solid fa-crown" style="color: var(--primary-glow);"></i> Top 10 Series in ${selectedRegion} Today${appBadge}${activeGenreLabel}${countryBadge}`,
+            title: `<i class="fa-solid fa-crown" style="color: var(--primary-glow);"></i> Top 10 Series in selectedRegionToday{appBadge}activeGenreLabel{countryBadge}`,
             url: top10TVUrl,
             mType: 'tv',
             isTop10: true,
@@ -4041,7 +4461,7 @@ async function initEndlessNetflixHome() {
         specialRows.push(
             {
                 title: `<i class="fa-solid fa-ticket" style="color: #f43f5e;"></i> 🍿 Now Showing in Theaters`,
-                url: `https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_API_KEY}&region=${selectedRegion}&page=1`,
+                url: `https://api.themoviedb.org/3/movie/now_playing?api_key=TMDBAPIKEY&region={selectedRegion}&page=1`,
                 mType: 'movie',
                 customRationale: "Currently playing in theaters now."
             },
@@ -4053,7 +4473,7 @@ async function initEndlessNetflixHome() {
             },
             {
                 title: `<i class="fa-solid fa-calendar-star" style="color: #a855f7;"></i> 🗓️ Upcoming & Coming Soon`,
-                url: `https://api.themoviedb.org/3/movie/upcoming?api_key=${TMDB_API_KEY}&region=${selectedRegion}&page=1`,
+                url: `https://api.themoviedb.org/3/movie/upcoming?api_key=TMDBAPIKEY&region={selectedRegion}&page=1`,
                 mType: 'movie',
                 customRationale: "Upcoming theatrical & streaming release."
             }
@@ -4077,8 +4497,8 @@ async function initEndlessNetflixHome() {
         const kwParam = kwParts.length ? `&with_keywords=${kwParts.join('|')}` : '';
 
         specialRows.push({
-            title: `<i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary-glow);"></i> 💜 Picked For Your Genre Taste (${gNames.join(' + ')})${appBadge}`,
-            url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=true${gParam}${kwParam}&sort_by=popularity.desc&page=1`,
+            title: `<i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary-glow);"></i> 💜 Picked For Your Genre Taste (gNames.join('+')){appBadge}`,
+            url: `https://api.themoviedb.org/3/discover/movie?api_key=TMDBAPIKEY&includeadult=true{gParam}${kwParam}&sort_by=popularity.desc&page=1`,
             mType: 'movie',
             isAI: true,
             allowCross: true,
@@ -4101,7 +4521,9 @@ async function initEndlessNetflixHome() {
             ...m, media_type: m.media_type || row.mType,
             rationale: row.customRationale || m.rationale
         }));
-        return row.curated ? items : await verifyItems(items.filter(isSafeNonPorn));
+        return row.curated
+            ? await ageFilter(items)
+            : await verifyItems(items.filter(isSafeNonPorn));
     }));
     if (gen !== feedGen) return;
     if (settled.length && settled.every(s => s.status === 'rejected')) {
@@ -4119,6 +4541,9 @@ async function initEndlessNetflixHome() {
         if (rowEl) mainContainer.appendChild(rowEl);
     });
 
+    if (!mainContainer.querySelector('.row-section') && settled.some(result => result.status === 'rejected')) {
+        return showMainError("Couldn't load movies. Check your connection and try again.", initEndlessNetflixHome);
+    }
     await appendNextNetflixRowBatch(4);
 }
 
@@ -4135,6 +4560,7 @@ document.querySelectorAll('#mediaFilterRow .filter-pill[data-media]').forEach(pi
 
 // ---------------- ENDLESS MULTI-SEARCH & CATEGORY/COUNTRY MATCHING ENGINE ----------------
 async function performSearch() {
+    if (profileReady && currentUser && viewerAge() === null) await profileReady;
     const query = searchInput.value.trim();
     if (currentView !== 'discover') {
         currentView = 'discover';
@@ -4172,7 +4598,7 @@ async function performSearch() {
     const BASE = 'https://api.themoviedb.org/3';
     const SORT = 'sort_by=popularity.desc';
     const disc = (type, qs, rationale, origin) => page => ({
-        url: `${BASE}/discover/${type}?api_key=${TMDB_API_KEY}&${qs}&page=${page}`,
+        url: `BASE/discover/{type}?api_key=TMDBAPIKEY&{qs}&page=${page}`,
         mType: type, rationale, origin
     });
 
@@ -4182,24 +4608,24 @@ async function performSearch() {
     let isPlainSearch = false;
 
     if (isBLQuery || isGLQuery) {
-        const kw = isBLQuery && isGLQuery ? `${BL_TMDB_KEYWORDS}|${GL_TMDB_KEYWORDS}` : (isBLQuery ? BL_TMDB_KEYWORDS : GL_TMDB_KEYWORDS);
+        const kw = isBLQuery && isGLQuery ? `BLTMDBKEYWORDS|{GL_TMDB_KEYWORDS}` : (isBLQuery ? BL_TMDB_KEYWORDS : GL_TMDB_KEYWORDS);
         const label = isBLQuery && isGLQuery ? "Boys' Love (BL) & Girls' Love (GL)" : (isBLQuery ? "Boys' Love (BL — Boys Love Boys)" : "Girls' Love (GL — Girls Love Girls)");
         sources = [
-            disc('tv', `include_adult=true&with_keywords=${kw}&${SORT}`, `Matched ${label} series.`),
-            disc('movie', `include_adult=true&with_keywords=${kw}&${SORT}`, `Matched ${label} romance movie.`)
+            disc('tv', `include_adult=true&with_keywords=kw&{SORT}`, `Matched ${label} series.`),
+            disc('movie', `include_adult=true&with_keywords=kw&{SORT}`, `Matched ${label} romance movie.`)
         ];
         aiNote = `Showing official <strong>${label}</strong> movies and series.`;
     } else if (isAnimeQuery) {
         sources = [
             disc('tv', `include_adult=true&with_genres=16&with_origin_country=JP&${SORT}`, "Official Japanese Anime Series."),
-            disc('tv', `include_adult=true&with_genres=16&with_keywords=${ANIME_TMDB_KEYWORDS}&${SORT}`, "Global Anime Series classification."),
+            disc('tv', `include_adult=true&with_genres=16&with_keywords=ANIMETMDBKEYWORDS&{SORT}`, "Global Anime Series classification."),
             disc('movie', `include_adult=true&with_genres=16&with_origin_country=JP&${SORT}`, "Official Anime Feature Film.")
         ];
         aiNote = `Showing <strong>Japanese & Global Anime</strong> movies and series across Action, Fantasy, Sports, and Sci-Fi.`;
     } else if (isSportsQuery) {
         sources = [
-            disc('movie', `include_adult=false&with_keywords=${SPORTS_TMDB_KEYWORDS}&${SORT}`, "Official Sports Movie."),
-            disc('tv', `include_adult=false&with_keywords=${SPORTS_TMDB_KEYWORDS}&${SORT}`, "Official Sports Series / Anime.")
+            disc('movie', `include_adult=false&with_keywords=SPORTSTMDBKEYWORDS&{SORT}`, "Official Sports Movie."),
+            disc('tv', `include_adult=false&with_keywords=SPORTSTMDBKEYWORDS&{SORT}`, "Official Sports Series / Anime.")
         ];
         aiNote = `Showing <strong>Sports</strong> movies, series, and sports anime.`;
     } else if (isKidsQuery) {
@@ -4231,7 +4657,7 @@ async function performSearch() {
         if (!sources && isQuestionOrPlot) {
             try {
                 const res = await fetch(`${BACKEND_URL}/chat`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    method: 'POST', headers: authHeaders(),
                     body: JSON.stringify({
                         message: query,
                         media: selectedMedia,
@@ -4246,7 +4672,7 @@ async function performSearch() {
                     })
                 });
                 const data = await res.json();
-                initial = (data.movies || []).filter(isSafeNonPorn).filter(matchesSelectedMedia);
+                initial = await ageFilter((data.movies || []).filter(isSafeNonPorn).filter(matchesSelectedMedia));
                 aiNote = data.reply || "";
                 isAISearch = true;
             } catch (e) {}
@@ -4257,7 +4683,7 @@ async function performSearch() {
             isPlainSearch = true;
             const kind = selectedMedia === 'all' ? 'multi' : selectedMedia;
             sources = [page => ({
-                url: `${BASE}/search/${kind}?api_key=${TMDB_API_KEY}&include_adult=true&query=${encodeURIComponent(query)}&page=${page}`,
+                url: `BASE/search/{kind}?api_key=TMDBAPIKEY&includeadult=true&query={encodeURIComponent(query)}&page=${page}`,
                 mType: kind === 'multi' ? undefined : kind
             })];
         }
@@ -4274,7 +4700,7 @@ async function performSearch() {
             if (isPlainSearch && results.length) {
                 try {
                     const top = results[0];
-                    const rec = await fetchJSON(`${BASE}/${top.media_type}/${top.id}/recommendations?api_key=${TMDB_API_KEY}&page=1`);
+                    const rec = await fetchJSON(`BASE/{top.media_type}/top.id/recommendations?apikey={TMDB_API_KEY}&page=1`);
                     (rec.results || []).forEach(rm => {
                         if (rm.poster_path && isSafeNonPorn(rm)) {
                             results.push({ ...rm, media_type: top.media_type, rationale: `Recommended because you searched for "${top.title || top.name}".` });
@@ -4285,11 +4711,13 @@ async function performSearch() {
             }
         }
 
+        results = await ageFilter(results);
+        if (gen !== feedGen) return;
         const unique = takeNewItems(results, searchItemFilter);
 
         mainContainer.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-                <h3 class="row-title"><i class="fa-solid fa-magnifying-glass-chart" style="color: var(--secondary-glow);"></i> ${intent.structured ? `AI Matches: ${escapeHTML(describeIntent(intent))}` : `Search & AI Answer for "${escapeHTML(query)}"`}</h3>
+                <h3 class="row-title"><i class="fa-solid fa-magnifying-glass-chart" style="color: var(--secondary-glow);"></i> ${intent.structured ? `AI Matches: escapeHTML(describeIntent(intent))`:`Search&AIAnswerfor"{escapeHTML(query)}"`}</h3>
                 <button type="button" class="filter-pill" onclick="searchInput.value='';performSearch();"><i class="fa-solid fa-arrow-left"></i> Back to Galaxy Stream</button>
             </div>
         `;
@@ -4376,22 +4804,30 @@ navItems.forEach(item => {
                 try {
                     const lw = watchedMovies[0];
                     const lwType = lw.media_type === 'tv' ? 'tv' : 'movie';
-                    const simRes = await fetch(`https://api.themoviedb.org/3/${lwType}/${lw.id}/recommendations?api_key=${TMDB_API_KEY}&page=1`).then(r => r.json());
+                    const simRes = await fetch(`https://api.themoviedb.org/3/lwType/{lw.id}/recommendations?api_key=${TMDB_API_KEY}&page=1`).then(r => r.json());
                     const simItems = (simRes.results || []).map(m => ({
                         ...m,
                         media_type: lwType,
                         rationale: `AI Recommended because you watched "${lw.title}".`
                     }));
-                    const simRow = buildRowElement(`<i class="fa-solid fa-robot" style="color:var(--primary-glow);"></i> 🤖 AI Picks Because You Watched "${escapeHTML(lw.title)}"`, simItems, true, false);
+                    const ageCheckedSimItems = await ageFilter(simItems);
+                    const simRow = buildRowElement(`<i class="fa-solid fa-robot" style="color:var(--primary-glow);"></i> 🤖 AI Picks Because You Watched "${escapeHTML(lw.title)}"`, ageCheckedSimItems, true, false);
                     if (simRow) mainContainer.appendChild(simRow);
                 } catch (e) {}
             }
 
             const grid = document.createElement('div');
             grid.className = 'movie-grid';
-            const targetArr = currentView === 'watchlist' ? watchlist : (currentView === 'favorites' ? favorites : watchedMovies);
-            if (targetArr.length > 0) {
-                targetArr.forEach(movie => grid.appendChild(createMovieCard(movie)));
+            let targetArr;
+            try {
+                targetArr = await ageFilter(currentView === 'watchlist' ? watchlist : (currentView === 'favorites' ? favorites : watchedMovies));
+            } catch (error) {
+                console.warn('Could not verify ages for saved titles.', error);
+                targetArr = [];
+            }
+            const visibleTitles = targetArr;
+            if (visibleTitles.length > 0) {
+                visibleTitles.forEach(movie => grid.appendChild(createMovieCard(movie)));
             } else {
                 grid.innerHTML = `<p style="color: var(--text-muted); font-weight:500;">No titles saved here yet. Click any movie or series card to add it!</p>`;
             }
@@ -4522,12 +4958,12 @@ async function renderDataAnalyticsDashboard() {
 }
 
 // ---------------- ENLARGED NOVA AI HUB ----------------
-function renderEnlargedNovaView() {
+async function renderEnlargedNovaView() {
     mainContainer.innerHTML = `
         <div class="nova-view-container" style="display:flex; flex-direction:column; gap:22px;">
             <div class="nova-banner-clean">
                 <div style="display:flex; align-items:center; gap:20px;">
-                    <img src="nova.png" alt="Nova" class="nova-avatar-animated" onclick="triggerTiltAnimation(this)" onerror="this.src='CineMind-Logo.jpg'">
+                    <img src="nova.png" alt="Nova" class="nova-avatar-animated nova-icon nova-icon--md" onclick="triggerTiltAnimation(this)" onerror="this.onerror=null;this.src='CineMind-Logo.png'">
                     <div>
                         <h2>Nova AI Intelligence Hub <span style="font-size:0.8rem; background:rgba(16,185,129,0.2); color:#10b981; padding:4px 10px; border-radius:12px; vertical-align:middle; margin-left:8px;">Contextual Memory Active</span></h2>
                         <p>Ask specific movie questions (e.g. "Why is there boxing in Toy Story?"), describe any plot, or request recommendations!</p>
@@ -4557,7 +4993,19 @@ function renderEnlargedNovaView() {
     mainContainer.querySelectorAll('.chip').forEach(c => { c.textContent = stripEmoji(c.textContent); });
     const vGrid = document.getElementById('novaVerticalGrid');
     if (lastNovaMovies && lastNovaMovies.length > 0) {
-        lastNovaMovies.filter(m => isSafeNonPorn(m) && !isBlockedByNotInterested(m, false) && matchesSelectedMedia(m)).forEach(m => vGrid.appendChild(createMovieCard(m, true, lastNovaQuery)));
+        const candidates = lastNovaMovies.filter(m =>
+            isSafeNonPorn(m) && !isBlockedByNotInterested(m, false) &&
+            matchesSelectedMedia(m) && !isAgeBlocked(m));
+        let safeMovies = [];
+        try {
+            safeMovies = await ageFilter(candidates);
+        } catch (error) {
+            console.warn('Could not verify ages for Nova recommendations.', error);
+        }
+        safeMovies.forEach(m => vGrid.appendChild(createMovieCard(m, true, lastNovaQuery)));
+        if (!safeMovies.length) {
+            vGrid.innerHTML = `<p style="color: var(--text-muted); font-weight:500;">No verified match yet.</p>`;
+        }
     } else {
         vGrid.innerHTML = `<p style="color: var(--text-muted); font-weight:500;">Try clicking one of the prompts above or ask Nova anything!</p>`;
     }
@@ -4582,9 +5030,9 @@ async function loadModalSimilarRecommendations(id, mType, title) {
     box.style.display = 'none';
     strip.innerHTML = '';
     try {
-        const r = await fetch(`https://api.themoviedb.org/3/${mType}/${id}/recommendations?api_key=${TMDB_API_KEY}&page=1`);
+        const r = await fetch(`https://api.themoviedb.org/3/mType/{id}/recommendations?api_key=${TMDB_API_KEY}&page=1`);
         const d = await r.json();
-        const recs = (d.results || []).filter(x => x.poster_path && isSafeNonPorn(x) && !isBlockedByNotInterested(x, false)).slice(0, 8);
+        const recs = (await ageFilter((d.results || []).filter(x => x.poster_path && isSafeNonPorn(x) && !isBlockedByNotInterested(x, false)))).slice(0, 8);
         if (!recs.length) return;
         box.style.display = 'flex';
         recs.forEach(sim => {
@@ -4595,7 +5043,7 @@ async function loadModalSimilarRecommendations(id, mType, title) {
             item.onclick = () => {
                 fetchAndOpenModal(sTitle, sPoster, `AI Recommended because you viewed "${title}".`, sim.id, 94, mType, sim);
             };
-            item.innerHTML = `<img src="${sPoster}" alt="${escapeHTML(sTitle)}"><span>${escapeHTML(sTitle)}</span>`;
+            item.innerHTML = `<img src="sPoster"alt="{escapeHTML(sTitle)}"><span>${escapeHTML(sTitle)}</span>`;
             strip.appendChild(item);
         });
     } catch (e) {}
@@ -4678,7 +5126,7 @@ function renderModalGenresAndCredits(item, mType) {
         } else if (job.includes('producer')) {
             if (!producers.includes(name)) producers.push(name);
         } else if (job.includes('director of photography') || job.includes('cinematography') || job.includes('original music composer') || job === 'editor') {
-            const label = `${name} (${member.job})`;
+            const label = `name({member.job})`;
             if (!keyCrew.includes(label)) keyCrew.push(label);
         }
     });
@@ -4727,8 +5175,8 @@ function renderModalGenresAndCredits(item, mType) {
         const card = document.createElement('div');
         card.className = 'cast-member-card';
         card.innerHTML = `
-            <img src="${profileImg}" alt="${escapeHTML(actorName)}" loading="lazy" onerror="this.onerror=null;this.src=NO_AVATAR">
-            <div class="cast-actor-name" title="${escapeHTML(actorName)}">${escapeHTML(actorName)}</div>
+            <img src="profileImg"alt="{escapeHTML(actorName)}" loading="lazy" onerror="this.onerror=null;this.src=NO_AVATAR">
+            <div class="cast-actor-name" title="escapeHTML(actorName)">{escapeHTML(actorName)}</div>
             <div class="cast-char-name" title="as ${escapeHTML(charName)}">as ${escapeHTML(charName)}</div>
         `;
         castStrip.appendChild(card);
@@ -4746,7 +5194,7 @@ async function fetchAndOpenModal(title, fallbackPoster, customRationale, movieId
             } catch (error) { console.warn('Detail request failed, trying title search.', error); }
         }
         if (!item) {
-            const r = await fetch(`https://api.themoviedb.org/3/search/${mType}?api_key=${TMDB_API_KEY}&include_adult=true&query=${encodeURIComponent(title)}`);
+            const r = await fetch(`https://api.themoviedb.org/3/search/mType?apikey={TMDB_API_KEY}&include_adult=true&query=${encodeURIComponent(title)}`);
             const d = await r.json();
             const firstHit = d.results && d.results[0];
             if (firstHit && firstHit.id) {
@@ -4786,6 +5234,13 @@ async function fetchAndOpenModal(title, fallbackPoster, customRationale, movieId
                 }
             }
         } catch (e) {}
+
+        const ageFacts = ageFactsFromDetails(item, mType);
+        ageBlockCache.set(key, ageFacts);
+        if (!ageAllows(ageFacts, viewerCeiling())) {
+            showToast("This title isn't available for your account's age group.");
+            return;
+        }
 
         r18Cache.set(key, certR18);
         currentMovieData = item;
@@ -4828,7 +5283,7 @@ async function fetchAndOpenModal(title, fallbackPoster, customRationale, movieId
         renderModalGenresAndCredits(item, mType);
         initRatingBox(item, mType);
 
-        fetch(`${BACKEND_URL}/api/omdb?title=${encodeURIComponent(currentMovieData.title)}&year=${year}`)
+        fetch(`BACKENDURL/api/omdb?title={encodeURIComponent(currentMovieData.title)}&year=${year}`)
             .then(r => r.json())
             .then(o => {
                 const b = document.getElementById('omdbBadge');
@@ -4839,12 +5294,12 @@ async function fetchAndOpenModal(title, fallbackPoster, customRationale, movieId
             }).catch(() => {});
 
         document.getElementById('modalProviders').innerHTML = `<i class="fa-solid fa-tv"></i> <span>Checking streaming apps (${selectedRegion})...</span>`;
-        fetch(`https://api.themoviedb.org/3/${mType}/${currentMovieData.id}/watch/providers?api_key=${TMDB_API_KEY}`)
+        fetch(`https://api.themoviedb.org/3/mType/{currentMovieData.id}/watch/providers?api_key=${TMDB_API_KEY}`)
             .then(r => r.json())
             .then(provData => {
                 const provs = provData.results && (provData.results[selectedRegion] || provData.results.US);
                 const flat = provs && provs.flatrate ? provs.flatrate.map(p => p.provider_name).join(', ') : null;
-                document.getElementById('modalProviders').innerHTML = `<i class="fa-solid fa-tv"></i> <span>Streaming in ${selectedRegion}: <strong>${flat || 'Available on Digital / VOD'}</strong></span>`;
+                document.getElementById('modalProviders').innerHTML = `<i class="fa-solid fa-tv"></i> <span>Streaming in selectedRegion:<strong>{flat || 'Available on Digital / VOD'}</strong></span>`;
             }).catch(() => {
                 document.getElementById('modalProviders').innerHTML = `<i class="fa-solid fa-tv"></i> <span>Streaming on: <strong>Global VOD Catalog</strong></span>`;
             });
@@ -4862,7 +5317,7 @@ async function fetchAndOpenModal(title, fallbackPoster, customRationale, movieId
 
 async function fetchAndPlayTrailer(id, title, mType = 'movie') {
     try {
-        const res = await fetch(`https://api.themoviedb.org/3/${mType}/${id}/videos?api_key=${TMDB_API_KEY}`);
+        const res = await fetch(`https://api.themoviedb.org/3/mType/{id}/videos?api_key=${TMDB_API_KEY}`);
         const data = await res.json();
         const videos = (data.results || []).filter(v => v.site === 'YouTube');
         const trailer = videos.find(v => v.type === 'Trailer' && v.official)
@@ -4872,7 +5327,7 @@ async function fetchAndPlayTrailer(id, title, mType = 'movie') {
         const extBtn = document.getElementById('youtubeExternalBtn');
         if (trailer && trailer.key) {
             const origin = window.location.origin.startsWith('http') ? `&origin=${encodeURIComponent(window.location.origin)}` : '';
-            document.getElementById('youtubeIframe').src = `https://www.youtube-nocookie.com/embed/${trailer.key}?autoplay=1&rel=0${origin}`;
+            document.getElementById('youtubeIframe').src = `https://www.youtube-nocookie.com/embed/trailer.key?autoplay=1&rel=0{origin}`;
             extBtn.href = `https://www.youtube.com/watch?v=${trailer.key}`;
             document.getElementById('videoModalTitle').innerText = `${title} – Official Trailer`;
             document.getElementById('videoModal').classList.add('active');
@@ -4993,7 +5448,7 @@ function titleMetaForServer(item) {
         country: country || undefined, language: item.original_language || undefined, year: y || undefined
     };
 }
-const miniStars = n => `<span class="mini-stars" aria-label="${n} out of 5">${[1,2,3,4,5].map(i => `<i class="fa-solid fa-star${i <= Math.round(n) ? '' : ' off'}"></i>`).join('')}</span>`;
+const miniStars = n => `<span class="mini-stars" aria-label="noutof5">{[1,2,3,4,5].map(i => `<i class="fa-solid fa-star${i <= Math.round(n) ? '' : ' off'}"></i>`).join('')}</span>`;
 
 async function loadRatingProfile() {
     if (!currentUser) return;
@@ -5044,7 +5499,7 @@ function initRatingBox(item, type) {
         </div>
         <div class="rating-row">
             <div class="star-group" id="starGroup" role="radiogroup" aria-label="Rate this title from 1 to 5 stars">
-                ${[1,2,3,4,5].map(v => `<button type="button" class="star-btn" data-v="${v}" role="radio" aria-checked="false" aria-label="${v} star${v > 1 ? 's' : ''}: ${STAR_LABELS[v]}"><i class="fa-solid fa-star"></i></button>`).join('')}
+                ${[1,2,3,4,5].map(v => `<button type="button" class="star-btn" data-v="${v}" role="radio" aria-checked="false" aria-label="vstar{v > 1 ? 's' : ''}: ${STAR_LABELS[v]}"><i class="fa-solid fa-star"></i></button>`).join('')}
             </div>
             <button type="button" class="rating-clear" id="ratingClear" hidden><i class="fa-solid fa-xmark"></i> Remove rating</button>
         </div>
@@ -5080,7 +5535,7 @@ function paintCommunity() {
     const k = c.community;
     el.innerHTML = (!k || !k.count)
         ? 'No CineMind ratings yet. Be the first to rate this title. <span style="opacity:.8">(TMDB / IMDb ratings are shown separately.)</span>'
-        : `<strong>CineMind community:</strong> ${miniStars(k.average)} <strong>${k.average.toFixed(1)}/5</strong> • ${k.count} rating${k.count === 1 ? '' : 's'} <span style="opacity:.8">(TMDB / IMDb ratings are shown separately.)</span>`;
+        : `<strong>CineMind community:</strong> miniStars(k.average)<strong>{k.average.toFixed(1)}/5</strong> • k.countrating{k.count === 1 ? '' : 's'} <span style="opacity:.8">(TMDB / IMDb ratings are shown separately.)</span>`;
 }
 
 function setRatingBusy(b) { const g = document.getElementById('starGroup'); if (g) g.classList.toggle('busy', b); }
@@ -5099,7 +5554,7 @@ async function submitRating(v) {
     if (myRatings.get(c.key) === v) return;
     c.saving = true; setRatingBusy(true);
     try {
-        const res = await fetch(`${BACKEND_URL}/api/ratings/${c.type}/${c.id}`, {
+        const res = await fetch(`BACKENDURL/api/ratings/{c.type}/${c.id}`, {
             method: 'PUT', headers: authHeaders(), body: JSON.stringify({ rating: v, meta: titleMetaForServer(c.item) })
         });
         if (res.status === 401) return expireSession();
@@ -5115,7 +5570,7 @@ async function removeRating() {
     const c = ratingCtx; if (!c || c.saving || !currentUser) return;
     c.saving = true; setRatingBusy(true);
     try {
-        const res = await fetch(`${BACKEND_URL}/api/ratings/${c.type}/${c.id}`, { method: 'DELETE', headers: authHeaders() });
+        const res = await fetch(`BACKENDURL/api/ratings/{c.type}/${c.id}`, { method: 'DELETE', headers: authHeaders() });
         if (res.status === 401) return expireSession();
         const d = await res.json();
         if (!res.ok || !d.success) throw new Error(d.message || `HTTP ${res.status}`);
@@ -5128,7 +5583,7 @@ async function removeRating() {
 async function loadTitleRatings() {
     const c = ratingCtx; if (!c) return;
     try {
-        const res = await fetch(`${BACKEND_URL}/api/titles/${c.type}/${c.id}/ratings`, { headers: authHeaders() });
+        const res = await fetch(`BACKENDURL/api/titles/{c.type}/${c.id}/ratings`, { headers: authHeaders() });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const d = await res.json();
         if (ratingCtx !== c) return;
@@ -5148,7 +5603,7 @@ async function loadTitleRatings() {
 
 function updateReviewCount() {
     const ta = document.getElementById('reviewText'), n = document.getElementById('reviewCount');
-    if (ta && n) n.textContent = `${ta.value.length}/${REVIEW_MAX}`;
+    if (ta && n) n.textContent = `ta.value.length/{REVIEW_MAX}`;
 }
 
 function paintReviewForm() {
@@ -5175,7 +5630,7 @@ async function loadReviews(reset) {
     const list = document.getElementById('reviewList'), more = document.getElementById('reviewMore'); if (!list) return;
     if (reset) { c.offset = 0; list.innerHTML = ''; }
     try {
-        const res = await fetch(`${BACKEND_URL}/api/titles/${c.type}/${c.id}/reviews?offset=${c.offset}&limit=${REVIEW_PAGE}`, { headers: authHeaders() });
+        const res = await fetch(`BACKENDURL/api/titles/{c.type}/c.id/reviews?offset={c.offset}&limit=${REVIEW_PAGE}`, { headers: authHeaders() });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const d = await res.json();
         if (ratingCtx !== c) return;
@@ -5183,7 +5638,7 @@ async function loadReviews(reset) {
             const div = document.createElement('div');
             div.className = 'review-item';
             const date = r.created_at ? new Date(r.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '';
-            div.innerHTML = `<div class="review-meta"><b>${escapeHTML(r.username)}${r.mine ? ' (you)' : ''}</b>${r.rating ? miniStars(r.rating) : ''}<span>${escapeHTML(date)}</span></div><div class="review-body">${escapeHTML(r.body)}</div>`;
+            div.innerHTML = `<div class="review-meta"><b>escapeHTML(r.username){r.mine ? ' (you)' : ''}</b>r.rating?miniStars(r.rating):''<span>{escapeHTML(date)}</span></div><div class="review-body">${escapeHTML(r.body)}</div>`;
             list.appendChild(div);
         });
         c.offset += (d.reviews || []).length;
@@ -5197,7 +5652,7 @@ async function saveReview() {
     const body = ta.value.trim();
     if (!body) return showToast('Write something first, or leave the review empty.');
     try {
-        const res = await fetch(`${BACKEND_URL}/api/reviews/${c.type}/${c.id}`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify({ body }) });
+        const res = await fetch(`BACKENDURL/api/reviews/{c.type}/${c.id}`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify({ body }) });
         if (res.status === 401) return expireSession();
         const d = await res.json();
         if (!res.ok || !d.success) throw new Error(d.message || `HTTP ${res.status}`);
@@ -5211,7 +5666,7 @@ async function saveReview() {
 async function deleteReview() {
     const c = ratingCtx; if (!c) return;
     try {
-        const res = await fetch(`${BACKEND_URL}/api/reviews/${c.type}/${c.id}`, { method: 'DELETE', headers: authHeaders() });
+        const res = await fetch(`BACKENDURL/api/reviews/{c.type}/${c.id}`, { method: 'DELETE', headers: authHeaders() });
         if (res.status === 401) return expireSession();
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const ta = document.getElementById('reviewText'); if (ta) { ta.value = ''; updateReviewCount(); }
@@ -5438,7 +5893,8 @@ const slimNovaMovie = m => ({
     id: m.id, title: m.title, name: m.name, media_type: m.media_type, poster_path: m.poster_path, poster: m.poster,
     overview: m.overview, release_date: m.release_date, first_air_date: m.first_air_date, vote_average: m.vote_average,
     vote_count: m.vote_count, genre_ids: m.genre_ids, original_language: m.original_language,
-    origin_country: m.origin_country, rationale: m.rationale, match: m.match, _isR18: m._isR18, _why: m._why,
+    origin_country: m.origin_country, production_countries: m.production_countries, tagline: m.tagline,
+    _cast: m._cast, rationale: m.rationale, match: m.match, _isR18: m._isR18, _why: m._why,
     _cats: [...getAllItemCategories(m)]
 });
 
@@ -5464,7 +5920,7 @@ async function hydrateNovaMovies(list, limit = 6, forceDetails = false) {
             return { ...m, media_type: t };
         }
     }));
-    return out.filter(m => m.poster_path || m.poster);
+    return ageFilter(out.filter(m => m.poster_path || m.poster));
 }
 
 async function topUpFromIntent(intent, have, want = 6) {
@@ -5524,7 +5980,17 @@ const PLOT_SYNONYMS = [
     ['ship','boat','cruise','liner'],
     ['heist','robbery','robber','thief','thieves','steal','burglar'],
     ['prison','jail','inmate','captive'],
-    ['kill','murder','killer','assassin']
+    ['kill','murder','killer','assassin'],
+    ['child','children','kid','kids','youngster'],
+    ['competition','contest','tournament','games','game'],
+    ['deadly','lethal','fatal'],
+    ['school','academy','boarding'],
+    ['power','powers','superpower','ability','abilities'],
+    ['detective','investigator','inspector'],
+    ['teacher','professor'],
+    ['drug','drugs','meth','methamphetamine','narcotics'],
+    ['dinosaur','dinosaurs','jurassic'],
+    ['timeline','timelines','parallel','alternate','multiverse']
 ];
 const PLOT_SYN = {};
 PLOT_SYNONYMS.forEach(group => group.forEach(w => { PLOT_SYN[w] = group[0]; }));
@@ -5616,6 +6082,17 @@ const PLOT_KB = [
     ["Alice in Borderland",2020,"tv","people trapped in an empty Tokyo forced to play deadly games to survive, Japan"],
     ["The Glory",2022,"tv","woman plans revenge on the school bullies who tormented her, Korean drama"]
 ].map(([t, y, k, d]) => ({ t, y, k, d }));
+PLOT_KB.push(...[
+    ["Jurassic Park",1993,"movie","billionaire creates a theme park on an island with cloned dinosaurs, the park systems fail and visitors are hunted, scientists, amber dna, velociraptors"],
+    ["Breaking Bad",2008,"tv","high school chemistry teacher diagnosed with cancer starts cooking and selling methamphetamine drugs with a former student, New Mexico, drug empire"],
+    ["Battle Royale",2000,"movie","class of japanese teenage students forced by the government to fight to the death on an island, deadly game, Japan"],
+    ["American Psycho",2000,"movie","wealthy investment banker in New York by day and serial killer by night, 1980s, business cards"],
+    ["Solo Leveling",2024,"tv","weak low ranked hunter gains a system that lets him level up and becomes the strongest overpowered, dungeons gates, anime"],
+    ["Miss Peregrine's Home for Peculiar Children",2016,"movie","boy discovers a home for peculiar children with unusual powers run by a headmistress, time loop, school"],
+    ["Wednesday",2022,"tv","Wednesday Addams is sent to Nevermore Academy a school for outcast kids with powers, mystery, murders"],
+    ["Dark",2017,"tv","children disappear in a german town and families are connected across several timelines through time travel, cave, mystery"],
+    ["The Silence of the Lambs",1991,"movie","young FBI trainee consults imprisoned cannibal psychiatrist Hannibal Lecter to catch a serial killer"]
+].map(([t, y, k, d]) => ({ t, y, k, d })));
 
 let plotKbIndex = null;
 function getPlotKb() {
@@ -5657,7 +6134,7 @@ const PLOT_KEYWORD_ALIASES = {
 };
 
 // TMDB has no plot search, so turn the user's key phrases into keyword IDs and discover by those
-async function findMoviesByPlot(query) {
+async function findMoviesByPlot(query, extra = '', typesOverride) {
     const words = String(query).toLowerCase().match(/[a-z0-9']+/g) || [];
     const isTerm = w => w.length >= 3 && !STOP_WORDS.has(w) && !PLOT_FILLER.has(w);
     const list = [];
@@ -5673,7 +6150,7 @@ async function findMoviesByPlot(query) {
     const api = 'https://api.themoviedb.org/3';
     const norm = s => String(s || '').toLowerCase().trim();
     const lookups = await Promise.allSettled(queries.map(x =>
-        fetchJSON(`${api}/search/keyword?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(x.q)}`)));
+        fetchJSON(`api/search/keyword?apikey={TMDB_API_KEY}&query=${encodeURIComponent(x.q)}`)));
     const ids = { phrase: [], alias: [], single: [] };
     lookups.forEach((r, i) => {
         if (r.status !== 'fulfilled') return;
@@ -5695,11 +6172,11 @@ async function findMoviesByPlot(query) {
     ].filter(Boolean))];
     if (!attempts.length) return [];
 
-    const types = selectedMedia === 'all' ? ['movie', 'tv'] : [selectedMedia];
+    const types = typesOverride || (selectedMedia === 'all' ? ['movie', 'tv'] : [selectedMedia]);
     const pool = [], seen = new Set();
     for (const expr of attempts) {
         const res = await Promise.allSettled(types.map(t =>
-            fetchJSON(`${api}/discover/${t}?api_key=${TMDB_API_KEY}&include_adult=false&with_keywords=${expr}&sort_by=popularity.desc&page=1`)));
+            fetchJSON(`api/discover/{t}?api_key=TMDBAPIKEY&includeadult=false&withkeywords={expr}&sort_by=popularity.desc${extra}&page=1`)));
         const lists = types.map(() => []);
         res.forEach((r, i) => {
             if (r.status !== 'fulfilled') return;
@@ -5724,14 +6201,14 @@ async function lookupKbTitle(e) {
     const type = e.k === 'tv' ? 'tv' : 'movie';
     const norm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     const search = async withYear => {
-        const yp = withYear ? `&${type === 'tv' ? 'first_air_date_year' : 'year'}=${e.y}` : '';
-        const d = await fetchJSON(`${api}/search/${type}?api_key=${TMDB_API_KEY}&include_adult=false&query=${encodeURIComponent(e.t)}${yp}`);
+        const yp = withYear ? `&type==='tv'?'firstairdateyear':'year'={e.y}` : '';
+        const d = await fetchJSON(`api/search/{type}?api_key=TMDBAPIKEY&includeadult=false&query={encodeURIComponent(e.t)}${yp}`);
         return (d.results || []).filter(r => r.poster_path);
     };
     try {
         let res = await search(true);
         if (!res.length) res = await search(false);
-        const hit = res.find(r => norm(r.title || r.name) === norm(e.t)) || res[0];
+        const hit = res.find(r => norm(r.title || r.name) === norm(e.t));
         return hit ? { ...hit, media_type: type } : null;
     } catch (err) { return null; }
 }
@@ -5756,16 +6233,16 @@ function extractTitlesFromReply(reply) {
 }
 
 // Turns titles named in Nova's reply into real TMDB results (exact title match only)
-async function resolveReplyTitles(reply, limit = 3) {
+async function resolveReplyTitles(reply, limit = 3, kindOverride) {
     const found = extractTitlesFromReply(reply);
     if (!found.length) return [];
     const api = 'https://api.themoviedb.org/3';
-    const kind = selectedMedia === 'all' ? 'multi' : selectedMedia;
+    const kind = kindOverride || (selectedMedia === 'all' ? 'multi' : selectedMedia);
     const norm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     const yr = r => (r.release_date || r.first_air_date || '').slice(0, 4);
     const out = await Promise.all(found.map(async ({ t, y }) => {
         try {
-            const d = await fetchJSON(`${api}/search/${kind}?api_key=${TMDB_API_KEY}&include_adult=false&query=${encodeURIComponent(t)}`);
+            const d = await fetchJSON(`api/search/{kind}?api_key=TMDBAPIKEY&includeadult=false&query={encodeURIComponent(t)}`);
             const hits = (d.results || []).filter(r =>
                 (kind !== 'multi' || r.media_type === 'movie' || r.media_type === 'tv')
                 && r.poster_path && norm(r.title || r.name) === norm(t));
@@ -5786,7 +6263,7 @@ async function fallbackRecommendations(want = 12) {
         const ids = [...new Set(userGenres.filter(g => /^\d+$/.test(String(g)))
             .flatMap(g => String(t === 'tv' ? (MOVIE_TO_TV_GENRE[g] || g) : g).split(',')))];
         const gp = ids.length ? `&with_genres=${ids.join('|')}` : '';
-        return fetchJSON(`${api}/discover/${t}?api_key=${TMDB_API_KEY}&include_adult=false&sort_by=vote_average.desc&vote_count.gte=1500&vote_average.gte=7${gp}&page=${page}`);
+        return fetchJSON(`api/discover/{t}?api_key=TMDBAPIKEY&includeadult=false&sortby=voteaverage.desc&votecount.gte=1500&voteaverage.gte=7{gp}&page=${page}`);
     }));
     const pool = [];
     results.forEach((r, i) => {
@@ -5867,8 +6344,15 @@ async function resolvePlotMatches(query, backendCandidates, replyText = '') {
 
 // ----- Cards -----
 function buildNovaRecList(movies, query = '', opts = {}) {
+    const seenK = new Set();
+    movies = movies.filter(m => {
+        const k = `${m.media_type || 'movie'}_${m.id}`;
+        if (seenK.has(k)) return false;
+        seenK.add(k);
+        return true;
+    });
     const list = document.createElement('div');
-    const solo = !!opts.best && movies.length === 1;
+    const solo = !!(opts.best || opts.likely) && movies.length === 1;
     list.className = 'nova-rec-list' + (solo ? ' solo' : '');
     movies.forEach((m, idx) => {
         const mType = m.media_type || (m.first_air_date && !m.release_date ? 'tv' : 'movie');
@@ -5879,7 +6363,7 @@ function buildNovaRecList(movies, query = '', opts = {}) {
         const year = yearOf(m) || 'N/A';
         const rating = m.vote_average ? Number(m.vote_average).toFixed(1) : 'NR';
         const matchPct = calculateSimilarityMatch(m, query);
-        const rationale = m.rationale || (opts.best || opts.maybe ? `Matched to your description: "${query}".` : `Recommended by Nova for "${query}".`);
+        const rationale = m.rationale || (opts.best || opts.maybe ? `Matched to your description: "query".`:`RecommendedbyNovafor"{query}".`);
         const genres = getExactGenreNames(m);
         const originLabel = resolveMovieOriginCountry(m);
         const r18 = isGenuineR18(m);
@@ -5887,22 +6371,25 @@ function buildNovaRecList(movies, query = '', opts = {}) {
 
         const tag = opts.best && idx === 0
             ? '<span class="nova-best-tag"><i class="fa-solid fa-circle-check"></i> Best match</span>'
-            : (opts.maybe ? `<span class="nova-maybe-tag"><i class="fa-solid fa-circle-question"></i> Possible match ${idx + 1}</span>` : '');
+            : (opts.likely && idx === 0 ? '<span class="nova-maybe-tag"><i class="fa-solid fa-circle-check"></i> Likely match</span>'
+            : (opts.maybe ? `<span class="nova-maybe-tag"><i class="fa-solid fa-circle-question"></i> Possible match ${idx + 1}</span>` : ''));
         const card = document.createElement('div');
         card.className = 'nova-rec-card';
         card.innerHTML = `
-            <div class="nova-rec-poster"><img src="${escapeHTML(poster)}" alt="${escapeHTML(title)}" loading="lazy"></div>
+            <div class="nova-rec-poster"><img src="escapeHTML(poster)"alt="{escapeHTML(title)}" loading="lazy"></div>
             <div class="nova-rec-info">
                 ${tag}
                 <div class="nova-rec-title">${escapeHTML(title)}</div>
                 <div class="nova-rec-meta">
-                    <span class="nova-rec-badges">${r18 ? '<span class="r18-badge">R-18</span>' : ''}<span class="media-badge">${mediaLabel(mType)}</span></span>
+                    <span class="nova-rec-badges">r18?'<spanclass="r18-badge">R-18</span>':''<spanclass="media-badge">{mediaLabel(mType)}</span></span>
                     <span><i class="fa-solid fa-calendar"></i> ${escapeHTML(year)}</span>
                     <span><i class="fa-solid fa-location-dot"></i> ${escapeHTML(originLabel)}</span>
-                    <span class="rating-badge"><i class="fa-solid fa-star"></i> ${rating}</span>
+                    <span><i class="fa-solid fa-language"></i> ${escapeHTML((m.original_language || 'n/a').toUpperCase())}</span>
+                    <span class="rating-badge" title="TMDB user rating"><i class="fa-solid fa-star"></i> ${rating} TMDB</span><span class="nova-imdb"></span>
                     <span class="match-score"><i class="fa-solid fa-bolt"></i> ${matchPct}%</span>
                 </div>
                 ${genres ? `<div class="nova-rec-genres">${escapeHTML(genres)}</div>` : ''}
+                ${m._cast ? `<div class="nova-rec-cast"><i class="fa-solid fa-users"></i> ${escapeHTML(m._cast)}</div>` : ''}
                 <p class="nova-rec-overview">${escapeHTML(briefOverview(m.overview, solo ? 380 : 220))}</p>
                 ${m._why ? `<div class="nova-rec-why"><i class="fa-solid fa-lightbulb"></i> ${escapeHTML(m._why)}</div>` : ''}
                 <div class="nova-rec-actions">
@@ -5917,6 +6404,7 @@ function buildNovaRecList(movies, query = '', opts = {}) {
         card.querySelector('[data-act="details"]').onclick = ev => { ev.stopPropagation(); openDetails(); };
         card.querySelector('[data-act="trailer"]').onclick = ev => { ev.stopPropagation(); fetchAndPlayTrailer(m.id, title, mType); };
         list.appendChild(card);
+        if (opts.identify) fillImdb(card, title, year);
         if (!r18) verifyAndSyncR18OnCard(m, card.querySelector('.nova-rec-badges'));
     });
     return list;
@@ -5959,7 +6447,7 @@ async function topUpFromGenres(genres, have, want = 12) {
     const out = [...have];
     for (let page = 1; page <= 3 && out.length < want; page++) {
         const res = await Promise.allSettled(types.map(t => fetchJSON(
-            `https://api.themoviedb.org/3/discover/${t}?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams(t, new Set(genres))}&page=${page}`)));
+            `https://api.themoviedb.org/3/discover/t?apikey={TMDB_API_KEY}&sort_by=popularity.descgetActiveFilterQueryParams(t,newSet(genres))&page={page}`)));
         const pool = [];
         res.forEach((r, i) => {
             if (r.status === 'fulfilled') (r.value.results || []).forEach(m => pool.push({ ...m, media_type: types[i] }));
@@ -5974,6 +6462,413 @@ async function topUpFromGenres(genres, have, want = 12) {
     return out;
 }
 
+// ================= NOVA IDENTIFICATION ENGINE =================
+// Identification is based on the user's clues and verified TMDB records, not personalization.
+const NOVA_SESSION_KEY = 'cinemind_nova_session', NOVA_SESSION_TTL = 20 * 60 * 1000;
+let novaSession = null;
+try { novaSession = JSON.parse(sessionStorage.getItem(NOVA_SESSION_KEY) || 'null'); } catch (e) {}
+const saveNovaSession = () => {
+    try {
+        if (novaSession) sessionStorage.setItem(NOVA_SESSION_KEY, JSON.stringify(novaSession));
+        else sessionStorage.removeItem(NOVA_SESSION_KEY);
+    } catch (e) {}
+};
+const activeNovaSession = () => novaSession && Date.now() - novaSession.ts < NOVA_SESSION_TTL ? novaSession : null;
+const normName = s => String(s || '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+const CHARACTER_KB = {
+    'patrick bateman': [['American Psycho', 2000, 'movie']],
+    'eleven': [['Stranger Things', 2016, 'tv']],
+    'katniss everdeen': [['The Hunger Games', 2012, 'movie']],
+    'katniss': [['The Hunger Games', 2012, 'movie']],
+    'walter white': [['Breaking Bad', 2008, 'tv']],
+    'jesse pinkman': [['Breaking Bad', 2008, 'tv']],
+    'hannibal lecter': [['The Silence of the Lambs', 1991, 'movie']],
+    'daenerys targaryen': [['Game of Thrones', 2011, 'tv']],
+    'jack sparrow': [['Pirates of the Caribbean: The Curse of the Black Pearl', 2003, 'movie']],
+    'mirabel madrigal': [['Encanto', 2021, 'movie']],
+    'wednesday addams': [['Wednesday', 2022, 'tv']]
+};
+const CHAR_RE = /\b(?:character|role|protagonist|villain|girl|guy|person)\s+(?:named|called)\s+["“']?([a-z][\w'.-]*(?:\s+(?!in\b|from\b|who\b|that\b|and\b|with\b|is\b|was\b)[a-z][\w'.-]*){0,3})/i;
+const FOLLOWUP_RE = /^(?:no|nope|nah|not that|wrong|that'?s not|it was|it is|it'?s|its|they were|the (?:main|lead)|the (?:ending|plot|story|show|movie|film|series|setting)|i think|maybe|also|and|there was|he was|she was)\b/i;
+const CORRECTION_RE = /^(?:no|nope|nah|not that|wrong|that'?s not)\b/i;
+const REC_STRONG_RE = /\b(?:recommend\w*|suggest\w*|should i watch|something to watch|best|top \d+|good (?:movies?|series|shows?|anime))\b/i;
+const SIMILAR_RE = /\b(?:(?:movies?|films?|series|shows?|dramas?|anime|something|stuff|titles?)\s+(?:similar to|like)|similar to|if i (?:liked|loved|enjoyed)|reminds? me of)\s+["“]?(.+?)["”]?\s*[?.!]*$/i;
+const INFO_RE = /^(?:please\s+)?(?:tell me (?:more )?about|info(?:rmation)? (?:on|about)|plot of|summary of|cast of|characters? (?:in|of)|who(?:'s| is| stars?) in)\s+["“]?(.+?)["”]?\s*[?.!]*$/i;
+const NOVA_IDENT_RE = /\b(?:what(?:'s| is| was) (?:that|the) (?:\w+ ){0,3}(?:movie|film|series|show|anime|drama|cartoon)|forgot (?:the )?(?:name|title)|can'?t remember|i remember|looking for (?:a|the|that)|find (?:me )?(?:a|the|that)|which (?:movie|film|series|show|anime)|name of (?:a|the|that))\b/i;
+
+function classifyNovaIntent(message, nIntent) {
+    const t = message.trim(), words = t.split(/\s+/).length, ses = activeNovaSession();
+    const questionStart = /^(?:why|how|who|when|where|is|are|does|do|did|can|could|should|hi|hello|hey|thanks|thank)\b/i.test(t);
+    if (ses && words <= 6 && /^(?:yes|yep|yeah|that'?s (?:it|the one)|correct|exactly|got it)\b/i.test(t)) return { type: 'confirm' };
+    const sim = t.match(SIMILAR_RE);
+    if (sim) return { type: 'similar', title: sim[1].trim() };
+    const inf = t.match(INFO_RE);
+    if (inf) return { type: 'info', title: inf[1].trim() };
+    const followup = !!ses && (FOLLOWUP_RE.test(t) || (words <= 6 && !questionStart && !NOVA_REC_RE.test(t)));
+    const ident = CHAR_RE.test(t) || (NOVA_IDENT_RE.test(t) && !NOVA_REC_RE.test(t)) || (NOVA_PLOT_RE.test(t) && !REC_STRONG_RE.test(t))
+        || (!nIntent.structured && !REC_STRONG_RE.test(t) && (looksLikeDescription(t) || (!questionStart && !NOVA_REC_RE.test(t) && plotKbSearch(t, 1).length > 0)));
+    if (ident || followup) return { type: 'identify', followup, correction: CORRECTION_RE.test(t) };
+    return { type: 'other' };
+}
+
+const COUNTRY_WORD_RE = new RegExp(`\\b(${Object.keys(COUNTRY_QUERY_KEYWORDS).join('|')})\\b`, 'gi');
+function extractClues(message, nIntent, explicit) {
+    const t = message, cm = t.match(CHAR_RE);
+    const wantsTv = /\b(series|tv show|tv series|drama|k-?drama|sitcom|docuseries|season)\b/i.test(t);
+    const wantsMovie = /\b(movie|film)\b/i.test(t);
+    let yearFrom = null, yearTo = null;
+    const y4 = t.match(/\b(19\d{2}|20\d{2})\b/), dec = t.match(/\b(?:(19|20)(\d)0|(\d)0)s\b/i);
+    if (y4) yearFrom = yearTo = Number(y4[1]);
+    else if (dec) {
+        yearFrom = dec[1] ? Number(dec[1] + dec[2] + '0') : (Number(dec[3]) >= 3 ? 1900 : 2000) + Number(dec[3]) * 10;
+        yearTo = yearFrom + 9;
+    }
+    const jpOnlyFromAnime = nIntent.country && nIntent.country.code === 'JP' && /\banime\b/i.test(t) && !/\bjapan(?:ese)?\b/i.test(t);
+    return {
+        text: t,
+        character: cm ? cm[1].replace(/["”']+$/, '').trim() : null,
+        media: wantsTv && !wantsMovie ? 'tv' : (wantsMovie && !wantsTv ? 'movie' : null),
+        country: nIntent.country && !jpOnlyFromAnime ? nIntent.country.code : null,
+        language: nIntent.language || null, yearFrom, yearTo, explicit: explicit || []
+    };
+}
+
+function mergeClues(prev, cur, correction) {
+    if (!prev) return { ...cur, hard: [], suggested: [], rejected: [], last: [], lastTitles: [], ts: Date.now() };
+    const hard = new Set(prev.hard || []), out = { ...prev, ts: Date.now() };
+    out.text = `${prev.text} ${cur.text.replace(/^(?:no|nope|nah)[,.!\s]*/i, '')}`.slice(-900);
+    ['character', 'media', 'country', 'language', 'yearFrom', 'yearTo'].forEach(k => {
+        if (cur[k] != null) { out[k] = cur[k]; if (correction && k !== 'character') hard.add(k); }
+    });
+    out.explicit = [...new Set([...(prev.explicit || []), ...cur.explicit])];
+    out.hard = [...hard];
+    if (correction) out.rejected = [...new Set([...(prev.rejected || []), ...(prev.last || [])])];
+    return out;
+}
+
+const cleanPlotText = (t, character) => {
+    let s = String(t).replace(COUNTRY_WORD_RE, ' ').replace(/\b(main character|protagonist|character|named|called)\b/gi, ' ');
+    if (character) s = s.replace(new RegExp(character.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), ' ');
+    return s.replace(/\s+/g, ' ').trim();
+};
+const nextQuestion = c => !c.media ? 'Was it a movie or a series?'
+    : (!c.country && !c.language) ? 'Do you remember the country or language?'
+    : !c.yearFrom ? 'Roughly when did it come out?' : 'Can you remember a character name or a specific scene?';
+
+function characterInfo(m, name) {
+    const want = normName(name);
+    if (!want) return { s: 0 };
+    const wt = want.split(' ');
+    const cast = [...((m.credits && m.credits.cast) || []), ...((m.aggregate_credits && m.aggregate_credits.cast) || [])];
+    let best = { s: 0 };
+    for (const a of cast) {
+        const names = [a.character, ...((a.roles || []).map(r => r.character))].filter(Boolean);
+        for (const raw of names) for (const piece of String(raw).split(/\/|||,| aka | and /i)) {
+            const p = normName(piece);
+            if (!p) continue;
+            let s = 0;
+            if (p === want || (wt.length > 1 && (` ${p} `).includes(` ${want} `))) s = 0.95;
+            else if (wt.length > 1 && wt[wt.length - 1].length >= 4 && p.split(' ').includes(wt[wt.length - 1])) s = 0.5;
+            if (s > best.s) best = { s, actor: a.name, character: piece.trim() };
+        }
+    }
+    return best;
+}
+
+function novaCastLine(m, n = 4) {
+    const agg = m.aggregate_credits && m.aggregate_credits.cast, std = m.credits && m.credits.cast;
+    const cast = (itemMediaType(m) === 'tv' ? (agg || std) : (std || agg)) || [];
+    return cast.slice(0, n).map(a => {
+        const ch = a.character || ((a.roles || [])[0] || {}).character;
+        return ch ? `${a.name} as ${String(ch).split('/')[0].trim()}` : a.name;
+    }).join(' • ');
+}
+
+function fillImdb(card, title, year) {
+    fetch(`BACKENDURL/api/omdb?title={encodeURIComponent(title)}&year=${year}`).then(r => r.json()).then(o => {
+        const v = o.imdbrating || o.imdbRating, el = card.querySelector('.nova-imdb');
+        if (el && v && v !== 'N/A') el.innerHTML = `<i class="fa-brands fa-imdb"></i> ${escapeHTML(v)} IMDb`;
+    }).catch(() => {});
+}
+
+async function callNovaBackend(message, media) {
+    try {
+        const r = await fetchWithTimeout(`${BACKEND_URL}/chat`, {
+            method: 'POST', headers: authHeaders(),
+            body: JSON.stringify({ message, media: media || 'all', profile: { name: displayName(), favorite_genres: [], origin_country: '' }, region: selectedRegion, history: conversationHistory })
+        }, 10000);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return await r.json();
+    } catch (e) {
+        console.warn('Nova backend unavailable; identifying with TMDB only.', e);
+        return {};
+    }
+}
+
+async function gatherIdentityCandidates(clues, plotText, stats, backendData) {
+    const T = 'https://api.themoviedb.org/3', seeds = new Map();
+    const guard = p => p.catch(() => { stats.fail++; return null; });
+    const types = clues.media ? [clues.media] : ['movie', 'tv'];
+    const seed = (m, src, extra) => {
+        if (!m || !m.id) return;
+        const t = itemMediaType(m) || m.media_type;
+        if (t !== 'movie' && t !== 'tv') return;
+        const k = `${t}_${m.id}`, s = seeds.get(k) || { raw: { ...m, media_type: t }, src: new Set(), kb: null };
+        s.src.add(src);
+        if (extra && extra.kb) s.kb = extra.kb;
+        seeds.set(k, s);
+    };
+    await Promise.all(plotKbSearch(plotText, 3).map(async hit => seed(await lookupKbTitle(hit.e), 'kb', { kb: { ratio: hit.ratio, hits: hit.hits } })));
+    if (clues.character) {
+        const key = normName(clues.character);
+        await Promise.all((CHARACTER_KB[key] || []).map(async ([t, y, k]) => seed(await lookupKbTitle({ t, y, k }), 'char')));
+        const kw = await guard(fetchJSON(`T/search/keyword?apikey={TMDB_API_KEY}&query=${encodeURIComponent(clues.character)}`));
+        const kid = kw && (kw.results || []).find(k => normName(k.name) === key);
+        if (kid) for (const t of ['movie', 'tv']) {
+            const d = await guard(fetchJSON(`T/discover/{t}?api_key=TMDBAPIKEY&withkeywords={kid.id}&sort_by=popularity.desc`));
+            ((d && d.results) || []).slice(0, 6).forEach(m => seed({ ...m, media_type: t }, 'char'));
+        }
+        const sr = await guard(fetchJSON(`T/search/multi?apikey={TMDB_API_KEY}&include_adult=false&query=${encodeURIComponent(clues.character)}`));
+        ((sr && sr.results) || []).filter(r => r.media_type === 'movie' || r.media_type === 'tv').slice(0, 5).forEach(m => seed(m, 'char'));
+    }
+    (Array.isArray(backendData.movies) ? backendData.movies : []).forEach(m => seed(m, 'ai'));
+    if (backendData.reply) (await resolveReplyTitles(backendData.reply, 4, 'multi')).forEach(m => seed(m, 'ai'));
+    const extra = (clues.country ? `&with_origin_country=clues.country`:'')+(clues.language?`&withoriginallanguage={clues.language}` : '');
+    if (plotTerms(plotText).length) {
+        (await findMoviesByPlot(plotText, extra, types)).slice(0, 10).forEach(m => seed(m, 'kw'));
+        if (extra) (await findMoviesByPlot(plotText, '', types)).slice(0, 8).forEach(m => seed(m, 'kw'));
+    }
+    const spec = clues.explicit.filter(g => isNaN(g));
+    if (spec.length) for (const t of types) {
+        const d = await guard(fetchJSON(`T/discover/{t}?api_key=TMDBAPIKEY&sortby=popularity.desc{getActiveFilterQueryParams(t, new Set(spec), false)}${extra}&page=1`));
+        ((d && d.results) || []).slice(0, 8).forEach(m => seed({ ...m, media_type: t }, 'genre'));
+    }
+    const full = await hydrateNovaMovies([...seeds.values()].map(s => s.raw), 20, true);
+    return full.filter(isSafeNonPorn).map(h => {
+        const s = seeds.get(`${itemMediaType(h) || h.media_type}_${h.id}`) || { src: new Set(), kb: null };
+        return { m: h, src: s.src, kb: s.kb };
+    });
+}
+
+const termsOfTitle = m => `${m.title || m.name || ''} ${m.original_title || m.original_name || ''} ${m.tagline || ''} ${m.overview || ''} ${kwList(m).map(k => k.name).join(' ')}`;
+function rankIdentity(cands, clues, plotText) {
+    const q = plotTerms(plotText), docs = cands.map(c => new Set(plotTerms(termsOfTitle(c.m))));
+    const hit = (t, set) => set.has(t) || (t.length >= 4 && [...set].some(w => w.length >= 4 && (w.startsWith(t) || t.startsWith(w))));
+    const N = Math.max(1, cands.length);
+    const qIdf = q.map(t => Math.log(1 + N / (1 + docs.filter(d => hit(t, d)).length)));
+    const qTotal = qIdf.reduce((a, b) => a + b, 0) || 1;
+    const hard = new Set(clues.hard), rejected = new Set(clues.rejected || []);
+    const qWords = String(plotText).toLowerCase().match(/[a-z0-9']+/g) || [];
+    const spec = clues.explicit.filter(g => isNaN(g)), numeric = clues.explicit.filter(g => /^\d+$/.test(g));
+    const out = [];
+    cands.forEach((c, i) => {
+        const m = c.m, set = docs[i], key = titleKey(m);
+        const ch = clues.character ? characterInfo(m, clues.character) : { s: 0 };
+        const kb = c.kb ? Math.min(0.9, c.kb.ratio * 1.1) : 0;
+        const hitIdx = q.map((t, j) => hit(t, set) ? j : -1).filter(j => j >= 0);
+        let plot = 0, cooc = 0;
+        if (q.length && hitIdx.length >= Math.min(2, q.length)) {
+            const top = [...hitIdx].sort((a, b) => qIdf[b] - qIdf[a]).slice(0, 6);
+            const sents = ((m.overview || '').match(/[^.!?]+[.!?]*/g) || []).map(s => new Set(plotTerms(s)));
+            let pairs = 0, ok = 0;
+            for (let a = 0; a < top.length; a++) for (let b = a + 1; b < top.length; b++) {
+                pairs++;
+                if (sents.some(s => hit(q[top[a]], s) && hit(q[top[b]], s))) ok++;
+            }
+            cooc = pairs ? ok / pairs : 0;
+            plot = Math.min(1, 0.8 * (hitIdx.reduce((s, j) => s + qIdf[j], 0) / qTotal) + 0.2 * cooc);
+            if (q.length < 2) plot = Math.min(plot, 0.45);
+        }
+        let e = 1 - (1 - ch.s) * (1 - kb) * (1 - plot);
+        if (c.src.has('ai') && e >= 0.2) e = 1 - (1 - e) * 0.85;
+        if (e < 0.25) return;
+        let factor = 1;
+        const ok = [], mism = [];
+        if (clues.media) {
+            if (itemMediaType(m) === clues.media) ok.push(clues.media === 'tv' ? 'a series' : 'a movie');
+            else { mism.push(`it is ${itemMediaType(m) === 'tv' ? 'a series' : 'a movie'}`); factor *= hard.has('media') ? 0 : 0.4; }
+        }
+        const codes = itemCountryCodes(m);
+        if (!codes.length && LANG_TO_COUNTRY[m.original_language]) codes.push(LANG_TO_COUNTRY[m.original_language]);
+        if (clues.country) {
+            if (codes.includes(clues.country)) ok.push(COUNTRY_NAMES[clues.country] || clues.country);
+            else { mism.push(`it is from ${resolveMovieOriginCountry(m)}, not ${COUNTRY_NAMES[clues.country] || clues.country}`); factor *= hard.has('country') ? 0 : 0.6; }
+        }
+        if (clues.language) {
+            if ((m.original_language || '') === clues.language) ok.push(`${clues.language} language`);
+            else { mism.push(`its original language is ${(m.original_language || 'unknown').toUpperCase()}`); factor *= hard.has('language') ? 0 : 0.6; }
+        }
+        if (clues.yearFrom) {
+            const y = parseInt(yearOf(m), 10);
+            if (y && y >= clues.yearFrom - 3 && y <= clues.yearTo + 3) ok.push(`around ${y}`);
+            else { mism.push(`it came out in ${y || 'an unknown year'}`); factor *= (hard.has('yearFrom') || hard.has('yearTo')) ? 0 : 0.8; }
+        }
+        if (spec.length) {
+            if (matchesSelectedCategories(m, spec)) ok.push(spec.map(g => GENRE_OPTIONS[g]).join('/'));
+            else factor = 0;
+        }
+        if (numeric.length) {
+            const cats = getAllItemCategories(m);
+            if (!numeric.some(g => cats.has(g))) { factor *= 0.85; mism.push('the genre differs'); }
+        }
+        if (rejected.has(key) && ch.s < 0.9) factor = 0;
+        if (!factor) return;
+        const matched = [...new Set(qWords.filter(w => {
+            const st = synOf(w) || plotStem(w);
+            return q.includes(st) && hitIdx.some(j => q[j] === st);
+        }))].slice(0, 4);
+        const why = [
+            ch.s >= 0.9 ? `It has a character named "ch.character"{ch.actor ? ` (played by ${ch.actor})` : ''}.`
+                : (ch.s ? `It has a character with a similar name ("${ch.character}"), which is only a partial match.` : ''),
+            matched.length ? `The synopsis matches: ${matched.join(', ')}.` : (kb ? 'The premise matches a well-known plot.' : ''),
+            ok.length ? `Fits: ${ok.join(', ')}.` : '',
+            mism.length ? `Doesn't fit: ${mism.join('; ')}.` : ''
+        ].filter(Boolean).join(' ');
+        out.push({ m, e, char: ch.s, kb: !!c.kb, hitCount: hitIdx.length, ok, mism, why,
+            score: e * factor + Math.min(0.03, Math.log10((m.vote_count || 0) + 1) / 150) });
+    });
+    const byCol = new Map();
+    out.filter(s => s.char >= 0.9 && s.m.belongs_to_collection).forEach(s => {
+        const id = s.m.belongs_to_collection.id, prev = byCol.get(id);
+        if (!prev || (s.m.release_date || '9') < (prev.m.release_date || '9')) byCol.set(id, s);
+    });
+    const finalList = out.filter(s => !(s.char >= 0.9 && s.m.belongs_to_collection) || byCol.get(s.m.belongs_to_collection.id) === s);
+    finalList.forEach(s => { if (s.char >= 0.9 && s.m.belongs_to_collection) s.franchise = s.m.belongs_to_collection.name; });
+    return finalList.sort((a, b) => b.score - a.score);
+}
+
+function judgeIdentity(ranked) {
+    if (!ranked.length) return { level: 'none', shown: [] };
+    const [a, b] = ranked, gap = a.score - (b ? b.score : 0);
+    if (a.score >= 0.72 && gap >= 0.18 && (a.char >= 0.9 || a.kb || a.hitCount >= 3) && !a.mism.length) return { level: 'high', shown: [a] };
+    if (a.score >= 0.5 && gap >= 0.08) return { level: 'moderate', shown: [a] };
+    const near = ranked.filter(x => x.score >= 0.3).slice(0, 3);
+    return near.length ? { level: 'low', shown: near } : { level: 'none', shown: [] };
+}
+
+function identityReply(j, clues, ack, networkIssue) {
+    const t = s => `s.m.title||s.m.name{yearOf(s.m) ? ` (${yearOf(s.m)})` : ''}`, a = j.shown[0];
+    if (j.level === 'none') return networkIssue
+        ? `${ack}I couldn't reach the movie database just now, so I can't tell whether there's a match. Please try again in a moment.`
+        : `${ack}I couldn't verify a title from those clues, and I'd rather not guess. ${nextQuestion(clues)}`;
+    const fr = a.franchise ? ` It's part of the ${a.franchise}, so the character can appear in later entries too. This is the first one.` : '';
+    if (j.level === 'high') return `${ack}That's ${t(a)}. a.why{fr}`;
+    if (j.level === 'moderate') return `${ack}This is most likely ${t(a)}. a.why{fr} I can't confirm every detail.${a.mism.length ? ' One thing does not fit, so which detail are you more sure about?' : " Tell me if it isn't right and I'll narrow it down."}`;
+    return `${ack}I can't pin it to one title yet. These are the closest matches, with what fits each. ${nextQuestion(clues)}`;
+}
+
+async function finishNovaTurn(message, replyText, movies, cardOpts) {
+    const beforeAgeGate = movies.length;
+    movies = await ageFilter(movies);
+    if (isMinorViewer() && (movies.length !== beforeAgeGate || replyMentionsRestrictedTitle(replyText))) {
+        replyText = MINOR_SAFE_REPLY;
+    }
+    removeNovaSpinner();
+    appendBubbleToBothChats(replyText, 'ai', false);
+    if (movies.length) appendNovaCardsToBothChats(movies, message, cardOpts);
+    const note = movies.length ? ` [Movies shown to user: ${movies.slice(0, 5).map(m => `${m.title || m.name} (${yearOf(m)})`).join(', ')}]` : '';
+    conversationHistory.push({ role: 'user', content: message }, { role: 'assistant', content: replyText + note });
+    lastNovaMovies = movies.map(slimNovaMovie);
+    lastNovaQuery = message;
+    saveNovaMemory();
+    if (currentView === 'nova') {
+        const titleEl = document.getElementById('novaResultsTitle'), vGrid = document.getElementById('novaVerticalGrid');
+        if (titleEl) titleEl.innerHTML = `<i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> Neural Matches for "${escapeHTML(message)}"`;
+        if (vGrid) {
+            vGrid.innerHTML = '';
+            movies.forEach(mv => vGrid.appendChild(createMovieCard(mv, true, message)));
+            if (!movies.length) vGrid.innerHTML = `<p style="color: var(--text-muted); font-weight:500;">No verified match yet.</p>`;
+        }
+    }
+}
+
+async function runNovaIdentify(message, route, nIntent, explicit) {
+    const prev = route.followup ? activeNovaSession() : null;
+    const clues = mergeClues(prev, extractClues(message, nIntent, explicit), route.correction);
+    const plotText = cleanPlotText(clues.text, clues.character);
+    const ack = route.correction && prev && prev.lastTitles && prev.lastTitles.length ? `Okay, so it isn't ${prev.lastTitles.join(' or ')}. ` : '';
+    const specificEnough = clues.character || plotTerms(plotText).length >= 2 || clues.explicit.some(g => isNaN(g));
+    if (!specificEnough) {
+        novaSession = { ...clues, ts: Date.now() };
+        saveNovaSession();
+        return finishNovaTurn(message, `${ack}That's not enough to go on yet. ${nextQuestion(clues)}`, [], {});
+    }
+    const stats = { fail: 0 };
+    const data = await callNovaBackend(clues.text, clues.media);
+    const cands = await gatherIdentityCandidates(clues, plotText, stats, data);
+    const j = judgeIdentity(rankIdentity(cands, clues, plotText));
+    const movies = j.shown.map(s => ({ ...s.m, _why: s.why, _cast: novaCastLine(s.m), rationale: s.why || 'Matched to your description.' }));
+    const keys = movies.map(titleKey);
+    novaSession = { ...clues, suggested: [...new Set([...(clues.suggested || []), ...keys])], last: keys, lastTitles: movies.map(m => m.title || m.name), ts: Date.now() };
+    saveNovaSession();
+    finishNovaTurn(message, identityReply(j, clues, ack, stats.fail > 0 && !cands.length), movies,
+        { identify: true, best: j.level === 'high', likely: j.level === 'moderate', maybe: j.level === 'low' });
+}
+
+async function findExactTitle(name) {
+    const d = await fetchJSON(`https://api.themoviedb.org/3/search/multi?api_key=TMDBAPIKEY&includeadult=false&query={encodeURIComponent(name)}`);
+    const res = (d.results || []).filter(r => (r.media_type === 'movie' || r.media_type === 'tv') && r.poster_path && isSafeNonPorn(r));
+    const best = res.filter(r => normName(r.title || r.name) === normName(name)).sort((a, b) => (b.vote_count || 0) - (a.vote_count || 0))[0] || null;
+    return { best, near: res.slice(0, 3) };
+}
+
+async function runNovaInfo(message, name) {
+    const { best, near } = await findExactTitle(name);
+    if (!best) {
+        const cards = await hydrateNovaMovies(near, 3, true);
+        return finishNovaTurn(message, cards.length ? `I couldn't find an exact title called "name".Didyoumeanoneofthese?`:`Icouldn'tfindatitlecalled"{name}". Could you check the spelling?`,
+            cards.map(m => ({ ...m, _cast: novaCastLine(m) })), { identify: true, maybe: true });
+    }
+    const [rec] = await hydrateNovaMovies([best], 1, true);
+    if (!rec) return finishNovaTurn(message, `I can't show "${name}" for your account, or its details couldn't be loaded.`, [], {});
+    const tv = itemMediaType(rec) === 'tv';
+    const dir = ((rec.credits && rec.credits.crew) || []).filter(c => c.job === 'Director').map(c => c.name).slice(0, 2);
+    const by = tv ? (rec.created_by || []).map(c => c.name).slice(0, 2) : dir;
+    const reply = [`rec.title||rec.name({yearOf(rec) || 'n/a'}) is a ${tv ? 'TV series' : 'movie'} from ${resolveMovieOriginCountry(rec)}.`,
+        briefOverview(rec.overview, 320), tv && rec.number_of_seasons ? `${rec.number_of_seasons} season(s).` : '',
+        by.length ? `${tv ? 'Created' : 'Directed'} by ${by.join(' and ')}.` : '',
+        novaCastLine(rec, 5) ? `Main cast: ${novaCastLine(rec, 5)}.` : ''].filter(Boolean).join(' ');
+    finishNovaTurn(message, reply, [{ ...rec, _cast: novaCastLine(rec), _why: '' }], { identify: true, best: true });
+}
+
+async function runNovaSimilar(message, name) {
+    const { best, near } = await findExactTitle(name);
+    if (!best) {
+        const cards = await hydrateNovaMovies(near, 3, true);
+        return finishNovaTurn(message, cards.length ? `I couldn't match "name"tooneexacttitle.Didyoumeanoneofthese?`:`Icouldn'tfind"{name}". Could you check the title?`,
+            cards.map(m => ({ ...m, _cast: novaCastLine(m) })), { identify: true, maybe: true });
+    }
+    const [base] = await hydrateNovaMovies([best], 1, true);
+    if (!base) return finishNovaTurn(message, `I can't show "${name}" for your account, or its details couldn't be loaded.`, [], {});
+    const type = itemMediaType(base);
+    const d = await fetchJSON(`https://api.themoviedb.org/3/type/{base.id}/recommendations?api_key=${TMDB_API_KEY}&page=1`);
+    const raw = (d.results || []).filter(r => r.poster_path && isSafeNonPorn(r) && r.id !== base.id && !isBlockedByNotInterested(r, false)).map(r => ({ ...r, media_type: type }));
+    const pool = await hydrateNovaMovies(raw, 12, true);
+    const bt = new Set(itemTags(base)), bg = new Set(genreIdsOf(base));
+    const scored = pool.map((m, i) => {
+        const tags = itemTags(m), shared = tags.filter(t => bt.has(t)), g = genreIdsOf(m).filter(x => bg.has(x));
+        const jac = shared.length / Math.max(1, new Set([...tags, ...bt]).size);
+        return { m, s: 0.5 * jac * 4 + 0.3 * (g.length / Math.max(1, bg.size)) + 0.2 * (1 - i / pool.length),
+            why: `${shared.length ? `Shares themes: ${shared.slice(0, 3).join(', ')}. ` : ''}${g.length ? `Same genres: ${g.map(x => GENRE_OPTIONS[x]).filter(Boolean).join(', ')}.` : ''}`.trim() };
+    }).sort((a, b) => b.s - a.s).slice(0, 6);
+    const movies = scored.map(x => ({ ...x.m, _why: x.why, _cast: novaCastLine(x.m), rationale: `Similar to ${base.title || base.name}.` }));
+    finishNovaTurn(message, movies.length ? `Here are titles similar to ${base.title || base.name}, ranked by shared themes and genres.` : `TMDB has no similar titles on record for ${base.title || base.name}.`, movies, {});
+}
+
+function novaConfirm(message) {
+    const last = (activeNovaSession() || {}).lastTitles || [];
+    novaSession = null;
+    saveNovaSession();
+    finishNovaTurn(message, `Glad we found it${last[0] ? ` (${last[0]})` : ''}! Tap Details for the full cast, trailer and where to watch it.`, lastNovaMovies.slice(0, 1), { identify: true, best: true });
+}
+
+async function runNovaRoute(message, route, nIntent, explicit) {
+    if (route.type === 'confirm') return novaConfirm(message);
+    if (route.type === 'info') return runNovaInfo(message, route.title);
+    if (route.type === 'similar') return runNovaSimilar(message, route.title);
+    return runNovaIdentify(message, route, nIntent, explicit);
+}
+
 async function sendToNovaEngine(message) {
     appendBubbleToBothChats(message, 'user', false);
     appendBubbleToBothChats(`<i class="fa-solid fa-spinner fa-spin"></i> Nova is analyzing your question & scanning cinema vectors...`, 'ai', true);
@@ -5981,6 +6876,15 @@ async function sendToNovaEngine(message) {
     try {
         const nIntent = parseSearchIntent(message);
         const explicit = explicitGenresInMessage(message, nIntent);
+        const route = classifyNovaIntent(message, nIntent);
+        if (route.type !== 'other') {
+            await runNovaRoute(message, route, nIntent, explicit);
+            return;
+        }
+        if (activeNovaSession()) {
+            novaSession = null;
+            saveNovaSession();
+        }
         const questionStart = /^(?:why|how|who|when|where|is|are|does|do|did|can|could|should|hi|hello|hey|thanks|thank)\b/i.test(message.trim());
         const plotStrong = !nIntent.structured && NOVA_PLOT_RE.test(message);
         // a short description that clearly matches a known plot also counts ("girl turns into red panda")
@@ -5994,12 +6898,12 @@ async function sendToNovaEngine(message) {
             // Plot / filter / recommendation requests can be answered from TMDB alone, so don't wait long for the backend
             const response = await fetchWithTimeout(`${BACKEND_URL}/chat`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: authHeaders(),
                 body: JSON.stringify({
                     message: message,
                     media: selectedMedia,
                     profile: {
-                        name: currentUser || 'Guest',
+                        name: displayName(),
                         favorite_genres: userGenres.map(id => GENRE_OPTIONS[id]).filter(Boolean),
                         origin_country: selectedCountry,
                         watched_titles: watchedMovies.slice(0, 5).map(m => m.title),
@@ -6050,12 +6954,15 @@ async function sendToNovaEngine(message) {
         removeNovaSpinner();
 
         movies = movies.filter(m => matchesSelectedMedia(m) && matchesSelectedCategories(m) && matchesSelectedCategories(m, explicit));
+        const beforeAgeGate = movies.length;
+        movies = await ageFilter(movies);
+        const restrictedRemoved = movies.length !== beforeAgeGate;
         if (plot && !movies.length) plot = null;
         let replyText;
         if (movies.length && plot) {
             const top = movies[0];
             replyText = plot.clear
-                ? `That sounds like ${top.title || top.name}${yearOf(top) ? ` (${yearOf(top)})` : ''}. Here's the ${top.media_type === 'tv' ? 'series' : 'movie'} with a quick overview.`
+                ? `That sounds like top.title||top.name{yearOf(top) ? ` (${yearOf(top)})` : ''}. Here's the ${top.media_type === 'tv' ? 'series' : 'movie'} with a quick overview.`
                 : `I found ${movies.length} possible matches for that description. Which one sounds right? If none do, tell me one more detail, like a character, a scene, or roughly when it came out.`;
         } else if (movies.length) {
             replyText = nIntent.structured
@@ -6075,6 +6982,9 @@ async function sendToNovaEngine(message) {
                 : "I couldn't reach Nova's server just now (it can take up to a minute to wake up). Please try again in a moment.";
         }
 
+        if (isMinorViewer() && (restrictedRemoved || replyMentionsRestrictedTitle(replyText))) {
+            replyText = MINOR_SAFE_REPLY;
+        }
         if (!movies.length && browseSummary()) replyText += ` Your Browse filter is set to ${browseSummary()}, so I only show matching titles. Change it on Galaxy Home to see other types.`;
         appendBubbleToBothChats(replyText, 'ai', false);
         if (movies.length) appendNovaCardsToBothChats(movies, message, { best: !!(plot && plot.clear), maybe: !!(plot && !plot.clear) });
@@ -6145,3 +7055,5 @@ initKeywordIds().finally(() => initEndlessNetflixHome());
 </script>
 </body>
 </html>
+
+
