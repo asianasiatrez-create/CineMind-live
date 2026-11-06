@@ -1114,7 +1114,6 @@ def discover():
         items = [x for pair in zip(mv, tv) for x in pair] + mv[len(tv):] + tv[len(mv):]
     return jsonify({"success": True, "page": page, "items": items, "has_more": bool(pages) and page < max(pages) and bool(items)})
 
-# --- NOVA AI CHAT ---
 PARSE_PROMPT = f"""You are Nova, a flawless, highly accurate AI cinema and TV expert.
 CRITICAL RULES FOR 100% ACCURACY:
 1. ZERO HALLUCINATIONS: If the user describes a plot, identify the EXACT real-world title in "plot_guesses". Do NOT invent or guess blindly. If unsure, leave "plot_guesses" empty.
@@ -1609,7 +1608,6 @@ def trends():
     return jsonify({"ai_forecast": "Regional charts, ML matrix models, and collaborative filtering online.",
                     "trending_genres": ["Boys' Love (BL) and Girls' Love (GL)", "Real-Life Sports and True-Crime Docs", "Anime"]})
 
-init_db()
-
 if __name__ == "__main__":
+    init_db()
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
