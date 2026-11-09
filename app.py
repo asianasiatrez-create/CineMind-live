@@ -131,7 +131,6 @@ def init_db():
         conn = get_db_conn()
         c = conn.cursor()
         
-        # RBAC Roles and ML weights 
         c.execute('''CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
@@ -160,7 +159,6 @@ def init_db():
             except Exception:
                 pass
                 
-        # Audit Logs
         c.execute('''CREATE TABLE IF NOT EXISTS audit_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL,
@@ -204,7 +202,6 @@ def init_db():
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE)''')
             
-        # Unified User Ratings Table
         c.execute('''CREATE TABLE IF NOT EXISTS user_ratings (
             username TEXT NOT NULL,
             movie_id INTEGER NOT NULL,
@@ -557,6 +554,8 @@ def verify():
 @app.route("/api/signup", methods=["POST"])
 def signup():
     data = request.get_json(silent=True) or {}
+    if not isinstance(data, dict):
+        return jsonify({"success": False, "message": "Please provide signup details."}), 400
     username = str(data.get("username", "")).strip().lower()
     password = str(data.get("password", ""))
     raw_genres = clean_genres(data.get("genres"))
@@ -572,8 +571,13 @@ def signup():
         return jsonify({"success": False, "message": "Please enter your full name."}), 400
     if not EMAIL_RE.match(email):
         return jsonify({"success": False, "message": "Please enter a valid email address."}), 400
+    
+    # NEW DOB VERIFICATION
     if bd is None:
         return jsonify({"success": False, "message": "Please enter a valid date of birth."}), 400
+    if calc_age(bd) < 5:
+        return jsonify({"success": False, "message": "You must be at least 5 years old to create an account."}), 400
+
     if len(raw_genres) < 3:
         return jsonify({"success": False, "message": "Please pick at least 3 genres."}), 400
         
@@ -679,8 +683,11 @@ def update_profile():
                 return jsonify({"success": False, "message": "Date of birth can't be changed once set."}), 403
         else:
             bd = parse_birth_date(data["birth_date"])
+            # NEW DOB VERIFICATION 
             if bd is None:
                 return jsonify({"success": False, "message": "Please enter a valid date of birth."}), 400
+            if calc_age(bd) < 5:
+                return jsonify({"success": False, "message": "You must be at least 5 years old."}), 400
             updates["birth_date"] = bd.isoformat()
     if updates:
         conn = get_db_conn()
@@ -708,6 +715,23 @@ def profile_avatar():
     conn.commit()
     conn.close()
     return jsonify({"success": True, "profile": load_profile(g.username)})
+
+# NEW ENDPOINT: Rearrange User Preferences
+@app.route("/api/user/preferences/reorder", methods=["PUT"])
+@require_auth
+def reorder_preferences():
+    data = request.get_json(silent=True) or {}
+    genres = clean_genres(data.get("genres"))
+    if len(genres) < 3:
+        return jsonify({"success": False, "message": "Please maintain at least 3 genres in your preferences."}), 400
+    
+    conn = get_db_conn()
+    conn.execute("UPDATE users SET genres = ? WHERE username = ?", (json.dumps(genres), g.username))
+    conn.commit()
+    conn.close()
+    
+    log_audit_event(g.username, "PREFERENCES_REORDERED", "User rearranged genre preferences")
+    return jsonify({"success": True, "genres": genres, "message": "Preferences successfully reordered."})
 
 @app.route("/api/age/check", methods=["POST"])
 def age_check():
@@ -750,6 +774,7 @@ def get_library():
             pass
     return jsonify({"watchlist": wl, "favorites": fav, "not_interested": ni, "genres": saved})
 
+# UPDATED ENDPOINT: Watchlist and Favorites Boolean Return Logic
 @app.route("/api/user/library/toggle", methods=["POST"])
 @require_auth
 def toggle_library():
@@ -765,11 +790,14 @@ def toggle_library():
     
     genres = movie.get("genre_ids", [])
     if not genres and movie.get("exact_genres"):
-        genres = [g.upper() for g in movie["exact_genres"]]
+        genres = [gx.upper() for gx in movie["exact_genres"]]
         
     conn = get_db_conn()
     c = conn.cursor()
     c.execute(f"SELECT id FROM {table} WHERE username = ? AND movie_id = ?", (username, movie_id))
+    
+    is_added = False
+    
     if c.fetchone():
         c.execute(f"DELETE FROM {table} WHERE username = ? AND movie_id = ?", (username, movie_id))
         action = "removed"
@@ -781,6 +809,7 @@ def toggle_library():
             c.execute("INSERT INTO interactions (username, movie_id, title, action, vote_average) VALUES (?, ?, ?, ?, ?)",
                       (username, movie_id, title, 'like' if lib_type == 'favorites' else 'watched', movie.get("vote_average", 0.0)))
             update_user_genre_weights(username, genres, 0.2 if lib_type == "favorites" else 0.1)
+            is_added = True
         except sqlite3.IntegrityError:
             conn.close()
             return jsonify({"success": False, "message": "User account not found in database."}), 400
@@ -788,7 +817,14 @@ def toggle_library():
     conn.commit()
     conn.close()
     log_audit_event(username, f"LIBRARY_{action.upper()}", f"Toggled '{title}' in {table}")
-    return jsonify({"success": True, "action": action})
+    
+    return jsonify({
+        "success": True, 
+        "action": action, 
+        "is_added": is_added, 
+        "type": lib_type, 
+        "movie_id": movie_id
+    })
 
 @app.route("/api/user/not_interested", methods=["POST"])
 @require_auth
@@ -838,7 +874,6 @@ def get_insights():
     
     try:
         weights = json.loads(row[0] or "{}") if row else {}
-        # Convert numeric IDs to names for the frontend
         readable_weights = {}
         for k, v in weights.items():
             if str(k).isdigit() and int(k) in GENRE_ID_TO_NAME:
