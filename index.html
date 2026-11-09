@@ -1373,6 +1373,11 @@ html[data-theme="light"] .review-item { background: rgba(255,255,255,.7); }
 @media (max-width: 640px) {
     .nova-banner-clean .nova-icon--md { width: 48px; height: 48px; }
 }
+.search-input-wrap input[type="search"] { -webkit-appearance: none; appearance: none; }
+.search-input-wrap input[type="search"]::-webkit-search-decoration,
+.search-input-wrap input[type="search"]::-webkit-search-cancel-button,
+.search-input-wrap input[type="search"]::-webkit-search-results-button,
+.search-input-wrap input[type="search"]::-webkit-search-results-decoration { display: none; -webkit-appearance: none; }
 </style>
 </head>
 <body>
@@ -1423,7 +1428,12 @@ html[data-theme="light"] .review-item { background: rgba(255,255,255,.7); }
         <div class="hero-search-box">
             <div class="search-input-wrap">
                 <i class="fa-solid fa-brain"></i>
-                <input type="text" id="searchInput" placeholder="Search movies, series, Anime, Sports, Documentaries, Kids & Family, BL/GL, or ask Nova...">
+                <input type="search" id="searchInput" name="cinemind-title-search"
+                       autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                       enterkeyhint="search" role="searchbox" aria-label="Search movies and series"
+                       data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other"
+                       readonly onfocus="this.removeAttribute('readonly')"
+                       placeholder="Search movies, series, Anime, Sports, Documentaries, Kids & Family, BL/GL, or ask Nova...">
             </div>
             <button class="search-btn-submit" id="searchSubmitBtn" type="button"><i class="fa-solid fa-search"></i> Search</button>
         </div>
@@ -7065,6 +7075,26 @@ chatInput.addEventListener('keydown', (e) => {
     vv.addEventListener('resize', update);
     vv.addEventListener('scroll', update);
     update();
+})();
+
+// Search bar must only ever contain what the user typed
+(function guardSearchInput() {
+    const input = document.getElementById('searchInput');
+    if (!input) return;
+    let userTyped = false;
+    const markTyped = () => { userTyped = true; };
+    input.addEventListener('keydown', markTyped);
+    input.addEventListener('paste', markTyped);
+    input.addEventListener('compositionstart', markTyped);
+    input.addEventListener('input', e => {
+        if (!userTyped && !(e.inputType || '').startsWith('insertFrom') && input.value) input.value = '';
+    });
+    const sweep = () => {
+        if (!userTyped && input.value && document.activeElement !== input) input.value = '';
+    };
+    [0, 300, 1000, 2500].forEach(ms => setTimeout(sweep, ms));
+    window.addEventListener('pageshow', sweep);
+    input.addEventListener('blur', () => { if (!input.value) userTyped = false; });
 })();
 
 initKeywordIds().finally(() => initEndlessNetflixHome());
