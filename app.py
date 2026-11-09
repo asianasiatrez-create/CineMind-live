@@ -176,12 +176,46 @@ def init_db():
                 poster TEXT,
                 vote_average REAL,
                 media_type TEXT DEFAULT 'movie',
-                UNIQUE(username, movie_id),
+                UNIQUE(username, movie_id, media_type),
                 FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE)''')
             try:
                 c.execute(f"ALTER TABLE {table} ADD COLUMN media_type TEXT DEFAULT 'movie'")
             except Exception:
                 pass
+            unique_indexes = c.execute(f'PRAGMA index_list("{table}")').fetchall()
+            has_legacy_unique = False
+            for index in unique_indexes:
+                if not index[2]:
+                    continue
+                index_name = str(index[1]).replace('"', '""')
+                columns = tuple(
+                    row[2] for row in c.execute(f'PRAGMA index_info("{index_name}")').fetchall()
+                )
+                if columns == ("username", "movie_id"):
+                    has_legacy_unique = True
+                    break
+            if has_legacy_unique:
+                migration_table = f"{table}_media_type_migration"
+                c.execute(f"DROP TABLE IF EXISTS {migration_table}")
+                c.execute(f'''CREATE TABLE {migration_table} (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT NOT NULL,
+                    movie_id INTEGER NOT NULL,
+                    title TEXT NOT NULL,
+                    poster TEXT,
+                    vote_average REAL,
+                    media_type TEXT DEFAULT 'movie',
+                    UNIQUE(username, movie_id, media_type),
+                    FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE)''')
+                c.execute(
+                    f'''INSERT INTO {migration_table}
+                    (id, username, movie_id, title, poster, vote_average, media_type)
+                    SELECT id, username, movie_id, title, poster, vote_average,
+                           COALESCE(media_type, 'movie')
+                    FROM {table}'''
+                )
+                c.execute(f"DROP TABLE {table}")
+                c.execute(f"ALTER TABLE {migration_table} RENAME TO {table}")
                 
         c.execute('''CREATE TABLE IF NOT EXISTS not_interested (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -434,8 +468,9 @@ def clean_genres(raw):
             out.append(value)
     return out[:30]
 
-def update_user_genre_weights(username, movie_genres, weight_delta):
-    conn = get_db_conn()
+def update_user_genre_weights(username, movie_genres, weight_delta, conn=None):
+    owns_connection = conn is None
+    conn = conn or get_db_conn()
     row = conn.execute("SELECT genre_weights FROM users WHERE username = ?", (username,)).fetchone()
     try:
         weights = json.loads(row[0] or "{}") if row else {}
@@ -448,8 +483,9 @@ def update_user_genre_weights(username, movie_genres, weight_delta):
         weights[g_id] = max(0.1, min(4.0, current + weight_delta))
         
     conn.execute("UPDATE users SET genre_weights = ? WHERE username = ?", (json.dumps(weights), username))
-    conn.commit()
-    conn.close()
+    if owns_connection:
+        conn.commit()
+        conn.close()
 
 def get_collaborative_bonus(username, candidates):
     conn = get_db_conn()
@@ -755,17 +791,19 @@ def age_check():
 def get_library():
     username = g.username
     conn = get_db_conn()
-    c = conn.cursor()
-    q = "SELECT movie_id, title, poster, vote_average, media_type FROM {} WHERE username = ?"
-    c.execute(q.format("watchlist"), (username,))
-    wl = [{"id": r[0], "title": r[1], "poster": r[2], "vote_average": r[3], "media_type": r[4] or "movie"} for r in c.fetchall()]
-    c.execute(q.format("favorites"), (username,))
-    fav = [{"id": r[0], "title": r[1], "poster": r[2], "vote_average": r[3], "media_type": r[4] or "movie"} for r in c.fetchall()]
-    c.execute("SELECT movie_id, title, keywords FROM not_interested WHERE username = ?", (username,))
-    ni = [{"id": r[0], "title": r[1], "keywords": json.loads(r[2] or "[]")} for r in c.fetchall()]
-    c.execute("SELECT genres FROM users WHERE username = ?", (username,))
-    g_row = c.fetchone()
-    conn.close()
+    try:
+        c = conn.cursor()
+        q = "SELECT movie_id, title, poster, vote_average, media_type FROM {} WHERE username = ?"
+        c.execute(q.format("watchlist"), (username,))
+        wl = [{"id": r[0], "title": r[1], "poster": r[2], "vote_average": r[3], "media_type": r[4] or "movie"} for r in c.fetchall()]
+        c.execute(q.format("favorites"), (username,))
+        fav = [{"id": r[0], "title": r[1], "poster": r[2], "vote_average": r[3], "media_type": r[4] or "movie"} for r in c.fetchall()]
+        c.execute("SELECT movie_id, title, keywords FROM not_interested WHERE username = ?", (username,))
+        ni = [{"id": r[0], "title": r[1], "keywords": json.loads(r[2] or "[]")} for r in c.fetchall()]
+        c.execute("SELECT genres FROM users WHERE username = ?", (username,))
+        g_row = c.fetchone()
+    finally:
+        conn.close()
     saved = []
     if g_row:
         try:
@@ -779,36 +817,56 @@ def get_library():
 @require_auth
 def toggle_library():
     data = request.get_json(silent=True) or {}
+    if not isinstance(data, dict):
+        return jsonify({"success": False, "message": "Invalid payload."}), 400
     username = g.username
     lib_type = data.get("type")
     movie = data.get("movie", {})
-    if lib_type not in ("watchlist", "favorites") or not movie:
+    if lib_type not in ("watchlist", "favorites") or not isinstance(movie, dict):
         return jsonify({"success": False, "message": "Invalid payload."}), 400
-    movie_id = movie.get("id")
+    try:
+        movie_id = int(movie.get("id"))
+    except (TypeError, ValueError):
+        return jsonify({"success": False, "message": "A valid title id is required."}), 400
+    if isinstance(movie.get("id"), bool) or movie_id <= 0:
+        return jsonify({"success": False, "message": "A valid title id is required."}), 400
     title = movie.get("title") or movie.get("name")
+    if not isinstance(title, str) or not title.strip():
+        return jsonify({"success": False, "message": "A title is required."}), 400
+    media_type = movie.get("media_type", "movie")
+    if media_type not in ("movie", "tv"):
+        return jsonify({"success": False, "message": "Media type must be movie or tv."}), 400
     table = "watchlist" if lib_type == "watchlist" else "favorites"
     
     genres = movie.get("genre_ids", [])
     if not genres and movie.get("exact_genres"):
         genres = [gx.upper() for gx in movie["exact_genres"]]
+    if not isinstance(genres, list):
+        genres = []
         
     conn = get_db_conn()
     c = conn.cursor()
-    c.execute(f"SELECT id FROM {table} WHERE username = ? AND movie_id = ?", (username, movie_id))
+    c.execute(
+        f"SELECT id FROM {table} WHERE username = ? AND movie_id = ? AND media_type = ?",
+        (username, movie_id, media_type)
+    )
     
     is_added = False
     
     if c.fetchone():
-        c.execute(f"DELETE FROM {table} WHERE username = ? AND movie_id = ?", (username, movie_id))
+        c.execute(
+            f"DELETE FROM {table} WHERE username = ? AND movie_id = ? AND media_type = ?",
+            (username, movie_id, media_type)
+        )
         action = "removed"
-        update_user_genre_weights(username, genres, -0.1)
+        update_user_genre_weights(username, genres, -0.1, conn=conn)
     else:
         try:
             c.execute(f"INSERT OR REPLACE INTO {table} (username, movie_id, title, poster, vote_average, media_type) VALUES (?, ?, ?, ?, ?, ?)",
-                      (username, movie_id, title, movie.get("poster") or "", movie.get("vote_average", 0.0), movie.get("media_type", "movie")))
+                      (username, movie_id, title.strip(), movie.get("poster") or "", movie.get("vote_average", 0.0), media_type))
             c.execute("INSERT INTO interactions (username, movie_id, title, action, vote_average) VALUES (?, ?, ?, ?, ?)",
-                      (username, movie_id, title, 'like' if lib_type == 'favorites' else 'watched', movie.get("vote_average", 0.0)))
-            update_user_genre_weights(username, genres, 0.2 if lib_type == "favorites" else 0.1)
+                      (username, movie_id, title.strip(), 'like' if lib_type == 'favorites' else 'watched', movie.get("vote_average", 0.0)))
+            update_user_genre_weights(username, genres, 0.2 if lib_type == "favorites" else 0.1, conn=conn)
             is_added = True
         except sqlite3.IntegrityError:
             conn.close()
@@ -816,7 +874,7 @@ def toggle_library():
         action = "added"
     conn.commit()
     conn.close()
-    log_audit_event(username, f"LIBRARY_{action.upper()}", f"Toggled '{title}' in {table}")
+    log_audit_event(username, f"LIBRARY_{action.upper()}", f"Toggled '{title.strip()}' in {table}")
     
     return jsonify({
         "success": True, 
