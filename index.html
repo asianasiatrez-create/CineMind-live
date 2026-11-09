@@ -3322,9 +3322,24 @@ function saveNovaMemory() {
     sessionStorage.setItem('cinemind_nova_query', lastNovaQuery);
 }
 
-function renderChatHistoryInto(container) {
+function novaGreetingText() {
+    const tail = "What are you in the mood to discover today? Tell me anything you’re looking for, and let’s find something interesting!";
+    return currentUser ? `Hi, ${displayName()}! ${tail}` : `Hi there! ${tail}`;
+}
+
+function refreshNovaGreeting() {
+    document.querySelectorAll('.nova-greeting').forEach(el => { el.textContent = novaGreetingText(); });
+}
+
+function renderChatHistoryInto(container, withGreeting = true) {
     if (!container) return;
-    container.innerHTML = `<div class="chat-bubble ai-bubble">Hi ${escapeHTML(displayName())}! I'm Nova. Ask me any movie question (like <em>"Why is there boxing in Toy Story?"</em>), describe a plot, or search a country like <em>"Philippines"</em>!</div>`;
+    container.innerHTML = '';
+    if (withGreeting) {
+        const hello = document.createElement('div');
+        hello.className = 'chat-bubble ai-bubble nova-greeting';
+        hello.textContent = novaGreetingText();
+        container.appendChild(hello);
+    }
     conversationHistory.forEach(turn => {
         if (!turn || !turn.content) return;
         const div = document.createElement('div');
@@ -3353,7 +3368,7 @@ window.clearNovaMemory = () => {
     saveNovaMemory();
     renderChatHistoryInto(chatHistory);
     const enlargedHist = document.getElementById('novaEnlargedHistory');
-    if (enlargedHist) renderChatHistoryInto(enlargedHist);
+    if (enlargedHist) renderChatHistoryInto(enlargedHist, false);
 };
 
 function calculateSimilarityMatch(movie, queryText = "") {
@@ -3419,6 +3434,7 @@ function renderProfileEverywhere() {
     icon.style.display = avatar ? 'none' : '';
     if (avatar) img.src = avatar;
     else img.removeAttribute('src');
+    refreshNovaGreeting();
     renderProfileCard();
 }
 
@@ -4989,7 +5005,7 @@ async function renderEnlargedNovaView() {
         </div>
     `;
 
-    renderChatHistoryInto(document.getElementById('novaEnlargedHistory'));
+    renderChatHistoryInto(document.getElementById('novaEnlargedHistory'), false);
     mainContainer.querySelectorAll('.chip').forEach(c => { c.textContent = stripEmoji(c.textContent); });
     const vGrid = document.getElementById('novaVerticalGrid');
     if (lastNovaMovies && lastNovaMovies.length > 0) {
@@ -6772,7 +6788,7 @@ async function finishNovaTurn(message, replyText, movies, cardOpts) {
     lastNovaQuery = message;
     saveNovaMemory();
     if (currentView === 'nova') {
-        const titleEl = document.getElementByIAd('novaResultsTitle'), vGrid = document.getElementById('novaVerticalGrid');
+        const titleEl = document.getElementById('novaResultsTitle'), vGrid = document.getElementById('novaVerticalGrid');
         if (titleEl) titleEl.innerHTML = `<i class="fa-solid fa-sparkles" style="color: var(--secondary-glow);"></i> Neural Matches for "${escapeHTML(message)}"`;
         if (vGrid) {
             vGrid.innerHTML = '';
