@@ -1378,6 +1378,20 @@ html[data-theme="light"] .review-item { background: rgba(255,255,255,.7); }
 .search-input-wrap input[type="search"]::-webkit-search-cancel-button,
 .search-input-wrap input[type="search"]::-webkit-search-results-button,
 .search-input-wrap input[type="search"]::-webkit-search-results-decoration { display: none; -webkit-appearance: none; }
+
+/* ---- Genre order editor ---- */
+.genre-order-list { display: flex; flex-direction: column; gap: 6px; }
+.genre-order-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: rgba(124,58,237,.10); border: 1px solid var(--glass-border); border-radius: 12px; cursor: grab; user-select: none; transition: border-color .15s ease, opacity .15s ease; }
+.genre-order-item.dragging { opacity: .4; }
+.genre-order-item.drag-over { border-color: var(--secondary-glow); box-shadow: 0 0 12px rgba(0,242,254,.35); }
+.genre-order-rank { width: 22px; text-align: center; font-size: .75rem; font-weight: 800; color: var(--secondary-glow); }
+.genre-order-name { flex: 1; font-size: .84rem; font-weight: 700; }
+.genre-order-grip { color: var(--text-muted); }
+.genre-order-btns { display: inline-flex; gap: 4px; }
+.genre-order-btn { width: 32px; height: 32px; border-radius: 10px; border: 1px solid var(--glass-border); background: rgba(124,58,237,.18); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.genre-order-btn i { color: var(--text-main); font-size: .8rem; pointer-events: none; }
+.genre-order-btn:disabled { opacity: .35; cursor: default; }
+.genre-order-hint { font-size: .72rem; color: var(--text-muted); line-height: 1.35; }
 </style>
 </head>
 <body>
@@ -1654,9 +1668,11 @@ html[data-theme="light"] .review-item { background: rgba(255,255,255,.7); }
             <div class="profile-field"><label for="pfBirthDate">Date of birth</label><input type="date" id="pfBirthDate"><small id="pfBirthHint"></small></div>
             <button type="button" class="btn-action" id="profileSaveBtn" style="justify-content:center;"><i class="fa-solid fa-floppy-disk"></i> Save profile</button>
         </div>
-        <div>
-            <div style="font-size:0.8rem; font-weight:700; color:var(--secondary-glow); margin-bottom:6px;">Your Genres</div>
-            <div id="acctGenres" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+            <div style="font-size:0.8rem; font-weight:700; color:var(--secondary-glow);">Your Genres (in order of preference)</div>
+            <div class="genre-order-hint">Drag to reorder, or use the arrows. Top = most preferred.</div>
+            <div id="acctGenres" class="genre-order-list"></div>
+            <button type="button" class="btn-action" id="saveGenreOrderBtn" style="justify-content:center;"><i class="fa-solid fa-arrow-down-short-wide"></i> Save Preference Order</button>
         </div>
         <button type="button" id="logoutBtn" class="btn-action btn-not-interested" style="width:100%; justify-content:center;">
             <i class="fa-solid fa-right-from-bracket"></i> Log Out
@@ -3527,7 +3543,10 @@ document.getElementById('profileSaveBtn').onclick = async () => {
         email: document.getElementById('pfEmail').value
     };
     const birthDate = document.getElementById('pfBirthDate');
-    if (!birthDate.disabled && birthDate.value) body.birth_date = birthDate.value;
+    if (!birthDate.disabled && birthDate.value) {
+        if (birthDate.value > maxBirthDateISO()) return showToast(AGE_ERROR_TEXT);
+        body.birth_date = birthDate.value;
+    }
     const wasCeiling = viewerCeiling();
     try {
         const response = await fetch(`${BACKEND_URL}/api/profile`, {
@@ -3535,7 +3554,7 @@ document.getElementById('profileSaveBtn').onclick = async () => {
         });
         if (response.status === 401) return expireSession();
         const data = await response.json();
-        if (!response.ok || !data.success) throw new Error(data.message || `HTTP ${response.status}`);
+        if (!response.ok || !data.success) throw new Error(data.message || data.error || `HTTP ${response.status}`);
         setProfile(data.profile);
         showToast('Profile saved.');
         if (wasCeiling !== viewerCeiling()) {
@@ -3705,10 +3724,7 @@ function renderProfileCard() {
         document.getElementById('acctWatchlist').textContent = watchlist.length;
         document.getElementById('acctFavs').textContent = favorites.length;
         document.getElementById('acctWatched').textContent = watchedMovies.length;
-        const g = userGenres.map(id => GENRE_OPTIONS[id]).filter(Boolean);
-        document.getElementById('acctGenres').innerHTML = g.length
-            ? g.map(n => `<span class="modal-genre-tag">${escapeHTML(n)}</span>`).join('')
-            : `<span style="font-size:0.8rem; color:var(--text-muted);">No genres set yet.</span>`;
+        renderGenreOrder();
     } else {
         document.getElementById('acctAvatar').hidden = true;
         document.getElementById('acctAvatar').removeAttribute('src');
@@ -3718,6 +3734,8 @@ function renderProfileCard() {
         document.getElementById('acctName').textContent = '';
         document.getElementById('acctEmail').textContent = '';
         document.getElementById('acctAgeBadge').textContent = '';
+        document.getElementById('acctGenres').innerHTML = '';
+        document.getElementById('saveGenreOrderBtn').hidden = true;
         ['authFullName', 'authEmail', 'authBirthDate'].forEach(id => {
             document.getElementById(id).value = '';
         });
@@ -3763,15 +3781,20 @@ async function syncCloudLibrary() {
         if (profileRes.status === 401) { if (user === currentUser) await expireSession(); return; }
         if (!profileRes.ok) throw new Error(`Profile request failed: HTTP ${profileRes.status}`);
         const profileData = await profileRes.json();
+        if (user !== currentUser) return;
         setProfile(profileData.profile);
         const res = await fetch(`${BACKEND_URL}/api/user/library`, { headers: authHeaders() });
         if (res.status === 401) { if (user === currentUser) await expireSession(); return; }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        watchlist = await repairSavedPosters(data.watchlist || []);
-        favorites = await repairSavedPosters(data.favorites || []);
+        const wl = await repairSavedPosters(data.watchlist || []);
+        const fv = await repairSavedPosters(data.favorites || []);
+        if (user !== currentUser) return;
+        watchlist = wl;
+        favorites = fv;
         await loadRatingProfile();
-        if (data.genres && data.genres.length >= 3 && userGenres.length === 0) {
+        if (user !== currentUser) return;
+        if (data.genres && data.genres.length >= 3) {
             userGenres = data.genres.map(String);
             localStorage.setItem('cinemind_genres', JSON.stringify(userGenres));
         }
@@ -3780,6 +3803,131 @@ async function syncCloudLibrary() {
     }
     renderProfileCard();                
 }
+
+// ================= DATE OF BIRTH: MIN AGE 5 =================
+const MIN_SIGNUP_AGE = 5;
+const AGE_ERROR_TEXT = "You must be at least 5 years old to create an account.";
+function maxBirthDateISO() {
+    const t = new Date(), month = t.getMonth();
+    const d = new Date(t.getFullYear() - MIN_SIGNUP_AGE, month, t.getDate());
+    if (d.getMonth() !== month) d.setDate(0);
+    const p = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+function applyBirthDateLimits() {
+    ['authBirthDate', 'pfBirthDate'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.max = maxBirthDateISO();
+    });
+}
+applyBirthDateLimits();
+
+// ================= GENRE PREFERENCE ORDER =================
+let genreOrderDraft = null;
+let genreOrderDraftOwner = null;
+function currentGenreOrder() {
+    if (genreOrderDraftOwner !== currentUser) {
+        genreOrderDraft = null;
+        genreOrderDraftOwner = currentUser;
+    }
+    const base = userGenres.map(String);
+    if (genreOrderDraft && genreOrderDraft.length === base.length &&
+        new Set(genreOrderDraft).size === base.length &&
+        base.every(genre => genreOrderDraft.includes(genre))) return genreOrderDraft;
+    genreOrderDraft = null;
+    return base;
+}
+function moveGenre(from, to) {
+    const order = [...currentGenreOrder()];
+    if (from === to || to < 0 || to >= order.length) return;
+    const [item] = order.splice(from, 1);
+    order.splice(to, 0, item);
+    genreOrderDraft = order;
+    renderGenreOrder();
+}
+function renderGenreOrder() {
+    const box = document.getElementById('acctGenres');
+    if (!box) return;
+    const order = currentGenreOrder();
+    const saveButton = document.getElementById('saveGenreOrderBtn');
+    if (!order.length) {
+        box.innerHTML = `<span style="font-size:0.8rem; color:var(--text-muted);">No genres set yet.</span>`;
+        saveButton.hidden = true;
+        return;
+    }
+    saveButton.hidden = false;
+    box.innerHTML = '';
+    let dragFrom = null;
+    order.forEach((id, i) => {
+        const row = document.createElement('div');
+        row.className = 'genre-order-item';
+        row.draggable = true;
+        row.innerHTML = `
+            <i class="fa-solid fa-grip-vertical genre-order-grip"></i>
+            <span class="genre-order-rank">${i + 1}</span>
+            <span class="genre-order-name">${escapeHTML(GENRE_OPTIONS[id] || id)}</span>
+            <span class="genre-order-btns">
+                <button type="button" class="genre-order-btn" data-dir="-1" aria-label="Move up" ${i === 0 ? 'disabled' : ''}><i class="fa-solid fa-chevron-up"></i></button>
+                <button type="button" class="genre-order-btn" data-dir="1" aria-label="Move down" ${i === order.length - 1 ? 'disabled' : ''}><i class="fa-solid fa-chevron-down"></i></button>
+            </span>`;
+        row.querySelectorAll('.genre-order-btn').forEach(button => {
+            button.onclick = event => {
+                event.stopPropagation();
+                moveGenre(i, i + Number(button.dataset.dir));
+            };
+        });
+        row.addEventListener('dragstart', event => {
+            dragFrom = i;
+            row.classList.add('dragging');
+            event.dataTransfer.effectAllowed = 'move';
+            try { event.dataTransfer.setData('text/plain', String(i)); } catch (error) {}
+        });
+        row.addEventListener('dragend', () => {
+            row.classList.remove('dragging');
+            box.querySelectorAll('.drag-over').forEach(item => item.classList.remove('drag-over'));
+        });
+        row.addEventListener('dragover', event => {
+            event.preventDefault();
+            row.classList.add('drag-over');
+        });
+        row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+        row.addEventListener('drop', event => {
+            event.preventDefault();
+            if (dragFrom !== null) moveGenre(dragFrom, i);
+            dragFrom = null;
+        });
+        box.appendChild(row);
+    });
+}
+
+document.getElementById('saveGenreOrderBtn').onclick = async () => {
+    if (!currentUser) return;
+    const btn = document.getElementById('saveGenreOrderBtn');
+    const genres = currentGenreOrder();
+    if (!genres.length) return showToast('Nothing to save.');
+    btn.disabled = true;
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/user/preferences/reorder`, {
+            method: 'PUT', headers: authHeaders(), body: JSON.stringify({ genres })
+        });
+        if (response.status === 401) return expireSession();
+        const data = await response.json();
+        if (!response.ok || data.success === false) {
+            throw new Error(data.message || data.error || `HTTP ${response.status}`);
+        }
+        userGenres = (Array.isArray(data.genres) && data.genres.length ? data.genres : genres).map(String);
+        localStorage.setItem('cinemind_genres', JSON.stringify(userGenres));
+        localStorage.setItem(`cinemind_genres_${currentUser}`, JSON.stringify(userGenres));
+        genreOrderDraft = null;
+        renderGenreOrder();
+        showToast('Preference order saved.');
+    } catch (error) {
+        showToast(error.message || "Couldn't save your preference order.");
+    } finally {
+        btn.disabled = false;
+    }
+};
+
 let profileReady = loadProfile();
 syncCloudLibrary();
 
@@ -3812,6 +3960,7 @@ document.getElementById('homeLogoBtn').onclick = () => {
 };
 
 document.getElementById('openProfile').onclick = () => {
+    applyBirthDateLimits();
     if (!currentUser) {
         signupGenres = new Set(userGenres.map(String));
         renderGenrePills();
@@ -3857,8 +4006,8 @@ document.getElementById('loginBtn').onclick = async () => {
             clearNovaMemory();
             localStorage.setItem('cinemind_auth_token', currentAuthToken);
             localStorage.setItem('cinemind_auth_user', currentUser);
-            if (signupGenres.size >= 3) userGenres = [...signupGenres];
-            else if (data.genres && data.genres.length) userGenres = data.genres.map(String);
+            if (data.genres && data.genres.length >= 3) userGenres = data.genres.map(String);
+            else if (signupGenres.size >= 3) userGenres = [...signupGenres];
             localStorage.setItem(`cinemind_genres_${currentUser}`, JSON.stringify(userGenres));
             localStorage.setItem('cinemind_genres', JSON.stringify(userGenres));
             await syncCloudLibrary();
@@ -3883,6 +4032,7 @@ document.getElementById('signupBtn').onclick = async () => {
     if (!fullName) return alert("Please enter your full name.");
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(email)) return alert("Please enter a valid email address.");
     if (!birthDate) return alert("Please enter your date of birth.");
+    if (birthDate > maxBirthDateISO()) return alert(AGE_ERROR_TEXT);
     if (signupGenres.size < 3) return alert("Please pick at least 3 favorite genres before signing up!");
     try {
         const res = await fetch(`${BACKEND_URL}/api/signup`, {
@@ -3908,7 +4058,7 @@ document.getElementById('signupBtn').onclick = async () => {
             profileModal.classList.remove('active');
             initEndlessNetflixHome();
             alert("Account created & calibrated with your favorite genres!");
-        } else alert(data.message);
+        } else alert(data.message || data.error || AGE_ERROR_TEXT);
     } catch(e) { alert("Signup error."); }
 };
 
@@ -4506,6 +4656,19 @@ async function initEndlessNetflixHome() {
         );
     }
 
+    // Personalized SERIES row, inserted first so the movie row below appears before it.
+    if (userGenres.length && selectedGenres.size === 0 && !isMovieOnly) {
+        const gNamesTv = userGenres.map(id => GENRE_OPTIONS[id]).filter(Boolean);
+        specialRows.unshift({
+            title: `<i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary-glow);"></i> 💜 Picked For Your Genre Taste — Series (${gNamesTv.join(' + ')})${appBadge}`,
+            url: `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&sort_by=popularity.desc${getActiveFilterQueryParams('tv', new Set(userGenres.map(String)), false)}&page=1`,
+            mType: 'tv',
+            isAI: true,
+            allowCross: true,
+            customRationale: `Series matched to your calibrated genres (${gNamesTv.join(', ')}).`
+        });
+    }
+
     if (userGenres.length && selectedGenres.size === 0 && !isSeriesTab) {
         const gNames = userGenres.map(id => GENRE_OPTIONS[id]).filter(Boolean);
         const SPECIAL_KEYS = new Set(['BL', 'GL', 'ANIME', 'KIDS_FAMILY', 'SPORTS']);
@@ -4522,7 +4685,7 @@ async function initEndlessNetflixHome() {
         const gParam = stdUserG.length ? `&with_genres=${[...new Set(stdUserG)].join('|')}` : '';
         const kwParam = kwParts.length ? `&with_keywords=${kwParts.join('|')}` : '';
 
-        specialRows.push({
+        specialRows.unshift({
             title: `<i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary-glow);"></i> 💜 Picked For Your Genre Taste (${gNames.join(' + ')})${appBadge}`,
             url: `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&include_adult=true${gParam}${kwParam}&sort_by=popularity.desc&page=1`,
             mType: 'movie',
@@ -5369,21 +5532,32 @@ document.getElementById('closeVideoModal').onclick = () => {
     document.getElementById('videoModal').classList.remove('active');
 };
 
+function applyLibraryButtonState(type, isAdded) {
+    if (type === 'watchlist') {
+        const button = document.getElementById('watchlistBtn');
+        button.innerHTML = isAdded ? `<i class="fa-solid fa-check"></i> In Watchlist` : `<i class="fa-solid fa-plus"></i> Watchlist`;
+        button.style.background = isAdded ? '#10b981' : 'linear-gradient(135deg, var(--primary-glow), var(--secondary-glow))';
+    } else if (type === 'favorites') {
+        const button = document.getElementById('favoriteBtn');
+        button.innerHTML = isAdded ? `<i class="fa-solid fa-heart" style="color: #f43f5e;"></i> Favorited` : `<i class="fa-solid fa-heart"></i> Favorite`;
+        button.style.borderColor = isAdded ? '#f43f5e' : '';
+        button.style.background = isAdded ? 'rgba(244, 63, 94, 0.14)' : '';
+    }
+}
+
 function updateButtonStates() {
     if (!currentMovieData) return;
-    const inWatchlist = watchlist.some(m => Number(m.id) === Number(currentMovieData.id));
-    const wBtn = document.getElementById('watchlistBtn');
-    wBtn.innerHTML = inWatchlist ? `<i class="fa-solid fa-check"></i> In Watchlist` : `<i class="fa-solid fa-plus"></i> Watchlist`;
-    wBtn.style.background = inWatchlist ? "#10b981" : "linear-gradient(135deg, var(--primary-glow), var(--secondary-glow))";
+    const has = list => list.some(movie => sameTitle(movie, currentMovieData));
+    applyLibraryButtonState('watchlist', has(watchlist));
+    applyLibraryButtonState('favorites', has(favorites));
 
-    const inFavs = favorites.some(m => Number(m.id) === Number(currentMovieData.id));
-    const fBtn = document.getElementById('favoriteBtn');
-    fBtn.innerHTML = inFavs ? `<i class="fa-solid fa-heart" style="color: #f43f5e;"></i> Favorited` : `<i class="fa-solid fa-heart"></i> Favorite`;
-
-    const inWatched = watchedMovies.some(m => Number(m.id) === Number(currentMovieData.id));
+    const inWatched = has(watchedMovies);
     const watchedBtn = document.getElementById('watchedBtn');
     watchedBtn.innerHTML = inWatched ? `<i class="fa-solid fa-circle-check" style="color: #10b981;"></i> Watched` : `<i class="fa-solid fa-eye"></i> Mark Watched`;
 }
+
+const sameTitle = (a, b) => Number(a.id) === Number(b.id) &&
+    (!a.media_type || !b.media_type || (a.media_type === 'tv') === (b.media_type === 'tv'));
 
 function libraryPayload(m) {
     const cleanPoster = (m.poster && m.poster.startsWith('http'))
@@ -5395,6 +5569,12 @@ function libraryPayload(m) {
         poster: cleanPoster,
         vote_average: m.vote_average || 0,
         media_type: m.media_type || 'movie',
+        original_language: m.original_language || undefined,
+        origin_country: Array.isArray(m.origin_country)
+            ? m.origin_country
+            : (m.production_countries || []).slice(0, 1).map(country => country.iso_3166_1),
+        release_date: m.release_date || undefined,
+        first_air_date: m.first_air_date || undefined,
         genre_ids: itemGenreKeys(m).slice(0, 12),
         tags: itemTags(m).slice(0, 15),
         _isR18: Boolean(m._isR18),
@@ -5402,43 +5582,68 @@ function libraryPayload(m) {
     };
 }
 
-document.getElementById('watchlistBtn').onclick = async () => {
-    if(!currentUser) { alert("Please log in to save items to your cloud watchlist."); profileModal.classList.add('active'); return; }
-    try {
-        const res = await fetch(`${BACKEND_URL}/api/user/library/toggle`, {
-            method: 'POST', headers: authHeaders(),
-            body: JSON.stringify({type: 'watchlist', movie: libraryPayload(currentMovieData)})
-        });
-        if (res.status === 401) { document.getElementById('movieModal').classList.remove('active'); return expireSession(); }
-        const data = await res.json();
-        if(data.success) {
-            await syncCloudLibrary();
-            updateButtonStates();
-            if (currentView === 'watchlist') navItems[3].click();
-        }
-    } catch(e) { alert("Sync error."); }
-};
+function applyLibraryResult(type, isAdded, movie) {
+    const list = type === 'watchlist' ? watchlist : favorites;
+    const index = list.findIndex(item => sameTitle(item, movie));
+    if (isAdded && index < 0) list.unshift(libraryPayload(movie));
+    if (!isAdded && index >= 0) list.splice(index, 1);
+    if (currentMovieData && sameTitle(currentMovieData, movie)) {
+        applyLibraryButtonState(type, isAdded);
+    }
+}
 
-document.getElementById('favoriteBtn').onclick = async () => {
-    if(!currentUser) { alert("Please log in to save items to your cloud favorites."); profileModal.classList.add('active'); return; }
+let libraryBusy = false;
+async function toggleLibraryItem(type) {
+    const movie = currentMovieData;
+    if (!movie || libraryBusy) return;
+    if (!currentUser) {
+        alert(`Please log in to save items to your cloud ${type}.`);
+        profileModal.classList.add('active');
+        return;
+    }
+    libraryBusy = true;
+    const btn = document.getElementById(type === 'watchlist' ? 'watchlistBtn' : 'favoriteBtn');
+    if (btn) btn.disabled = true;
     try {
-        const res = await fetch(`${BACKEND_URL}/api/user/library/toggle`, {
+        const response = await fetch(`${BACKEND_URL}/api/user/library/toggle`, {
             method: 'POST', headers: authHeaders(),
-            body: JSON.stringify({type: 'favorites', movie: libraryPayload(currentMovieData)})
+            body: JSON.stringify({ type, movie: libraryPayload(movie) })
         });
-        if (res.status === 401) { document.getElementById('movieModal').classList.remove('active'); return expireSession(); }
-        const data = await res.json();
-        if(data.success) {
-            await syncCloudLibrary();
-            updateButtonStates();
-            if (currentView === 'favorites') navItems[4].click();
+        if (response.status === 401) {
+            document.getElementById('movieModal').classList.remove('active');
+            return expireSession();
         }
-    } catch(e) { alert("Sync error."); }
-};
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || data.error || `Server error (HTTP ${response.status}). Please try again.`);
+        }
+        const resultType = data.type || type;
+        if (resultType !== 'watchlist' && resultType !== 'favorites') {
+            throw new Error('The server returned an invalid library type.');
+        }
+        const isAdded = typeof data.is_added === 'boolean'
+            ? data.is_added
+            : data.action === 'added' ? true : data.action === 'removed' ? false : null;
+        if (isAdded === null) throw new Error('The server did not return the updated library state.');
+        applyLibraryResult(resultType, isAdded, movie);
+        await syncCloudLibrary();
+        updateButtonStates();
+        if (currentView === 'watchlist' && resultType === 'watchlist') navItems[3].click();
+        else if (currentView === 'favorites' && resultType === 'favorites') navItems[4].click();
+    } catch (error) {
+        showToast(error.message || "Couldn't sync your library.");
+    } finally {
+        libraryBusy = false;
+        if (btn) btn.disabled = false;
+    }
+}
+
+document.getElementById('watchlistBtn').onclick = () => toggleLibraryItem('watchlist');
+document.getElementById('favoriteBtn').onclick = () => toggleLibraryItem('favorites');
 
 document.getElementById('watchedBtn').onclick = () => {
     if (!currentMovieData) return;
-    const idx = watchedMovies.findIndex(m => Number(m.id) === Number(currentMovieData.id));
+    const idx = watchedMovies.findIndex(m => sameTitle(m, currentMovieData));
     if (idx >= 0) {
         watchedMovies.splice(idx, 1);
     } else {
