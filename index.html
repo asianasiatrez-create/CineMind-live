@@ -1558,8 +1558,8 @@ html[data-theme="light"] .review-item { background: rgba(255,255,255,.7); }
 
         <div class="modal-actions">
             <button type="button" class="btn-action btn-trailer" id="trailerBtn"><i class="fa-solid fa-play"></i> Watch Trailer</button>
-            <button type="button" class="btn-action" id="watchlistBtn"><i class="fa-solid fa-plus"></i> Watchlist</button>
-            <button type="button" class="btn-action btn-fav" id="favoriteBtn"><i class="fa-solid fa-heart"></i> Favorite</button>
+            <button type="button" class="btn-action" id="watchlistBtn"><i class="fa-solid fa-plus" style="color:white;"></i> Watchlist</button>
+            <button type="button" class="btn-action btn-fav" id="favoriteBtn"><i class="fa-regular fa-heart" style="color:white;"></i> Favorite</button>
             <button type="button" class="btn-action btn-fav" id="watchedBtn"><i class="fa-solid fa-eye"></i> Mark Watched</button>
             <button type="button" class="btn-action btn-not-interested" id="notInterestedModalBtn"><i class="fa-solid fa-eye-slash"></i> Not Interested</button>
         </div>
@@ -5535,13 +5535,20 @@ document.getElementById('closeVideoModal').onclick = () => {
 function applyLibraryButtonState(type, isAdded) {
     if (type === 'watchlist') {
         const button = document.getElementById('watchlistBtn');
-        button.innerHTML = isAdded ? `<i class="fa-solid fa-check"></i> In Watchlist` : `<i class="fa-solid fa-plus"></i> Watchlist`;
-        button.style.background = isAdded ? '#10b981' : 'linear-gradient(135deg, var(--primary-glow), var(--secondary-glow))';
+        button.innerHTML = isAdded
+            ? `<i class="fa-solid fa-check" style="color:#10b981;"></i> In Watchlist`
+            : `<i class="fa-solid fa-plus" style="color:white;"></i> Watchlist`;
+        button.style.background = isAdded
+            ? 'rgba(16, 185, 129, 0.15)'
+            : 'linear-gradient(135deg, var(--primary-glow), var(--secondary-glow))';
+        button.style.borderColor = isAdded ? '#10b981' : 'transparent';
     } else if (type === 'favorites') {
         const button = document.getElementById('favoriteBtn');
-        button.innerHTML = isAdded ? `<i class="fa-solid fa-heart" style="color: #f43f5e;"></i> Favorited` : `<i class="fa-solid fa-heart"></i> Favorite`;
-        button.style.borderColor = isAdded ? '#f43f5e' : '';
+        button.innerHTML = isAdded
+            ? `<i class="fa-solid fa-heart" style="color:red;"></i> Favorited`
+            : `<i class="fa-regular fa-heart" style="color:white;"></i> Favorite`;
         button.style.background = isAdded ? 'rgba(244, 63, 94, 0.14)' : '';
+        button.style.borderColor = isAdded ? 'red' : 'transparent';
     }
 }
 
@@ -5604,6 +5611,9 @@ async function toggleLibraryItem(type) {
     libraryBusy = true;
     const btn = document.getElementById(type === 'watchlist' ? 'watchlistBtn' : 'favoriteBtn');
     if (btn) btn.disabled = true;
+    const list = type === 'watchlist' ? watchlist : favorites;
+    const wasAdded = list.some(item => sameTitle(item, movie));
+    applyLibraryButtonState(type, !wasAdded);
     try {
         const response = await fetch(`${BACKEND_URL}/api/user/library/toggle`, {
             method: 'POST', headers: authHeaders(),
@@ -5626,12 +5636,31 @@ async function toggleLibraryItem(type) {
             : data.action === 'added' ? true : data.action === 'removed' ? false : null;
         if (isAdded === null) throw new Error('The server did not return the updated library state.');
         applyLibraryResult(resultType, isAdded, movie);
-        await syncCloudLibrary();
         updateButtonStates();
-        if (currentView === 'watchlist' && resultType === 'watchlist') navItems[3].click();
-        else if (currentView === 'favorites' && resultType === 'favorites') navItems[4].click();
+        if (currentView === resultType) {
+            const grid = mainContainer.querySelector('.movie-grid');
+            if (grid) {
+                const mediaType = movie.media_type || 'movie';
+                const card = [...grid.querySelectorAll('.movie-card')]
+                    .find(item => item.dataset.titleKey === `${mediaType}_${movie.id}`);
+                if (isAdded) {
+                    if (!card) {
+                        const savedMovie = { ...movie, media_type: mediaType };
+                        grid.insertAdjacentElement('afterbegin', createMovieCard(savedMovie));
+                    }
+                    const emptyMessage = grid.querySelector('p');
+                    if (emptyMessage) emptyMessage.remove();
+                } else if (card) {
+                    card.remove();
+                    if (!grid.querySelector('.movie-card')) {
+                        grid.innerHTML = `<p style="color: var(--text-muted); font-weight:500;">No titles saved here yet.</p>`;
+                    }
+                }
+            }
+        }
     } catch (error) {
         showToast(error.message || "Couldn't sync your library.");
+        updateButtonStates();
     } finally {
         libraryBusy = false;
         if (btn) btn.disabled = false;
